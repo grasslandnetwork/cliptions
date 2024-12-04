@@ -11,7 +11,7 @@ class TestGuessingGame(unittest.TestCase):
         Target = 50
         Players guess: 48, 52, 45, 60, 70
         Expected scores: 0.33, 0.33, 0.17, 0.09, 0.05
-        Expected payouts (from $800 pool): $272.16, $272.16, $140.49, $74.23, $41.24
+        Expected payouts (from $40 pool): $13.72, $13.72, $6.86, $3.74, $1.96
         """
         # Force target number for testing
         self.game.target_number = 50
