@@ -91,5 +91,41 @@ class TestGuessingGame(unittest.TestCase):
             msg="Prize pool calculation is incorrect"
         )
 
+    def test_platform_fee_calculation(self):
+        """Test that platform fees are correctly calculated and separated from the prize pool."""
+        # Add players
+        self.game.add_player("Player1", 48)
+        self.game.add_player("Player2", 52)
+        self.game.add_player("Player3", 45)
+
+        # Calculate expected values
+        total_fees_collected = 3 * 10.0  # 3 players * $10 fee
+        expected_prize_pool = total_fees_collected * (1 - 0.2)  # 80% goes to prize pool
+        expected_platform_fees = total_fees_collected * 0.2  # 20% goes to platform
+
+        # Verify prize pool
+        self.assertAlmostEqual(
+            self.game.prize_pool,
+            expected_prize_pool,
+            places=2,
+            msg="Prize pool calculation is incorrect"
+        )
+
+        # Verify platform fees
+        self.assertAlmostEqual(
+            self.game.platform_fees,
+            expected_platform_fees,
+            places=2,
+            msg="Platform fee calculation is incorrect"
+        )
+
+        # Verify that total fees equal prize pool plus platform fees
+        self.assertAlmostEqual(
+            total_fees_collected,
+            self.game.prize_pool + self.game.platform_fees,
+            places=2,
+            msg="Total fees don't match prize pool plus platform fees"
+        )
+
 if __name__ == '__main__':
     unittest.main() 

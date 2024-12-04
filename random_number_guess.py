@@ -27,6 +27,7 @@ class GuessingGame:
         self.players: Dict[str, Player] = {}
         self.target_number: int = None
         self.prize_pool: float = 0.0
+        self.platform_fees: float = 0.0
         
     def add_player(self, player_id: str, guess: int) -> None:
         """Register a new player with their guess and collect their entry fee.
@@ -42,7 +43,9 @@ class GuessingGame:
             raise ValueError("Guess must be between 0 and 100")
             
         self.players[player_id] = Player(player_id, guess, self.fee)
-        self.prize_pool += self.fee * (1 - self.platform_fee_percent)
+        platform_fee = self.fee * self.platform_fee_percent
+        self.platform_fees += platform_fee
+        self.prize_pool += self.fee - platform_fee
 
     def calculate_scores(self) -> None:
         """Calculate scores for all players based on how close their guesses were to target number.
