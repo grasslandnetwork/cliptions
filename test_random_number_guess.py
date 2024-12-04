@@ -4,7 +4,7 @@ import time
 
 class TestGuessingGame(unittest.TestCase):
     def setUp(self):
-        self.game = GuessingGame(fee=10.0)
+        self.game = GuessingGame(fee=10.0, platform_fee_percent=0.2)
 
     def test_example_scenario(self):
         """Test the example scenario from the documentation:
@@ -72,6 +72,24 @@ class TestGuessingGame(unittest.TestCase):
         self.game.add_player("SinglePlayer", 50)
         with self.assertRaises(ValueError):
             self.game.run_game()
+
+    def test_fee_collection(self):
+        """Test that the prize pool is correctly calculated after players are added."""
+        # Add players
+        self.game.add_player("Player1", 48)
+        self.game.add_player("Player2", 52)
+        self.game.add_player("Player3", 45)
+
+        # Calculate expected prize pool
+        expected_prize_pool = 3 * 10.0 * (1 - 0.2)  # 3 players, $10 fee, 20% platform fee
+
+        # Verify prize pool
+        self.assertAlmostEqual(
+            self.game.prize_pool,
+            expected_prize_pool,
+            places=2,
+            msg="Prize pool calculation is incorrect"
+        )
 
 if __name__ == '__main__':
     unittest.main() 
