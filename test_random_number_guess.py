@@ -109,5 +109,69 @@ class TestGuessingGame(unittest.TestCase):
             msg="Total fees don't match prize pool plus platform fees"
         )
 
+    def test_payout_distribution(self):
+        """Test that all payouts are distributed correctly and completely."""
+        # Force target number for testing
+        self.game.target_number = 50
+        
+        # Add players with their guesses
+        test_players = [
+            ("Player1", 48),
+            ("Player2", 52),
+            ("Player3", 45),
+            ("Player4", 60),
+            ("Player5", 70)
+        ]
+        
+        for player_id, guess in test_players:
+            self.game.add_player(player_id, guess)
+
+        initial_prize_pool = self.game.prize_pool
+        
+        # Run game calculations
+        self.game.calculate_scores()
+        self.game.distribute_prizes()
+
+        # Test 1: Verify all players received a payout
+        for player_id, _ in test_players:
+            self.assertGreater(
+                self.game.players[player_id].payout,
+                0,
+                f"{player_id} did not receive any payout"
+            )
+
+        # Test 2: Verify total payouts equal prize pool
+        total_payouts = sum(player.payout for player in self.game.players.values())
+        self.assertAlmostEqual(
+            total_payouts,
+            initial_prize_pool,
+            places=2,
+            msg="Total payouts don't match prize pool"
+        )
+
+        # Test 3: Verify relative payout proportions
+        # Players with same scores should get same payouts
+        player1_payout = self.game.players["Player1"].payout
+        player2_payout = self.game.players["Player2"].payout
+        self.assertAlmostEqual(
+            player1_payout,
+            player2_payout,
+            places=2,
+            msg="Players with equal scores received different payouts"
+        )
+
+        # Test 4: Verify payout order (closer guesses should pay more)
+        payouts = [(p.id, p.payout) for p in self.game.players.values()]
+        sorted_payouts = sorted(payouts, key=lambda x: x[1], reverse=True)
+        
+        expected_order = ["Player1", "Player2", "Player3", "Player4", "Player5"]
+        actual_order = [player_id for player_id, _ in sorted_payouts]
+        
+        self.assertEqual(
+            actual_order,
+            expected_order,
+            "Payout ordering is incorrect"
+        )
+
 if __name__ == '__main__':
     unittest.main() 

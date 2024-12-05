@@ -53,3 +53,7 @@ Advantages
     Fairness: Closer guesses receive a larger portion of the prize, rewarding better performance.
     Engagement: Adds a layer of excitement as everyone feels they have a chance to win something.
 
+
+Now we need a test that does 2 things. 1) verifies that all players got paid and 2 ) that they all got paid the correct amount
+
+
