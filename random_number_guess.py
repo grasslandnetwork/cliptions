@@ -2,6 +2,7 @@ import random
 import time
 from dataclasses import dataclass
 from typing import List, Dict
+from abc import ABC, abstractmethod
 
 @dataclass
 class Player:
@@ -12,10 +13,45 @@ class Player:
     score: float = 0.0
     payout: float = 0.0
 
+class IPlayerManager(ABC):
+    @abstractmethod
+    def add_player(self, player_id: str, guess: int) -> None:
+        pass
+
+class IScoringStrategy(ABC):
+    @abstractmethod
+    def calculate_score(self, guess: int, target: int) -> float:
+        pass
+
+class IPrizeDistributor(ABC):
+    @abstractmethod
+    def distribute_prizes(self, players: Dict[str, Player], prize_pool: float) -> None:
+        pass
+
+class IGameOutput(ABC):
+    @abstractmethod
+    def display_results(self, target: int, players: Dict[str, Player]) -> None:
+        pass
+
+class DefaultScoringStrategy(IScoringStrategy):
+    def calculate_score(self, guess: int, target: int) -> float:
+        return 1 / (1 + abs(guess - target))
+
+class ConsoleGameOutput(IGameOutput):
+    def display_results(self, target: int, players: Dict[str, Player]) -> None:
+        print(f"\nTarget number was: {target}")
+        print("\nResults:")
+        for player in sorted(players.values(), key=lambda x: x.payout, reverse=True):
+            print(f"Player {player.id}: Guess={player.guess}, Score={player.score:.2f}, Payout=${player.payout:.2f}")
+
 class GuessingGame:
     """Manages a number guessing game where players pay to guess a random number and win proportional payouts."""
     
-    def __init__(self, fee: float = 10.0, platform_fee_percent: float = 0.2):
+    def __init__(self, 
+                 fee: float = 10.0,
+                 platform_fee_percent: float = 0.2,
+                 scoring_strategy: IScoringStrategy = DefaultScoringStrategy(),
+                 output_handler: IGameOutput = ConsoleGameOutput()):
         """Initialize a new game with specified entry fee and platform fee percentage.
         
         Args:
@@ -28,6 +64,8 @@ class GuessingGame:
         self.target_number: int = None
         self.prize_pool: float = 0.0
         self.platform_fees: float = 0.0
+        self.scoring_strategy = scoring_strategy
+        self.output_handler = output_handler
         
     def add_player(self, player_id: str, guess: int) -> None:
         """Register a new player with their guess and collect their entry fee.
@@ -56,7 +94,10 @@ class GuessingGame:
             self.target_number = random.randint(0, 100)
         
         for player in self.players.values():
-            player.score = 1 / (1 + abs(player.guess - self.target_number))
+            player.score = self.scoring_strategy.calculate_score(
+                player.guess, 
+                self.target_number
+            )
 
     def distribute_prizes(self) -> None:
         """Distribute the prize pool among players proportionally based on their scores.
@@ -78,11 +119,7 @@ class GuessingGame:
             
         self.calculate_scores()
         self.distribute_prizes()
-        
-        print(f"\nTarget number was: {self.target_number}")
-        print("\nResults:")
-        for player in sorted(self.players.values(), key=lambda x: x.payout, reverse=True):
-            print(f"Player {player.id}: Guess={player.guess}, Score={player.score:.2f}, Payout=${player.payout:.2f}")
+        self.output_handler.display_results(self.target_number, self.players)
 
 # Example usage
 if __name__ == "__main__":
