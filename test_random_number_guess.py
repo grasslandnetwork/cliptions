@@ -1,10 +1,26 @@
 import unittest
-from random_number_guess import GuessingGame, Player
+from random_number_guess import (
+    GameEngine, Player, PlayerRegistry, 
+    RandomNumberGenerator, DefaultScoringStrategy,
+    PrizeDistributor, ConsoleGameOutput
+)
 import time
 
 class TestGuessingGame(unittest.TestCase):
     def setUp(self):
-        self.game = GuessingGame(fee=10.0, platform_fee_percent=0.2)
+        self.player_registry = PlayerRegistry(entry_fee=10.0, platform_fee_percent=0.2)
+        self.number_generator = RandomNumberGenerator()
+        self.scoring_strategy = DefaultScoringStrategy()
+        self.prize_distributor = PrizeDistributor()
+        self.output_handler = ConsoleGameOutput()
+        
+        self.game = GameEngine(
+            self.player_registry,
+            self.number_generator,
+            self.scoring_strategy,
+            self.prize_distributor,
+            self.output_handler
+        )
 
     def test_example_scenario(self):
         """Test the example scenario from the documentation:
@@ -17,15 +33,15 @@ class TestGuessingGame(unittest.TestCase):
         self.game.target_number = 50
         
         # Add players with their guesses
-        self.game.add_player("Player1", 48)
-        self.game.add_player("Player2", 52)
-        self.game.add_player("Player3", 45)
-        self.game.add_player("Player4", 60)
-        self.game.add_player("Player5", 70)
+        self.game.player_registry.add_player("Player1", 48)
+        self.game.player_registry.add_player("Player2", 52)
+        self.game.player_registry.add_player("Player3", 45)
+        self.game.player_registry.add_player("Player4", 60)
+        self.game.player_registry.add_player("Player5", 70)
 
         # Run game calculations
-        self.game.calculate_scores()
-        self.game.distribute_prizes()
+        self.game._calculate_scores()
+        self.game._distribute_prizes()
 
         # Verify scores
         expected_scores = {
@@ -46,7 +62,7 @@ class TestGuessingGame(unittest.TestCase):
 
         for player_id, expected_score in expected_scores.items():
             self.assertAlmostEqual(
-                self.game.players[player_id].score,
+                self.game.player_registry.players[player_id].score,
                 expected_score,
                 places=2,
                 msg=f"Score mismatch for {player_id}"
@@ -54,7 +70,7 @@ class TestGuessingGame(unittest.TestCase):
 
         for player_id, expected_payout in expected_payouts.items():
             self.assertAlmostEqual(
-                self.game.players[player_id].payout,
+                self.game.player_registry.players[player_id].payout,
                 expected_payout,
                 places=2,
                 msg=f"Payout mismatch for {player_id}"
@@ -63,22 +79,22 @@ class TestGuessingGame(unittest.TestCase):
     def test_invalid_guess_range(self):
         """Test that adding a player with an invalid guess raises ValueError"""
         with self.assertRaises(ValueError):
-            self.game.add_player("InvalidPlayer", 101)
+            self.game.player_registry.add_player("InvalidPlayer", 101)
         with self.assertRaises(ValueError):
-            self.game.add_player("InvalidPlayer", -1)
+            self.game.player_registry.add_player("InvalidPlayer", -1)
 
     def test_minimum_players(self):
         """Test that running a game with fewer than 2 players raises ValueError"""
-        self.game.add_player("SinglePlayer", 50)
+        self.game.player_registry.add_player("SinglePlayer", 50)
         with self.assertRaises(ValueError):
             self.game.run_game()
 
     def test_platform_fee_calculation(self):
         """Test that platform fees are correctly calculated and separated from the prize pool."""
         # Add players
-        self.game.add_player("Player1", 48)
-        self.game.add_player("Player2", 52)
-        self.game.add_player("Player3", 45)
+        self.game.player_registry.add_player("Player1", 48)
+        self.game.player_registry.add_player("Player2", 52)
+        self.game.player_registry.add_player("Player3", 45)
 
         # Calculate expected values
         total_fees_collected = 3 * 10.0  # 3 players * $10 fee
@@ -87,7 +103,7 @@ class TestGuessingGame(unittest.TestCase):
 
         # Verify prize pool
         self.assertAlmostEqual(
-            self.game.prize_pool,
+            self.game.player_registry.prize_pool,
             expected_prize_pool,
             places=2,
             msg="Prize pool calculation is incorrect"
@@ -95,7 +111,7 @@ class TestGuessingGame(unittest.TestCase):
 
         # Verify platform fees
         self.assertAlmostEqual(
-            self.game.platform_fees,
+            self.game.player_registry.platform_fees,
             expected_platform_fees,
             places=2,
             msg="Platform fee calculation is incorrect"
@@ -104,7 +120,7 @@ class TestGuessingGame(unittest.TestCase):
         # Verify that total fees equal prize pool plus platform fees
         self.assertAlmostEqual(
             total_fees_collected,
-            self.game.prize_pool + self.game.platform_fees,
+            self.game.player_registry.prize_pool + self.game.player_registry.platform_fees,
             places=2,
             msg="Total fees don't match prize pool plus platform fees"
         )
@@ -124,24 +140,24 @@ class TestGuessingGame(unittest.TestCase):
         ]
         
         for player_id, guess in test_players:
-            self.game.add_player(player_id, guess)
+            self.game.player_registry.add_player(player_id, guess)
 
-        initial_prize_pool = self.game.prize_pool
+        initial_prize_pool = self.game.player_registry.prize_pool
         
         # Run game calculations
-        self.game.calculate_scores()
-        self.game.distribute_prizes()
+        self.game._calculate_scores()
+        self.game._distribute_prizes()
 
         # Test 1: Verify all players received a payout
         for player_id, _ in test_players:
             self.assertGreater(
-                self.game.players[player_id].payout,
+                self.game.player_registry.players[player_id].payout,
                 0,
                 f"{player_id} did not receive any payout"
             )
 
         # Test 2: Verify total payouts equal prize pool
-        total_payouts = sum(player.payout for player in self.game.players.values())
+        total_payouts = sum(player.payout for player in self.game.player_registry.players.values())
         self.assertAlmostEqual(
             total_payouts,
             initial_prize_pool,
@@ -151,8 +167,8 @@ class TestGuessingGame(unittest.TestCase):
 
         # Test 3: Verify relative payout proportions
         # Players with same scores should get same payouts
-        player1_payout = self.game.players["Player1"].payout
-        player2_payout = self.game.players["Player2"].payout
+        player1_payout = self.game.player_registry.players["Player1"].payout
+        player2_payout = self.game.player_registry.players["Player2"].payout
         self.assertAlmostEqual(
             player1_payout,
             player2_payout,
@@ -161,7 +177,7 @@ class TestGuessingGame(unittest.TestCase):
         )
 
         # Test 4: Verify payout order (closer guesses should pay more)
-        payouts = [(p.id, p.payout) for p in self.game.players.values()]
+        payouts = [(p.id, p.payout) for p in self.game.player_registry.players.values()]
         sorted_payouts = sorted(payouts, key=lambda x: x[1], reverse=True)
         
         expected_order = ["Player1", "Player2", "Player3", "Player4", "Player5"]
