@@ -2,6 +2,7 @@ import unittest
 from random_number_guess import (
     GameEngine, Player, PlayerRegistry, 
     RandomNumberGenerator, DefaultScoringStrategy,
+    LinearScoringStrategy, ExponentialScoringStrategy,
     PrizeDistributor, ConsoleGameOutput
 )
 import time
@@ -188,6 +189,41 @@ class TestGuessingGame(unittest.TestCase):
             expected_order,
             "Payout ordering is incorrect"
         )
+
+
+# Add LSP-specific tests
+class ScoringStrategyTests(unittest.TestCase):
+    """Tests to verify LSP compliance for scoring strategies."""
+    
+    def setUp(self):
+        self.strategies = [
+            DefaultScoringStrategy(),
+            LinearScoringStrategy(),
+            ExponentialScoringStrategy()
+        ]
+    
+    def test_score_range(self):
+        """Verify all strategies return scores between 0 and 1."""
+        for strategy in self.strategies:
+            score = strategy.calculate_score(50, 50)
+            self.assertEqual(score, 1.0, f"{strategy.__class__.__name__} perfect guess should score 1.0")
+            
+            score = strategy.calculate_score(0, 100)
+            self.assertGreaterEqual(score, 0.0, f"{strategy.__class__.__name__} worst guess should be >= 0.0")
+            self.assertLessEqual(score, 1.0, f"{strategy.__class__.__name__} worst guess should be <= 1.0")
+    
+    def test_equal_distance_symmetry(self):
+        """Verify equal distances from target yield equal scores."""
+        target = 50
+        for strategy in self.strategies:
+            score1 = strategy.calculate_score(40, target)
+            score2 = strategy.calculate_score(60, target)
+            self.assertAlmostEqual(score1, score2, 
+                                 msg=f"{strategy.__class__.__name__} failed distance symmetry")
+
+class TestScoringStrategyLSP(ScoringStrategyTests):
+    """Run LSP compliance tests for scoring strategies."""
+    pass
 
 if __name__ == '__main__':
     unittest.main() 

@@ -3,6 +3,7 @@ import time
 from dataclasses import dataclass
 from typing import List, Dict, Optional
 from abc import ABC, abstractmethod
+import unittest
 
 @dataclass
 class Player:
@@ -19,9 +20,35 @@ class IPlayerManager(ABC):
         pass
 
 class IScoringStrategy(ABC):
+    """Interface for scoring strategies.
+    
+    Contract:
+    1. Must return a float score between 0.0 and 1.0
+    2. Higher scores must indicate better guesses
+    3. Equal distance from target must yield equal scores
+    4. Must handle any integer inputs between 0-100 inclusive
+    """
+    
     @abstractmethod
     def calculate_score(self, guess: int, target: int) -> float:
+        """Calculate score for a guess relative to target number.
+        
+        Args:
+            guess: Integer between 0-100
+            target: Integer between 0-100
+            
+        Returns:
+            float: Score between 0.0 and 1.0
+            
+        Raises:
+            ValueError: If guess or target outside valid range
+        """
         pass
+
+    def validate_inputs(self, guess: int, target: int) -> None:
+        """Validate inputs match contract requirements."""
+        if not (0 <= guess <= 100 and 0 <= target <= 100):
+            raise ValueError("Guess and target must be between 0 and 100")
 
 class IPrizeDistributor(ABC):
     @abstractmethod
@@ -29,20 +56,100 @@ class IPrizeDistributor(ABC):
         pass
 
 class IGameOutput(ABC):
+    """Interface for game output handlers.
+    
+    Contract:
+    1. Must display all player results
+    2. Must show target number
+    3. Must handle any number of players (2 or more)
+    4. Must display scores rounded to 2 decimal places
+    5. Must display payouts rounded to 2 decimal places
+    """
+    
     @abstractmethod
     def display_results(self, target: int, players: Dict[str, Player]) -> None:
+        """Display game results.
+        
+        Args:
+            target: The target number
+            players: Dictionary of Player objects
+            
+        Raises:
+            ValueError: If fewer than 2 players
+        """
         pass
 
+    def validate_results(self, target: int, players: Dict[str, Player]) -> None:
+        """Validate results match contract requirements."""
+        if len(players) < 2:
+            raise ValueError("Must have at least 2 players")
+        if not (0 <= target <= 100):
+            raise ValueError("Target must be between 0 and 100")
+        if not all(0 <= p.score <= 1 for p in players.values()):
+            raise ValueError("All scores must be between 0 and 1")
+
 class DefaultScoringStrategy(IScoringStrategy):
+    """Inverse linear distance scoring strategy."""
+    
     def calculate_score(self, guess: int, target: int) -> float:
-        return 1 / (1 + abs(guess - target))
+        self.validate_inputs(guess, target)
+        score = 1 / (1 + abs(guess - target))
+        assert 0 <= score <= 1, "Score must be between 0 and 1"
+        return score
+
+class LinearScoringStrategy(IScoringStrategy):
+    """Linear distance scoring strategy."""
+    
+    def calculate_score(self, guess: int, target: int) -> float:
+        self.validate_inputs(guess, target)
+        max_distance = 100
+        distance = abs(guess - target)
+        score = 1 - (distance / max_distance)
+        assert 0 <= score <= 1, "Score must be between 0 and 1"
+        return score
+
+class ExponentialScoringStrategy(IScoringStrategy):
+    """Exponential scoring strategy."""
+    
+    def calculate_score(self, guess: int, target: int) -> float:
+        self.validate_inputs(guess, target)
+        distance = abs(guess - target)
+        score = 2 ** (-distance/10)  # Normalized to be between 0 and 1
+        assert 0 <= score <= 1, "Score must be between 0 and 1"
+        return score
 
 class ConsoleGameOutput(IGameOutput):
+    """Console-based output handler."""
+    
     def display_results(self, target: int, players: Dict[str, Player]) -> None:
+        self.validate_results(target, players)
         print(f"\nTarget number was: {target}")
         print("\nResults:")
         for player in sorted(players.values(), key=lambda x: x.payout, reverse=True):
-            print(f"Player {player.id}: Guess={player.guess}, Score={player.score:.2f}, Payout=${player.payout:.2f}")
+            print(f"Player {player.id}: "
+                  f"Guess={player.guess}, "
+                  f"Score={player.score:.2f}, "
+                  f"Payout=${player.payout:.2f}")
+
+class JsonGameOutput(IGameOutput):
+    """JSON-formatted output handler."""
+    
+    def display_results(self, target: int, players: Dict[str, Player]) -> None:
+        self.validate_results(target, players)
+        import json
+        results = {
+            "target": target,
+            "players": [
+                {
+                    "id": p.id,
+                    "guess": p.guess,
+                    "score": round(p.score, 2),
+                    "payout": round(p.payout, 2)
+                }
+                for p in players.values()
+            ]
+        }
+        print(json.dumps(results, indent=2))
 
 class PlayerRegistry:
     """Handles player management and fee collection"""
@@ -135,39 +242,6 @@ class GameEngine:
             self.player_registry.players
         )
 
-# Example alternative scoring strategies (OCP)
-class LinearScoringStrategy(IScoringStrategy):
-    """Linear scoring based on distance from target"""
-    def calculate_score(self, guess: int, target: int) -> float:
-        max_distance = 100
-        distance = abs(guess - target)
-        return 1 - (distance / max_distance)
-
-class ExponentialScoringStrategy(IScoringStrategy):
-    """Exponential scoring that heavily rewards very close guesses"""
-    def calculate_score(self, guess: int, target: int) -> float:
-        distance = abs(guess - target)
-        return 2 ** (-distance/10)
-
-# Example alternative output handlers (OCP)
-class JsonGameOutput(IGameOutput):
-    """Outputs game results in JSON format"""
-    def display_results(self, target: int, players: Dict[str, Player]) -> None:
-        import json
-        results = {
-            "target": target,
-            "players": [
-                {
-                    "id": p.id,
-                    "guess": p.guess,
-                    "score": round(p.score, 2),
-                    "payout": round(p.payout, 2)
-                }
-                for p in players.values()
-            ]
-        }
-        print(json.dumps(results, indent=2))
-
 # Factory for creating preconfigured game instances
 class GuessingGameFactory:
     @staticmethod
@@ -203,3 +277,4 @@ if __name__ == "__main__":
     custom_game.player_registry.add_player("Alice", 48)
     custom_game.player_registry.add_player("Bob", 52)
     custom_game.run_game()
+
