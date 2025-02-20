@@ -14,7 +14,7 @@ pip install torch transformers Pillow numpy
 
 #### Generate Image Embeddings
 ```bash
-echo '{"image": "'$(cat image.png | base64)'"}' | python clip_embedder.py --mode image
+echo '{"image": "'$(cat image.jpg | base64)'"}' | python clip_embedder.py --mode image
 ```
 
 #### Generate Text Embeddings

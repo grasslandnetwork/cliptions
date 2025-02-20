@@ -145,7 +145,7 @@ if __name__ == "__main__":
     Usage examples:
     
     1. For images:
-    echo '{"image": "'$(cat image.png | base64)'"}' | python clip_embedder.py --mode image
+    echo '{"image": "'$(cat image.jpg | base64)'"}' | python clip_embedder.py --mode image
     
     2. For text:
     echo '{"text": "a photo of a dog"}' | python clip_embedder.py --mode text
