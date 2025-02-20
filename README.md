@@ -10,6 +10,32 @@ The CLIP embedder generates embeddings for images and text using OpenAI's CLIP m
 pip install torch transformers Pillow numpy
 ```
 
+### First Run Behavior
+On first run, the script will download the CLIP model (approximately 605MB). This will:
+- Take about 15-20 seconds
+- Show download progress bars
+- Cache the model locally for future use
+
+Subsequent runs will use the cached model and be much faster (1-2 seconds).
+
+### Windows Setup Notes
+When running on Windows, you might see a warning about symlinks in the Hugging Face cache system. You have two options:
+
+1. **Enable Developer Mode (Recommended)**
+   - Open Windows Settings
+   - Navigate to Privacy & Security > For Developers
+   - Enable "Developer Mode"
+
+2. **Run as Administrator**
+   - Run Python/command prompt as administrator
+
+Alternatively, you can suppress the warning by setting an environment variable:
+```bash
+set HF_HUB_DISABLE_SYMLINKS_WARNING=1
+```
+
+The model will still work without these changes, but caching might be less efficient.
+
 ### Usage
 
 #### Generate Image Embeddings
