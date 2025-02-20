@@ -49,10 +49,28 @@ python -m unittest test_clip_embedder.py
 ```
 
 The test suite verifies:
-- Image embedding generation (from file, PIL Image, and bytes)
-- Text embedding generation (single and batch)
-- Embedding properties (512 dimensions, normalized vectors)
+
+#### Core Functionality
+- Image embedding generation
+  - From file path
+  - From PIL Image object
+  - From bytes
+- Text embedding generation
+  - Single text input
+  - Batch text input
+- Embedding properties
+  - 512 dimensions
+  - Normalized vectors
 - Similarity computation between images and text
+
+#### CLI Interface
+- Image input processing via stdin
+- Text input processing via stdin
+- JSON output format
+- Error handling
+  - Invalid JSON input
+  - Missing required fields
+  - Invalid mode arguments
 
 ## Contributing
 

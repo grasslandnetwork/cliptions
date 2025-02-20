@@ -6,6 +6,8 @@ import base64
 import json
 import io
 import os
+from unittest.mock import patch
+import sys
 
 class TestClipEmbedder(unittest.TestCase):
     @classmethod
@@ -83,29 +85,97 @@ class TestClipEmbedder(unittest.TestCase):
         
         # Create input JSON
         input_data = {'image': image_base64}
+        input_str = json.dumps(input_data)
         
-        # Convert to bytes for stdin simulation
-        input_bytes = json.dumps(input_data).encode()
-        
-        # Create file-like object for stdin
-        stdin = io.BytesIO(input_bytes)
-        
-        # TODO: Test main() function with stdin input
-        # This would require mocking sys.stdin and sys.stdout
+        # Mock stdin and stdout
+        with patch('sys.stdin', io.StringIO(input_str)), \
+             patch('sys.stdout', new_callable=io.StringIO) as mock_stdout, \
+             patch('sys.argv', ['clip_embedder.py', '--mode', 'image']):
+            
+            from clip_embedder import main
+            main()
+            
+            # Parse output
+            output = json.loads(mock_stdout.getvalue())
+            
+            # Verify output structure
+            self.assertIn('embedding', output)
+            self.assertIn('shape', output)
+            
+            # Verify embedding properties
+            embedding = np.array(output['embedding'])
+            self.assertEqual(output['shape'], [512])
+            self.assertEqual(embedding.shape, (512,))
+            self.assertAlmostEqual(np.linalg.norm(embedding), 1.0, places=6)
 
     def test_cli_text_input(self):
         """Test CLI text input processing."""
         # Create input JSON
         input_data = {'text': 'a photo of a dog'}
+        input_str = json.dumps(input_data)
         
-        # Convert to bytes for stdin simulation
-        input_bytes = json.dumps(input_data).encode()
+        # Mock stdin and stdout
+        with patch('sys.stdin', io.StringIO(input_str)), \
+             patch('sys.stdout', new_callable=io.StringIO) as mock_stdout, \
+             patch('sys.argv', ['clip_embedder.py', '--mode', 'text']):
+            
+            from clip_embedder import main
+            main()
+            
+            # Parse output
+            output = json.loads(mock_stdout.getvalue())
+            
+            # Verify output structure
+            self.assertIn('embedding', output)
+            self.assertIn('shape', output)
+            
+            # Verify embedding properties
+            embedding = np.array(output['embedding'])
+            self.assertEqual(output['shape'], [512])
+            self.assertEqual(embedding.shape, (512,))
+            self.assertAlmostEqual(np.linalg.norm(embedding), 1.0, places=6)
+
+    def test_cli_invalid_json(self):
+        """Test CLI handling of invalid JSON input."""
+        invalid_input = "not valid json"
         
-        # Create file-like object for stdin
-        stdin = io.BytesIO(input_bytes)
+        with patch('sys.stdin', io.StringIO(invalid_input)), \
+             patch('sys.stderr', new_callable=io.StringIO) as mock_stderr, \
+             patch('sys.argv', ['clip_embedder.py', '--mode', 'text']):
+            
+            from clip_embedder import main
+            with self.assertRaises(SystemExit):
+                main()
+            
+            self.assertIn("Invalid JSON input", mock_stderr.getvalue())
+
+    def test_cli_missing_field(self):
+        """Test CLI handling of missing required field."""
+        input_data = {'wrong_field': 'some value'}
+        input_str = json.dumps(input_data)
         
-        # TODO: Test main() function with stdin input
-        # This would require mocking sys.stdin and sys.stdout
+        with patch('sys.stdin', io.StringIO(input_str)), \
+             patch('sys.stderr', new_callable=io.StringIO) as mock_stderr, \
+             patch('sys.argv', ['clip_embedder.py', '--mode', 'text']):
+            
+            from clip_embedder import main
+            with self.assertRaises(SystemExit):
+                main()
+            
+            self.assertIn("Missing required field", mock_stderr.getvalue())
+
+    def test_cli_invalid_mode(self):
+        """Test CLI handling of invalid mode argument."""
+        input_data = {'text': 'some text'}
+        input_str = json.dumps(input_data)
+        
+        with patch('sys.stdin', io.StringIO(input_str)), \
+             patch('sys.stderr', new_callable=io.StringIO) as mock_stderr, \
+             patch('sys.argv', ['clip_embedder.py', '--mode', 'invalid_mode']):
+            
+            from clip_embedder import main
+            with self.assertRaises(SystemExit):
+                main()
 
 if __name__ == '__main__':
     unittest.main() 
