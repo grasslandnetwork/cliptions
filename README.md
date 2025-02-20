@@ -38,6 +38,22 @@ Errors are written to stderr with descriptive messages for:
 - Image processing errors
 - Model inference errors
 
+### Testing
+To run the tests, you'll need:
+1. The test image file (`example.jpg`) in your project directory
+2. All dependencies installed
+
+Run the tests with:
+```bash
+python -m unittest test_clip_embedder.py
+```
+
+The test suite verifies:
+- Image embedding generation (from file, PIL Image, and bytes)
+- Text embedding generation (single and batch)
+- Embedding properties (512 dimensions, normalized vectors)
+- Similarity computation between images and text
+
 ## Contributing
 
 ### Git Workflow
