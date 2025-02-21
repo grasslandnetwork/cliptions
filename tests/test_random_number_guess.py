@@ -6,6 +6,11 @@ from random_number_guess import (
     PrizeDistributor, ConsoleGameOutput
 )
 import time
+import os
+import sys
+
+# Add parent directory to path to import from root
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 class TestGuessingGame(unittest.TestCase):
     def setUp(self):
