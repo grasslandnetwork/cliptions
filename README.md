@@ -87,6 +87,9 @@ The test suite verifies:
 - Embedding properties
   - 512 dimensions
   - Normalized vectors
+- Deterministic output
+  - Verify embedding reproducibility using SHA-256 hash
+  - Ensure consistent results across different machines
 - Similarity computation between images and text
 
 #### CLI Interface

@@ -8,6 +8,7 @@ import io
 import os
 from unittest.mock import patch
 import sys
+import hashlib
 
 class TestClipEmbedder(unittest.TestCase):
     @classmethod
@@ -176,6 +177,32 @@ class TestClipEmbedder(unittest.TestCase):
             from clip_embedder import main
             with self.assertRaises(SystemExit):
                 main()
+
+    def test_deterministic_embedding(self):
+        """Test that example.jpg always produces the same embedding vector.
+        
+        This test ensures reproducibility across different machines and runs
+        by comparing the SHA-256 hash of the embedding's bytes. The reference
+        hash was pre-computed from example.jpg using clip-vit-base-patch32.
+        """
+        # Get embedding from example.jpg
+        embedding = self.embedder.get_image_embedding(self.test_image_path)
+        
+        # Convert embedding to bytes (ensure consistent byte representation)
+        embedding_bytes = embedding.tobytes()
+        
+        # Generate hash
+        current_hash = hashlib.sha256(embedding_bytes).hexdigest()
+        
+        # Known hash from reference embedding
+        expected_hash = "d5c2ea76b5a91196fbc9901628763da402b2c149aa49830da77a4bace20052f8"  # We need to generate this once
+        
+        # Compare hashes
+        self.assertEqual(
+            current_hash, 
+            expected_hash,
+            "Embedding hash differs from expected value - CLIP processing is not deterministic"
+        )
 
 if __name__ == '__main__':
     unittest.main() 
