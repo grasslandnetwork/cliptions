@@ -15,7 +15,7 @@ class TestClipEmbedder(unittest.TestCase):
     def setUpClass(cls):
         """Initialize the CLIP embedder once for all tests."""
         cls.embedder = ClipEmbedder()
-        cls.test_image_path = "example.jpg"
+        cls.test_image_path = os.path.join("tests", "fixtures", "example.jpg")
         
         # Ensure test image exists
         if not os.path.exists(cls.test_image_path):

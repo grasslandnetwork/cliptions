@@ -66,12 +66,11 @@ Errors are written to stderr with descriptive messages for:
 
 ### Testing
 To run the tests, you'll need:
-1. The test image file (`example.jpg`) in your project directory
-2. All dependencies installed
+1. All dependencies installed
+2. Run from the project root directory:
 
-Run the tests with:
 ```bash
-python -m unittest test_clip_embedder.py
+python -m unittest discover tests
 ```
 
 The test suite verifies:
