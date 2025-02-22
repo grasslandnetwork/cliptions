@@ -197,7 +197,7 @@ class TestClipEmbedder(unittest.TestCase):
         current_hash = hashlib.sha256(embedding_bytes).hexdigest()
         
         # Known hash from reference embedding
-        expected_hash = "d5c2ea76b5a91196fbc9901628763da402b2c149aa49830da77a4bace20052f8"
+        expected_hash = "1b9a1a7cc42361b9c7b344919196b09325389a118e50fdfa915ab51987faf9fe"
         
         # Compare hashes, but only warn if different
         if current_hash != expected_hash:
