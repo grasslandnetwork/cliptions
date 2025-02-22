@@ -52,17 +52,18 @@ echo '{"text": "a photo of a dog"}' | python clip_embedder.py --mode text
 The script outputs JSON to stdout with the following structure:
 ```json
 {
-    "embedding": [0.1, 0.2, ...],  // embedding vector
+    "embedding": [0.1, 0.2, ...],  // 512-dimensional embedding vector
     "shape": [512]                 // shape of the embedding
 }
 ```
 
-### Error Handling
-Errors are written to stderr with descriptive messages for:
-- Invalid JSON input
-- Missing required fields
-- Image processing errors
-- Model inference errors
+### Cross-Platform Behavior
+Important note about CLIP embeddings:
+- Different platforms or hardware may produce slightly different embedding vectors for the same input
+- This is normal and expected behavior
+- While the exact numbers might differ, the semantic relationships between embeddings remain consistent
+- Similarity scores between related concepts will maintain their relative ordering
+- For example, if a cat image is more similar to "cat" than "dog" on one machine, this relationship will hold on other machines
 
 ### Testing
 To run the tests, you'll need:
@@ -86,10 +87,10 @@ The test suite verifies:
 - Embedding properties
   - 512 dimensions
   - Normalized vectors
-- Deterministic output
-  - Verify embedding reproducibility using SHA-256 hash
-  - Ensure consistent results across different machines
-- Similarity computation between images and text
+- Cross-platform consistency
+  - Soft verification of embedding reproducibility
+  - Semantic similarity score validation
+  - Tolerance ranges for expected scores
 
 #### CLI Interface
 - Image input processing via stdin
@@ -99,6 +100,13 @@ The test suite verifies:
   - Invalid JSON input
   - Missing required fields
   - Invalid mode arguments
+
+### Error Handling
+Errors are written to stderr with descriptive messages for:
+- Invalid JSON input
+- Missing required fields
+- Image processing errors
+- Model inference errors
 
 ## Contributing
 
