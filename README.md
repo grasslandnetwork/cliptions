@@ -7,15 +7,15 @@ Predict how an AI Agent will caption upcoming frames from live video streams. Pl
 - [Key Rules](#key-rules)
 - [Key Features](#key-features)
 - [Example Round](#example-round)
+- [Commitment Hash Generation](#commitment-hash-generation)
+  - [Installation](#installation)
+  - [Usage](#usage)
+  - [Common Errors](#common-errors)
 - [Score and Payout Calculation](#score-and-payout-calculation)
   - [Ranking Process](#ranking-process)
   - [Payout Distribution](#payout-distribution)
   - [Basic Scoring](#basic-scoring-no-ties)
   - [Handling Ties](#handling-ties)
-- [Commitment Hash Generation](#commitment-hash-generation)
-  - [Installation](#installation)
-  - [Usage](#usage)
-  - [Common Errors](#common-errors)
 - [CLIP Embedder](#clip-embedder)
 - [Contributing](#contributing)
 
@@ -50,6 +50,35 @@ Predict how an AI Agent will caption upcoming frames from live video streams. Pl
 3. After target frame is revealed and players share their predictions, CLIP calculates similarity scores
 4. Players are ranked by score
 5. Prize pool is distributed according to rankings
+
+## Commitment Hash Generation
+Players must generate a **hash commitment** for their prediction.
+
+### Installation
+```bash
+pip install -r requirements.txt
+```
+
+### Usage
+Run the script using the following format:
+```bash
+python3 generate_commitment.py "Your predicted caption here" --salt "your-salt-value-here"
+```
+
+**Example:**  
+```bash
+python3 generate_commitment.py "Cat sanctuary with woman wearing snoopy sweater" --salt "random_secret_123"
+```
+
+This will output:
+```
+Commitment: f7b7889b520e01e8a2e915e8e9124bc299c6f584c0e0dd255a7e38fe8ec35747
+```
+
+### Common Errors
+- **Missing Quotes:** Always use **quotes** around both the **caption** and **salt**.
+- **Argument Order:** The **caption** must come **first**, followed by the `--salt` argument.
+- **PowerShell Users:** Ensure you use **double quotes** to avoid argument parsing issues.
 
 ## Score and Payout Calculation
 The system calculates payouts based on similarity rankings between guesses and the target image.
@@ -97,35 +126,6 @@ Groups:
 [Player3]           - Gets points for 3rd
 [Player4, Player5]   - Split points for 4th/5th
 ```
-
-## Commitment Hash Generation
-Players must generate a **hash commitment** for their prediction.
-
-### Installation
-```bash
-pip install -r requirements.txt
-```
-
-### Usage
-Run the script using the following format:
-```bash
-python3 generate_commitment.py "Your predicted caption here" --salt "your-salt-value-here"
-```
-
-**Example:**  
-```bash
-python3 generate_commitment.py "Cat sanctuary with woman wearing snoopy sweater" --salt "random_secret_123"
-```
-
-This will output:
-```
-Commitment: f7b7889b520e01e8a2e915e8e9124bc299c6f584c0e0dd255a7e38fe8ec35747
-```
-
-### Common Errors
-- **Missing Quotes:** Always use **quotes** around both the **caption** and **salt**.
-- **Argument Order:** The **caption** must come **first**, followed by the `--salt` argument.
-- **PowerShell Users:** Ensure you use **double quotes** to avoid argument parsing issues.
 
 ## CLIP Embedder
 The CLIP embedder generates embeddings for images and text using OpenAI's CLIP model. It can be used from the command line and accepts input via stdin.
