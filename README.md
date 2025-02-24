@@ -8,7 +8,6 @@ Predict how an AI Agent will caption upcoming frames from live video streams. Pl
 - [Key Features](#key-features)
 - [Example Round](#example-round)
 - [Commitment Hash Generation](#commitment-hash-generation)
-  - [Installation](#installation)
   - [Usage](#usage)
   - [Common Errors](#common-errors)
 - [Score and Payout Calculation](#score-and-payout-calculation)
@@ -52,12 +51,7 @@ Predict how an AI Agent will caption upcoming frames from live video streams. Pl
 5. Prize pool is distributed according to rankings
 
 ## Commitment Hash Generation
-Players must generate a **hash commitment** for their prediction.
-
-### Installation
-```bash
-pip install -r requirements.txt
-```
+Players must generate a hash commitment for their prediction.
 
 ### Usage
 Run the script using the following format:
@@ -132,7 +126,7 @@ The CLIP embedder generates embeddings for images and text using OpenAI's CLIP m
 
 ### Installation
 ```bash
-pip install torch transformers Pillow numpy
+pip install -r requirements.txt
 ```
 
 ### Usage
