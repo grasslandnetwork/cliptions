@@ -30,7 +30,7 @@ Predict how an AI Agent will caption upcoming frames from live video streams. Pl
 
 ### Key Rules
 - **Submission Deadline:** All predictions must be submitted **before** the target timestamp. Late submissions are disqualified.
-- **Commitment Format:** Predictions must be submitted as **plain hash commitments** along with the player's wallet address.
+- **Commitment Format:** Predictions must be submitted as **hash commitments** along with the player's wallet address.
 - **Reveal Phase:** After the target frame is posted, players must publicly reveal their plaintext guess and salt.
 - **No Edited Tweets:** Edited commitment tweets are **disqualified** and **no refunds** are issued for fees paid.
 
@@ -99,7 +99,7 @@ Groups:
 ```
 
 ## Commitment Hash Generation
-Players must generate a **plain hash commitment** for their prediction.
+Players must generate a **hash commitment** for their prediction.
 
 ### Installation
 ```bash
