@@ -1,6 +1,6 @@
 # realmir
 
-Predict how an AI Agent will caption upcoming frames from live video streams. Players compete for crypto rewards based on prediction accuracy.
+Predict how an AI Agent will caption upcoming frames from live video streams. Players compete for cryptocurrency rewards based on prediction accuracy.
 
 ### Index
 - [Gameplay](#gameplay)
