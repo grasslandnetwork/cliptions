@@ -32,22 +32,16 @@ def calculate_payouts(ranked_results, prize_pool=1.0):
     
     The payout calculation uses a position-based scoring system where:
     - Scores are based only on position (1st, 2nd, etc), not similarity values
+    - Equal similarity scores get equal payouts (ties split the combined payout)
     - Scores sum to 1.0 to distribute full prize pool
     - Higher positions get proportionally higher scores
     
-    For n players, the denominator is sum(1..n) = n(n+1)/2
-    Each position's score is: (n-position)/denominator
+    For n players without ties:
+    - Denominator = sum(1..n)
+    - Each position's score = (n-position)/denominator
     
-    Example for 2 players:
-    - Denominator = sum(1,2) = 3
-    - 1st place score = 2/3 ≈ 0.67 -> gets 67% of pool
-    - 2nd place score = 1/3 ≈ 0.33 -> gets 33% of pool
-    
-    Example for 3 players:
-    - Denominator = sum(1,2,3) = 6
-    - 1st place score = 3/6 = 0.50 -> gets 50% of pool
-    - 2nd place score = 2/6 ≈ 0.33 -> gets 33% of pool
-    - 3rd place score = 1/6 ≈ 0.17 -> gets 17% of pool
+    For players with ties:
+    - Players with equal similarity scores split their combined payout
     
     Args:
         ranked_results: List of (guess, similarity) tuples sorted by similarity
@@ -57,21 +51,43 @@ def calculate_payouts(ranked_results, prize_pool=1.0):
         List of payouts corresponding to ranked_results
     """
     total_guesses = len(ranked_results)
-    
-    # Calculate denominator: sum(1..n) where n is total_guesses
     denominator = sum(range(1, total_guesses + 1))
     
-    # Calculate normalized scores (sum to 1.0)
-    scores = []
-    for i in range(total_guesses):
-        # For each position i (0-based):
-        # - (total_guesses - i) is the "points" for this position
-        # - Dividing by denominator normalizes scores to sum to 1.0
-        score = (total_guesses - i) / denominator
-        scores.append(score)
+    # Group positions by similarity score
+    groups = []
+    current_group = []
+    current_similarity = None
     
-    # Calculate payouts by multiplying each score by prize pool
-    return [score * prize_pool for score in scores]
+    for guess, similarity in ranked_results:
+        if similarity != current_similarity:
+            if current_group:
+                groups.append(current_group)
+            current_group = [(guess, similarity)]
+            current_similarity = similarity
+        else:
+            current_group.append((guess, similarity))
+    
+    if current_group:
+        groups.append(current_group)
+    
+    # Calculate payouts
+    payouts = []
+    position = 0
+    
+    for group in groups:
+        # Calculate total points for this group's positions
+        group_size = len(group)
+        group_points = sum(total_guesses - (position + i) for i in range(group_size))
+        
+        # Split points equally among tied positions
+        points_per_position = group_points / group_size
+        score = points_per_position / denominator
+        
+        # Add same payout for each tied position
+        payouts.extend([score * prize_pool] * group_size)
+        position += group_size
+    
+    return payouts
 
 def display_results(ranked_results, payouts, prize_pool):
     """Display rankings and payouts in a formatted way."""
