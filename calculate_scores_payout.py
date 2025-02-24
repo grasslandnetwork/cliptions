@@ -27,7 +27,7 @@ def calculate_rankings(target_image_path, guesses):
     # Sort by similarity score (highest to lowest)
     return sorted(similarities, key=lambda x: x[1], reverse=True)
 
-def calculate_payouts(ranked_results, prize_pool=1.0):
+def calculate_payouts(ranked_results, prize_pool):
     """Calculate payouts based on rankings.
     
     The payout calculation uses a position-based scoring system where:
@@ -45,7 +45,7 @@ def calculate_payouts(ranked_results, prize_pool=1.0):
     
     Args:
         ranked_results: List of (guess, similarity) tuples sorted by similarity
-        prize_pool: Total amount to distribute (default: 1.0)
+        prize_pool: Total amount to distribute
     
     Returns:
         List of payouts corresponding to ranked_results
