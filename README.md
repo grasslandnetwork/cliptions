@@ -1,16 +1,16 @@
 # realmir
 
-A decentralized prediction game where players compete to guess how AI will caption a specific future frame in a live video stream.
+A decentralized prediction game where players compete to guess how an AI Agent will caption a specific future frame in a live video stream.
 
 ### Gameplay
 1. A target timestamp in the video stream is announced (e.g. "1:30:57 PM EST")
-2. Players predict what AI (using CLIP) will say this exact frame shows
+2. Players predict what an AI Agent (using CLIP) will say this exact frame shows
 3. When that moment arrives and the frame is revealed, each prediction is compared using CLIP
 4. Players are ranked by how well their predictions matched CLIP's understanding
 5. The prize pool is distributed based on rankings, with better predictions earning larger shares
 
 ### Key Features
-- **Timestamp Predictions**: Guess how AI will interpret a specific future video frame
+- **Timestamp Predictions**: Guess how an AI Agent will interpret a specific future video frame
 - **AI-Powered**: Uses OpenAI's CLIP model for objective scoring
 - **Web3 Integration**: Decentralized gameplay and prize distribution
 - **Crypto Rewards**: Prize pools paid out based on prediction accuracy
