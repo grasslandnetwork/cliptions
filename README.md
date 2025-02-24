@@ -1,5 +1,89 @@
 # realmir
 
+A decentralized prediction game where players compete to guess how AI will caption a specific future frame in a live video stream.
+
+### Gameplay
+1. A target timestamp in the video stream is announced (e.g. "1:30:57 PM EST")
+2. Players predict what AI (using CLIP) will say this exact frame shows
+3. When that moment arrives and the frame is revealed, each prediction is compared using CLIP
+4. Players are ranked by how well their predictions matched CLIP's understanding
+5. The prize pool is distributed based on rankings, with better predictions earning larger shares
+
+### Key Features
+- **Timestamp Predictions**: Guess how AI will interpret a specific future video frame
+- **AI-Powered**: Uses OpenAI's CLIP model for objective scoring
+- **Web3 Integration**: Decentralized gameplay and prize distribution
+- **Crypto Rewards**: Prize pools paid out based on prediction accuracy
+- **Transparent**: All calculations and rankings are verifiable
+
+### Example Round
+1. Target: Frame at 1:30:57 PM EST from live stream of a cat sanctuary
+2. Players submit predictions like:
+   - "Cat shelter with caretakers"
+   - "People caring for cats indoors"
+   - "Pet store with animals"
+3. When target timestamp arrives, CLIP calculates similarity scores
+4. Players are ranked by score
+5. Prize pool is distributed according to rankings
+
+## Score and Payout Calculation
+
+The system calculates payouts based on similarity rankings between guesses and the target image.
+
+### Ranking Process
+1. Calculate CLIP embeddings for target image and each guess
+2. Calculate cosine similarity between target and each guess
+3. Rank guesses by similarity (highest to lowest)
+
+### Payout Distribution
+The payout system uses a position-based scoring method that:
+- Distributes the entire prize pool
+- Rewards higher ranks with larger shares
+- Handles ties fairly
+
+#### Basic Scoring (No Ties)
+For n players, each position's score is calculated as:
+```
+position_score = (n - position) / sum(1..n)
+```
+
+Example for 3 players:
+- Denominator = 1 + 2 + 3 = 6
+- 1st place: 3/6 = 0.50 (50% of pool)
+- 2nd place: 2/6 ≈ 0.33 (33% of pool)
+- 3rd place: 1/6 ≈ 0.17 (17% of pool)
+
+#### Handling Ties
+When multiple guesses have equal similarity scores:
+1. Group tied positions together
+2. Calculate combined points for tied positions
+3. Split points equally among tied guesses
+
+Example with 5 players and ties:
+```
+Similarities:
+Player1: 0.9 (tied for 1st/2nd)
+Player2: 0.9 (tied for 1st/2nd)
+Player3: 0.7
+Player4: 0.5 (tied for 4th/5th)
+Player5: 0.5 (tied for 4th/5th)
+
+Groups:
+[Player1, Player2]   - Split points for 1st/2nd
+[Player3]           - Gets points for 3rd
+[Player4, Player5]   - Split points for 4th/5th
+```
+
+### Usage
+```bash
+python3 calculate_scores_payout.py <target_image_path> <guess1> <guess2> [guess3 ...]
+```
+
+Output shows:
+- Similarity scores for each guess
+- Payout amounts (normalized to prize pool)
+- Total payout verification
+
 ## CLIP Embedder
 
 The CLIP embedder generates embeddings for images and text using OpenAI's CLIP model. It can be used from the command line and accepts input via stdin.
