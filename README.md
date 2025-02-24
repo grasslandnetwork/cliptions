@@ -1,6 +1,6 @@
 # realmir
 
-A decentralized prediction game where players compete to guess how an AI Agent will caption a specific future frame in a live video stream.
+Predict how an AI Agent will caption upcoming frames from live video streams. Players compete for crypto rewards based on prediction accuracy.
 
 ### Index
 - [Gameplay](#gameplay)
