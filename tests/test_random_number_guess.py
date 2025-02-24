@@ -195,6 +195,75 @@ class TestGuessingGame(unittest.TestCase):
             "Payout ordering is incorrect"
         )
 
+    def test_score_based_on_ordering(self):
+        """Test that scores are based on ordering of guesses, not absolute distances.
+        
+        The scoring system should:
+        1. Rank players by how close they are to target
+        2. Assign scores based on rank order, not actual distances
+        3. Give equal scores to equidistant guesses
+        """
+        # Force target number for testing
+        self.game.target_number = 50
+        
+        # Add players with various distances from target
+        test_cases = [
+            ("Player1", 48),  # 2 away - should tie for 1st/2nd
+            ("Player2", 52),  # 2 away - should tie for 1st/2nd
+            ("Player3", 40),  # 10 away - should be 3rd
+            ("Player4", 70),  # 20 away - should be 4th
+            ("Player5", 10),  # 40 away - should be 5th
+        ]
+        
+        for player_id, guess in test_cases:
+            self.game.player_registry.add_player(player_id, guess)
+
+        # Calculate scores
+        self.game._calculate_scores()
+        
+        # Get scores in original order
+        scores = [self.game.player_registry.players[player_id].score 
+                 for player_id, _ in test_cases]
+        
+        # Verify Player1 and Player2 have equal scores (equidistant)
+        self.assertEqual(
+            scores[0], scores[1],
+            "Players equidistant from target should have equal scores"
+        )
+        
+        # Verify scores are in decreasing order (except first two are equal)
+        self.assertEqual(
+            scores[0], scores[1],  # First two equal
+            "Equidistant players should have equal scores"
+        )
+        self.assertGreater(
+            scores[0], scores[2],  # First better than third
+            "Closer players should have higher scores"
+        )
+        self.assertGreater(
+            scores[2], scores[3],  # Third better than fourth
+            "Closer players should have higher scores"
+        )
+        self.assertGreater(
+            scores[3], scores[4],  # Fourth better than fifth
+            "Closer players should have higher scores"
+        )
+        
+        # Verify the sum of scores is approximately 1.0
+        self.assertAlmostEqual(
+            sum(scores), 
+            1.0, 
+            places=2,
+            msg="Scores should sum to approximately 1.0"
+        )
+        
+        # Verify all scores are positive
+        for score in scores:
+            self.assertGreater(
+                score, 
+                0.0,
+                "All scores should be positive"
+            )
 
 # Add LSP-specific tests
 class ScoringStrategyTests(unittest.TestCase):
