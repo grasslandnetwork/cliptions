@@ -2,6 +2,17 @@
 
 A decentralized prediction game where players compete to guess how an AI Agent will caption a specific future frame in a live video stream.
 
+### Index
+- [Gameplay](#gameplay)
+- [Key Features](#key-features)
+- [Example Round](#example-round)
+- [Score and Payout Calculation](#score-and-payout-calculation)
+  - [Ranking Process](#ranking-process)
+  - [Payout Distribution](#payout-distribution)
+  - [Basic Scoring](#basic-scoring-no-ties)
+  - [Handling Ties](#handling-ties)
+- [CLIP Embedder](#clip-embedder)
+
 ### Gameplay
 1. A target timestamp in the video stream is announced (e.g. "20240223 13:30:57 EST")
 2. Players predict what an AI Agent (using CLIP) will say this exact frame shows
