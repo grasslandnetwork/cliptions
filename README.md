@@ -12,6 +12,15 @@ A decentralized prediction game where players compete to guess how an AI Agent w
   - [Basic Scoring](#basic-scoring-no-ties)
   - [Handling Ties](#handling-ties)
 - [CLIP Embedder](#clip-embedder)
+  - [Installation](#installation)
+  - [Usage](#usage)
+  - [API](#api)
+  - [Examples](#examples)
+- [Contributing](#contributing)
+  - [Development Setup](#development-setup)
+  - [Running Tests](#running-tests)
+  - [Code Style](#code-style)
+  - [Pull Request Process](#pull-request-process)
 
 ### Gameplay
 1. A target timestamp in the video stream is announced (e.g. "20240223 13:30:57 EST")
@@ -220,3 +229,28 @@ Hotfix branch prefix: hotfix/
 Support branch prefix: support/ 
 Version tag prefix:
 ```
+
+### Development Setup
+To set up the development environment, follow these steps:
+1. Clone the repository
+2. Create a new branch for your feature or bugfix
+3. Install dependencies
+4. Set up pre-commit hooks
+
+### Running Tests
+To run the tests, use the following command:
+```bash
+python -m unittest discover tests
+```
+
+### Code Style
+We use [Black](https://black.readthedocs.io/en/stable/) for code formatting and [isort](https://pycqa.github.io/isort/) for import sorting.
+
+### Pull Request Process
+1. Create a new branch for your feature or bugfix
+2. Make your changes
+3. Run tests to ensure everything works
+4. Commit your changes
+5. Push your branch to GitHub
+6. Create a pull request
+7. Wait for review and merge
