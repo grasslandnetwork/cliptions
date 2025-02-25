@@ -103,18 +103,18 @@ def display_results(ranked_results, payouts, prize_pool):
     print(f"Total payout: ${sum(payouts):.2f}")
 
 if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print("Usage: python3 calculate_guess_ranking.py <target_image_path> <guess1> <guess2> [guess3 ...]")
+    if len(sys.argv) < 4:
+        print("Usage: python3 calculate_guess_ranking.py <target_image_path> <prize_pool> <guess1> <guess2> [guess3 ...]")
         sys.exit(1)
         
     target_path = sys.argv[1]
-    guesses = sys.argv[2:]
+    prize_pool = float(sys.argv[2])
+    guesses = sys.argv[3:]
     
     # Calculate rankings
     ranked_results = calculate_rankings(target_path, guesses)
     
     # Calculate payouts
-    prize_pool = 1.0
     payouts = calculate_payouts(ranked_results, prize_pool)
     
     # Display results
