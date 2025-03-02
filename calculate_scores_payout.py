@@ -96,15 +96,16 @@ def display_results(ranked_results, payouts, prize_pool):
     for i, ((guess, similarity), payout) in enumerate(zip(ranked_results, payouts), 1):
         print(f"{i}. \"{guess}\"")
         print(f"   Similarity score: {similarity:.4f}")
-        print(f"   Payout: ${payout:.2f}")
+        print(f"   Payout: {payout:.9f}")
         print()
     
-    print(f"Total prize pool: ${prize_pool:.2f}")
-    print(f"Total payout: ${sum(payouts):.2f}")
+    print(f"Total prize pool: {prize_pool:.9f}")
+    print(f"Total payout: {sum(payouts):.9f}")
 
 if __name__ == "__main__":
     if len(sys.argv) < 4:
         print("Usage: python3 calculate_guess_ranking.py <target_image_path> <prize_pool> <guess1> <guess2> [guess3 ...]")
+        print("Note: prize_pool can be a small decimal value (up to 9 decimal places)")
         sys.exit(1)
         
     target_path = sys.argv[1]
