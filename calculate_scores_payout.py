@@ -96,26 +96,46 @@ def display_results(ranked_results, payouts, prize_pool):
     for i, ((guess, similarity), payout) in enumerate(zip(ranked_results, payouts), 1):
         print(f"{i}. \"{guess}\"")
         print(f"   Similarity score: {similarity:.4f}")
-        print(f"   Payout: ${payout:.2f}")
+        print(f"   Payout: {payout:.9f}")
         print()
     
-    print(f"Total prize pool: ${prize_pool:.2f}")
-    print(f"Total payout: ${sum(payouts):.2f}")
+    print(f"Total prize pool: {prize_pool:.9f}")
+    print(f"Total payout: {sum(payouts):.9f}")
 
 if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print("Usage: python3 calculate_guess_ranking.py <target_image_path> <guess1> <guess2> [guess3 ...]")
+    if len(sys.argv) < 4:
+        print("Usage: python3 calculate_guess_ranking.py <target_image_path> <prize_pool> <guess1> <guess2> [guess3 ...]")
+        print("Note: prize_pool can be a small decimal value (up to 9 decimal places)")
         sys.exit(1)
         
     target_path = sys.argv[1]
-    guesses = sys.argv[2:]
+    prize_pool = float(sys.argv[2])
     
-    # Calculate rankings
-    ranked_results = calculate_rankings(target_path, guesses)
+    # Validate inputs
+    if prize_pool <= 0:
+        print("Error: Prize pool must be greater than zero")
+        sys.exit(1)
+        
+    if len(sys.argv) < 4:
+        print("Usage: python3 calculate_guess_ranking.py <target_image_path> <prize_pool> <guess1> <guess2> [guess3 ...]")
+        print("Note: prize_pool can be a small decimal value (up to 9 decimal places)")
+        sys.exit(1)
     
-    # Calculate payouts
-    prize_pool = 1.0
-    payouts = calculate_payouts(ranked_results, prize_pool)
+    guesses = sys.argv[3:]
     
-    # Display results
-    display_results(ranked_results, payouts, prize_pool) 
+    if len(guesses) == 0:
+        print("Error: At least one guess must be provided")
+        sys.exit(1)
+    
+    try:
+        # Calculate rankings
+        ranked_results = calculate_rankings(target_path, guesses)
+        
+        # Calculate payouts
+        payouts = calculate_payouts(ranked_results, prize_pool)
+        
+        # Display results
+        display_results(ranked_results, payouts, prize_pool)
+    except Exception as e:
+        print(f"Error processing results: {e}")
+        sys.exit(1) 
