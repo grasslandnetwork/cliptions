@@ -17,6 +17,10 @@ Predict how an AI Agent will caption upcoming frames from live video streams. Pl
   - [Handling Ties](#handling-ties)
 - [CLIP Embedder](#clip-embedder)
 - [Contributing](#contributing)
+  - [Support the Network](#support-the-network)
+  - [Development Setup](#development-setup)
+  - [Running Tests](#running-tests)
+  - [Pull Request Process](#pull-request-process)
 
 ### Gameplay
 1. The Agent announces a new round on Twitter with a target frame
@@ -151,8 +155,7 @@ echo '{"text": "a photo of a dog"}' | python clip_embedder.py --mode text
 
 ## Contributing
 
-### Support Network 
-#### Browser Use
+### Support the Network 
 Browser-use enables automated browser interaction for retrieving Twitter data. For detailed instructions and advanced configuration options, please refer to the official documentation at [docs.browser-use.com](https://docs.browser-use.com/introduction).
 
 ##### Setup
