@@ -10,12 +10,12 @@ import os
 browser = Browser(
     config=BrowserConfig(
         # Specify the path to your Chrome executable
-        chrome_instance_path='/opt/google/chrome/google-chrome',  # macOS path
+        chrome_instance_path='/opt/google/chrome/google-chrome', 
+        # for macOS: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', 
         # For Windows, typically: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
         # For Linux, typically: '/usr/bin/google-chrome'
     )
 )
-
 
 # Define sensitive data
 # The model will only see the keys (x_name, x_password) but never the actual values
