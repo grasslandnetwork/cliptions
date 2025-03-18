@@ -151,6 +151,62 @@ echo '{"text": "a photo of a dog"}' | python clip_embedder.py --mode text
 
 ## Contributing
 
+### Support Network 
+#### Browser Use
+Browser-use enables automated browser interaction for retrieving Twitter data. 
+
+##### Setup
+1. **Python Environment Setup**
+   ```bash
+   # Create virtual environment with Python 3.11
+   uv venv --python 3.11
+   
+   # Activate virtual environment:
+   # For Windows (Command Prompt):
+   .venv\Scripts\activate
+   # For Windows (PowerShell):
+   .\.venv\Scripts\Activate.ps1
+   # For macOS/Linux:
+   source .venv/bin/activate
+   ```
+
+2. **Install Dependencies**
+   ```bash
+   # Install Python packages
+   uv pip install -r requirements.txt
+   
+   # Install browser (Chromium recommended)
+   playwright install --with-deps chromium
+   ```
+
+##### Usage Instructions for LLM
+When using browser-use to collect Twitter data, provide these instructions to the LLM:
+
+```
+Task: Collect RealMir game guesses from Twitter replies.
+
+Steps:
+1. Navigate to Twitter.com
+2. Search for @realmir_testnet
+3. Find the latest tweet with hashtag #round{NUMBER}
+4. Collect all replies containing guesses:
+   - Look for patterns like:
+     * "I commit to guess: [GUESS]"
+     * "My guess: [GUESS]"
+     * "Guessing: [GUESS]"
+     * "Commit: [GUESS]"
+   - If no pattern matches, use the full reply text
+
+Return data in this format:
+{
+  "round": NUMBER,
+  "guesses": [
+    {"username": "user1", "guess": "guess text"},
+    {"username": "user2", "guess": "guess text"}
+  ]
+}
+```
+
 ### Development Setup
 1. Clone the repository.
 2. Create a new branch for your feature or bugfix.
