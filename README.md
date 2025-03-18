@@ -153,7 +153,7 @@ echo '{"text": "a photo of a dog"}' | python clip_embedder.py --mode text
 
 ### Support Network 
 #### Browser Use
-Browser-use enables automated browser interaction for retrieving Twitter data. 
+Browser-use enables automated browser interaction for retrieving Twitter data. For detailed instructions and advanced configuration options, please refer to the official documentation at [docs.browser-use.com](https://docs.browser-use.com/introduction).
 
 ##### Setup
 1. **Environment Variables**
