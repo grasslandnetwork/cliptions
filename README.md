@@ -156,7 +156,29 @@ echo '{"text": "a photo of a dog"}' | python clip_embedder.py --mode text
 Browser-use enables automated browser interaction for retrieving Twitter data. 
 
 ##### Setup
-1. **Python Environment Setup**
+1. **Environment Variables**
+   Create a `.env` file in your project root:
+   ```bash
+   TWITTER_NAME=your_twitter_username
+   TWITTER_PASSWORD=your_twitter_password
+   ```
+   
+   Or set them in your shell:
+   ```bash
+   # For macOS/Linux
+   export TWITTER_NAME=your_twitter_username
+   export TWITTER_PASSWORD=your_twitter_password
+   
+   # For Windows (Command Prompt)
+   set TWITTER_NAME=your_twitter_username
+   set TWITTER_PASSWORD=your_twitter_password
+   
+   # For Windows (PowerShell)
+   $env:TWITTER_NAME="your_twitter_username"
+   $env:TWITTER_PASSWORD="your_twitter_password"
+   ```
+
+2. **Python Environment Setup**
    ```bash
    # Create virtual environment with Python 3.11
    uv venv --python 3.11
@@ -170,7 +192,7 @@ Browser-use enables automated browser interaction for retrieving Twitter data.
    source .venv/bin/activate
    ```
 
-2. **Install Dependencies**
+3. **Install Dependencies**
    ```bash
    # Install Python packages
    uv pip install -r requirements.txt
