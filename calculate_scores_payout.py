@@ -1,6 +1,9 @@
 import sys
 from clip_embedder import ClipEmbedder
 import numpy as np
+import re
+import torch
+import clip
 
 def calculate_rankings(target_image_path, guesses):
     """Calculate rankings for guesses based on similarity to target image.
@@ -101,6 +104,54 @@ def display_results(ranked_results, payouts, prize_pool):
     
     print(f"Total prize pool: {prize_pool:.9f}")
     print(f"Total payout: {sum(payouts):.9f}")
+
+class ScoreValidator:
+    def __init__(self):
+        self.embedder = ClipEmbedder()
+        self.baseline_text = "[UNUSED]"
+        self._init_baseline()
+    
+    def _init_baseline(self):
+        """Initialize baseline score for relative scoring"""
+        self.baseline_features = self.embedder.get_text_embedding(self.baseline_text)
+    
+    def validate_guess(self, guess: str) -> bool:
+        """Check if guess meets basic validity criteria"""
+        # Length filtering
+        if len(guess.strip()) < 5:
+            return False
+            
+        # Special character check
+        special_chars = len(re.findall(r'[\[\]{}()<>-]', guess))
+        if special_chars > 2:  # Allow up to 2 special characters
+            return False
+            
+        return True
+    
+    def calculate_adjusted_score(self, image_features, guess: str) -> float:
+        """Calculate score with multiple adjustments"""
+        if not self.validate_guess(guess):
+            return 0.0
+            
+        # Encode text
+        text_features = self.embedder.get_text_embedding(guess)
+        
+        # Fix dimension alignment - ensure image_features is 1D
+        if image_features.ndim > 1:
+            image_features = image_features.flatten()
+        
+        # Calculate raw similarity
+        raw_score = np.dot(text_features, image_features)
+        
+        # Calculate relative to baseline
+        baseline_score = np.dot(self.baseline_features, image_features)
+        adjusted_score = (raw_score - baseline_score) / (1 - baseline_score)
+        
+        # Apply special character penalty
+        special_chars = len(re.findall(r'[\[\]{}()<>-]', guess))
+        penalty = 1.0 - (0.05 * special_chars)
+        
+        return max(0.0, adjusted_score * penalty)
 
 if __name__ == "__main__":
     if len(sys.argv) < 4:
