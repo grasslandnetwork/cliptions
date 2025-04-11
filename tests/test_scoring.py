@@ -26,10 +26,19 @@ def cat_sanctuary_features(validator):
     return validator.embedder.get_image_embedding(test_image_path)
 
 def test_length_filtering(validator):
-    # Test minimum length requirement
-    assert validator.validate_guess("test") is False  # 4 chars
-    assert validator.validate_guess("valid") is True   # 5 chars
-    assert validator.validate_guess(" longer guess ") is True  # 12 chars
+    # Test that empty values are rejected
+    assert validator.validate_guess("") is False
+    assert validator.validate_guess(" ") is False
+    assert validator.validate_guess(None) is False
+    
+    # Test that normal values are accepted
+    assert validator.validate_guess("short") is True
+    assert validator.validate_guess("a") is True
+    assert validator.validate_guess("This is a longer description") is True
+    
+    # Test maximum length (should reject extremely long descriptions)
+    very_long_text = "a" * 350  # Over our 300 char conservative limit
+    assert validator.validate_guess(very_long_text) is False
 
 def test_baseline_adjustment(validator, cat_sanctuary_features):
     # Test baseline scoring logic
@@ -52,7 +61,7 @@ def test_baseline_adjustment(validator, cat_sanctuary_features):
 def test_full_scoring_flow(validator):
     # Test integration of all components
     valid_guess = "Cat sanctuary with staff wearing colorful uniforms"
-    invalid_guess = "[x]"
+    invalid_guess = ""  # Empty string should be invalid
     
     assert validator.validate_guess(valid_guess) is True
     assert validator.validate_guess(invalid_guess) is False
