@@ -108,6 +108,7 @@ class ScoreValidator:
     def __init__(self):
         self.embedder = ClipEmbedder()
         self.baseline_text = "[UNUSED]"
+        self.max_tokens = 77  # CLIP's maximum token limit
         self._init_baseline()
     
     def _init_baseline(self):
@@ -116,10 +117,16 @@ class ScoreValidator:
     
     def validate_guess(self, guess: str) -> bool:
         """Check if guess meets basic validity criteria"""
-        # Length filtering
-        if len(guess.strip()) < 5:
+        # Check if guess is a string with content
+        if not guess or not isinstance(guess, str) or len(guess.strip()) == 0:
             return False
         
+        # CLIP can handle up to 77 tokens, but we'll estimate
+        # Average token is ~4 characters in English, so ~300 chars
+        # This is a rough estimate; the actual tokenizer would be more accurate
+        if len(guess) > 300:  # Conservative estimate
+            return False
+            
         return True
     
     def calculate_adjusted_score(self, image_features, guess: str) -> float:
