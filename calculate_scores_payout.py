@@ -3,7 +3,6 @@ from clip_embedder import ClipEmbedder
 import numpy as np
 import re
 import torch
-import clip
 
 def calculate_rankings(target_image_path, guesses):
     """Calculate rankings for guesses based on similarity to target image.
