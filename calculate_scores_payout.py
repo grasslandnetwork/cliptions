@@ -119,16 +119,11 @@ class ScoreValidator:
         # Length filtering
         if len(guess.strip()) < 5:
             return False
-            
-        # Special character check
-        special_chars = len(re.findall(r'[\[\]{}()<>-]', guess))
-        if special_chars > 2:  # Allow up to 2 special characters
-            return False
-            
+        
         return True
     
     def calculate_adjusted_score(self, image_features, guess: str) -> float:
-        """Calculate score with multiple adjustments"""
+        """Calculate score with baseline adjustment"""
         if not self.validate_guess(guess):
             return 0.0
             
@@ -146,11 +141,7 @@ class ScoreValidator:
         baseline_score = np.dot(self.baseline_features, image_features)
         adjusted_score = (raw_score - baseline_score) / (1 - baseline_score)
         
-        # Apply special character penalty
-        special_chars = len(re.findall(r'[\[\]{}()<>-]', guess))
-        penalty = 1.0 - (0.05 * special_chars)
-        
-        return max(0.0, adjusted_score * penalty)
+        return max(0.0, adjusted_score)
 
 if __name__ == "__main__":
     if len(sys.argv) < 4:
