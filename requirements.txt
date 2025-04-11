@@ -1,16 +1,16 @@
 # Core dependencies (required for basic functionality)
 numpy>=1.24.0
 torch>=2.0.0
-transformers>=4.30.0  # For ClipEmbedder (HuggingFace implementation)
+transformers>=4.30.0  # For CLIP implementation via HuggingFace
 Pillow>=9.0.0
-clip>=1.0  # Original OpenAI CLIP (imported in calculate_scores_payout.py)
 
 # Development dependencies (uncomment to install for development work)
 # jupyter>=1.0.0
 # ipywidgets>=8.0.0
 # matplotlib>=3.10.0
 # notebook>=7.0.0
-# open_clip_torch>=2.20.0  # Alternative CLIP implementation used in testing
+# open_clip_torch>=2.20.0  # Alternative CLIP implementation for testing
+# clip>=1.0  # Original OpenAI CLIP implementation for comparison testing
 
 # Testing dependencies (required for running tests)
 pytest>=7.0.0
