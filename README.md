@@ -160,6 +160,34 @@ pip install -r requirements.txt
 ```
 4. Set up pre-commit hooks.
 
+### Installing Dependencies
+
+The `requirements.txt` file contains different groups of dependencies:
+
+- **Core dependencies**: Always installed by default
+  ```bash
+  pip install -r requirements.txt
+  ```
+
+- **Development dependencies**: For Jupyter notebooks and development tools
+  ```bash
+  # Edit requirements.txt to uncomment development dependencies
+  # Then run:
+  pip install -r requirements.txt
+  ```
+
+- **Testing dependencies**: Required for running tests
+  ```bash
+  # Already included when installing requirements.txt
+  ```
+
+- **Optional dependencies**: For specific features
+  ```bash
+  # Edit requirements.txt to uncomment optional dependencies
+  # Then run:
+  pip install -r requirements.txt
+  ```
+
 ### Running Tests
 ```bash
 python -m unittest discover tests
