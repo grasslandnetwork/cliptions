@@ -1,0 +1,22 @@
+{
+    "versions": {
+        "v1.0": {
+            "description": "Original scoring without baseline adjustment",
+            "applied_to_rounds": ["round0"],
+            "parameters": {
+                "use_baseline_adjustment": false
+            },
+            "commit_hash": "origin/master"
+        },
+        "v1.1": {
+            "description": "Added baseline adjustment to prevent exploit strings",
+            "applied_to_rounds": ["round1", "round2", "round3"],
+            "parameters": {
+                "use_baseline_adjustment": true,
+                "baseline_text": "[UNUSED]"
+            },
+            "commit_hash": "5933e05f7086fc48a43615117e8cd44762160038"
+        }
+    },
+    "default": "v1.1"
+} 
