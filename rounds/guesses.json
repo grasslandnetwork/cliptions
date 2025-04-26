@@ -1,0 +1,46 @@
+{
+    "round0": {
+        "participants": [
+            {
+                "username": "davidynamic",
+                "wallet": "5Co2unDtZKZDzYNZHT2fUMkEnpVWnassfbuabvZmGTrYKgtD",
+                "commitment": "c5aa575c17247359c59f6d126785250bcb756f4349d8f30155543515a43b146e",
+                "guess": "Cat sanctuary with woman wearing snoopy sweater",
+                "salt": "your-salt-value-here",
+                "valid": true,
+                "score": 0.2782,
+                "payout": 0.001646
+            },
+            {
+                "username": "track_data_",
+                "wallet": "5EFfNQedRehT16SDHG84HKwTcEDcf9sX76CHFLBVPY1Jkytt",
+                "commitment": "f7b7889b520e01e8a2e915e8e9124bc299c6f584c0e0dd255a7e38fe8ec35747",
+                "guess": "[-h]",
+                "salt": "cats",
+                "valid": true,
+                "score": 0.1805,
+                "payout": 0.000823
+            }
+        ],
+        "target_image": "round0/target20250223_133057EST.jpg",
+        "target_time": "20250223_133057EST",
+        "total_payout": 0.002469
+    },
+    "round1": {
+        "participants": [
+            {
+                "username": "davidynamic",
+                "wallet": "5Co2unDtZKZDzYNZHT2fUMkEnpVWnassfbuabvZmGTrYKgtD",
+                "commitment": "78d429be9b83d14807d9f3ce412c009a461e08f20efb480907becc5769f2f40f",
+                "guess": "live stream, video, cat, kitten, animal rescue, shelter, FFRC, Friends of Felines, Defiance Ohio, cage-free, no-kill, adoption, pet cam, live chat, animal welfare",
+                "salt": "1sdaf4aoifr",
+                "valid": true,
+                "score": 0.059538,
+                "payout": 1.0
+            }
+        ],
+        "target_image": "round1/target20250401_153057EST.jpg",
+        "target_time": "20250401_153057EST",
+        "total_payout": 1.0
+    }
+}
