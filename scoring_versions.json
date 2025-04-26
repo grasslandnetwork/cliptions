@@ -1,6 +1,6 @@
 {
     "versions": {
-        "v1.0": {
+        "v0.1": {
             "description": "Original scoring without baseline adjustment",
             "applied_to_rounds": ["round0"],
             "parameters": {
@@ -8,7 +8,7 @@
             },
             "commit_hash": "origin/master"
         },
-        "v1.1": {
+        "v0.2": {
             "description": "Added baseline adjustment to prevent exploit strings",
             "applied_to_rounds": ["round1", "round2", "round3"],
             "parameters": {
@@ -18,5 +18,5 @@
             "commit_hash": "5933e05f7086fc48a43615117e8cd44762160038"
         }
     },
-    "default": "v1.1"
+    "default": "v0.2"
 } 
