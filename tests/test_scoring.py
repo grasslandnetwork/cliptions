@@ -70,3 +70,4 @@ def test_full_scoring_flow(validator):
     assert validator.calculate_adjusted_score(
         np.zeros((1, 512)), invalid_guess
     ) == 0.0
+ 
