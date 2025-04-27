@@ -55,15 +55,15 @@ class TestCalculatePayouts(unittest.TestCase):
             ("second", 0.5)
         ]
         
-        # Test with prize pool of 100
-        payouts = calculate_payouts(ranked_results, prize_pool=100.0)
+        # Test with prize pool of 1
+        payouts = calculate_payouts(ranked_results, prize_pool=1.0)
         
         # Verify correct proportions
-        self.assertAlmostEqual(payouts[0], 100 * 2/3, places=2)
-        self.assertAlmostEqual(payouts[1], 100 * 1/3, places=2)
+        self.assertAlmostEqual(payouts[0], 1.0 * 2/3, places=2)
+        self.assertAlmostEqual(payouts[1], 1.0 * 1/3, places=2)
         
         # Verify sum equals prize pool
-        self.assertAlmostEqual(sum(payouts), 100.0)
+        self.assertAlmostEqual(sum(payouts), 1.0)
 
     def test_equal_scores_for_equal_ranks(self):
         """Test that positions with equal similarity scores get equal payouts."""
