@@ -36,11 +36,11 @@
                 "salt": "1sdaf4aoifr",
                 "valid": true,
                 "score": 0.059538,
-                "payout": 1.0
+                "payout": 0.001
             }
         ],
         "target_image": "round1/target20250401_153057EST.jpg",
         "target_time": "20250401_153057EST",
-        "total_payout": 1.0
+        "total_payout": 0.001
     }
 }
