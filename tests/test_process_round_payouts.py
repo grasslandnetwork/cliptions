@@ -66,7 +66,7 @@ class TestProcessRoundPayouts(unittest.TestCase):
             mock_path_instance.exists.return_value = True
             
             with patch('builtins.open', mock_file):
-                result = process_round_payouts("test_round", prize_pool=100.0, save_to_file=False)
+                result = process_round_payouts("test_round", prize_pool=1.0, save_to_file=False)
         
         # Verify validator was selected for the round
         mock_get_validator.assert_called_once_with("test_round")
@@ -76,10 +76,10 @@ class TestProcessRoundPayouts(unittest.TestCase):
         updated_participants = [
             {"username": "user1", "wallet": "wallet1", "commitment": "commit1", 
              "guess": "cats playing", "salt": "salt1", "valid": True, 
-             "score": 0.8, "payout": 2/3 * 100.0},
+             "score": 0.8, "payout": 2/3 * 1.0},
             {"username": "user2", "wallet": "wallet2", "commitment": "commit2", 
              "guess": "dogs running", "salt": "salt2", "valid": True, 
-             "score": 0.4, "payout": 1/3 * 100.0}
+             "score": 0.4, "payout": 1/3 * 1.0}
         ]
         
         # Check that all participants have scores
@@ -95,7 +95,7 @@ class TestProcessRoundPayouts(unittest.TestCase):
         # Check payout values
         self.assertAlmostEqual(
             updated_participants[0]["payout"] + updated_participants[1]["payout"],
-            100.0,
+            1.0,
             places=5
         )
         
@@ -141,11 +141,11 @@ class TestProcessRoundPayouts(unittest.TestCase):
                         "guess": "birds flying",
                         "valid": True,
                         "score": 0.5,
-                        "payout": 100.0
+                        "payout": 1.0
                     }
                 ],
                 "target_image": "round3/image.jpg",
-                "total_payout": 100.0  # Already has payout
+                "total_payout": 1.0  # Already has payout
             },
             "round4": {
                 "participants": [],  # Empty participants
@@ -167,13 +167,13 @@ class TestProcessRoundPayouts(unittest.TestCase):
             mock_path_instance.exists.return_value = True
             
             with patch('builtins.open', mock_file):
-                result = process_all_rounds(prize_pool=100.0, save_to_file=False)
+                result = process_all_rounds(prize_pool=1.0, save_to_file=False)
         
         # Check that process_round_payouts was called for each relevant round
         # Should be called for round1 and round2, but not round3 (already has payouts) or round4 (no participants)
         mock_process_round.assert_has_calls([
-            call("round1", 100.0, False),
-            call("round2", 100.0, False)
+            call("round1", 1.0, False),
+            call("round2", 1.0, False)
         ])
         
         # Check that it was called exactly twice

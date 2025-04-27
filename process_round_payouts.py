@@ -62,7 +62,7 @@ def get_validator_for_round(round_id, versions_file="scoring_versions.json"):
     # Default to current validator
     return ScoreValidator()
 
-def process_round_payouts(round_id, prize_pool=100.0, save_to_file=True):
+def process_round_payouts(round_id, prize_pool, save_to_file=True):
     """Process payouts for a specific round.
     
     Args:
@@ -151,7 +151,7 @@ def process_round_payouts(round_id, prize_pool=100.0, save_to_file=True):
     
     return round_data
 
-def process_all_rounds(prize_pool=100.0, save_to_file=True):
+def process_all_rounds(prize_pool, save_to_file=True):
     """Process payouts for all rounds that have participants but no payouts.
     
     Args:
@@ -196,7 +196,7 @@ if __name__ == "__main__":
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--round', type=str, help="Process a specific round (e.g., round1)")
     group.add_argument('--all', action='store_true', help="Process all rounds that need payouts")
-    parser.add_argument('--prize-pool', type=float, default=100.0, help="Prize pool amount (default: 100.0)")
+    parser.add_argument('--prize-pool', type=float, required=True, help="Prize pool amount")
     parser.add_argument('--no-save', action='store_true', help="Don't save results back to guesses.json")
     
     args = parser.parse_args()
