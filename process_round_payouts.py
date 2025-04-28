@@ -6,6 +6,7 @@ from pathlib import Path
 import argparse
 from calculate_scores_payout import ScoreValidator, calculate_payouts
 import numpy as np
+from verify_commitments import verify_round_commitments
 
 class LegacyScoreValidator:
     """Replicates the scoring logic used before baseline adjustment was added.
@@ -62,13 +63,14 @@ def get_validator_for_round(round_id, versions_file="scoring_versions.json"):
     # Default to current validator
     return ScoreValidator()
 
-def process_round_payouts(round_id, prize_pool, save_to_file=True):
+def process_round_payouts(round_id, prize_pool, save_to_file=True, verify_commitments=True):
     """Process payouts for a specific round.
     
     Args:
         round_id: The ID of the round to process (e.g., 'round1')
         prize_pool: Total amount to distribute
         save_to_file: Whether to save results back to guesses.json
+        verify_commitments: Whether to verify commitments before processing
         
     Returns:
         Dictionary with round data including calculated scores and payouts
@@ -97,6 +99,20 @@ def process_round_payouts(round_id, prize_pool, save_to_file=True):
     if not participants:
         print(f"No participants found for {round_id}")
         sys.exit(1)
+    
+    # Verify commitments if requested
+    if verify_commitments:
+        print(f"\nVerifying commitments for {round_id}...")
+        all_valid = verify_round_commitments(round_id)
+        
+        if not all_valid and not input("\nSome commitments are invalid. Continue anyway? (y/n): ").lower().startswith('y'):
+            print("Aborted.")
+            sys.exit(1)
+    
+    # Reload the data after verification (as it may have updated the valid fields)
+    with open(guesses_file, 'r') as f:
+        round_data = json.load(f)
+    participants = round_data[round_id]['participants']
     
     # Get the appropriate validator for this round
     validator = get_validator_for_round(round_id)
@@ -151,12 +167,13 @@ def process_round_payouts(round_id, prize_pool, save_to_file=True):
     
     return round_data
 
-def process_all_rounds(prize_pool, save_to_file=True):
+def process_all_rounds(prize_pool, save_to_file=True, verify_commitments=True):
     """Process payouts for all rounds that have participants but no payouts.
     
     Args:
         prize_pool: Total amount to distribute per round
         save_to_file: Whether to save results back to guesses.json
+        verify_commitments: Whether to verify commitments before processing
         
     Returns:
         Dictionary with all round data including calculated scores and payouts
@@ -183,7 +200,7 @@ def process_all_rounds(prize_pool, save_to_file=True):
             continue
             
         print(f"Processing {round_id}...")
-        process_round_payouts(round_id, prize_pool, save_to_file)
+        process_round_payouts(round_id, prize_pool, save_to_file, verify_commitments)
         processed_rounds.append(round_id)
     
     if not processed_rounds:
@@ -198,10 +215,11 @@ if __name__ == "__main__":
     group.add_argument('--all', action='store_true', help="Process all rounds that need payouts")
     parser.add_argument('--prize-pool', type=float, required=True, help="Prize pool amount")
     parser.add_argument('--no-save', action='store_true', help="Don't save results back to guesses.json")
+    parser.add_argument('--skip-verify', action='store_true', help="Skip commitment verification")
     
     args = parser.parse_args()
     
     if args.round:
-        process_round_payouts(args.round, args.prize_pool, not args.no_save)
+        process_round_payouts(args.round, args.prize_pool, not args.no_save, not args.skip_verify)
     else:  # args.all
-        process_all_rounds(args.prize_pool, not args.no_save) 
+        process_all_rounds(args.prize_pool, not args.no_save, not args.skip_verify) 
