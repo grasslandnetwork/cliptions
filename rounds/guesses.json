@@ -42,5 +42,32 @@
         "target_image": "round1/target20250401_153057EST.jpg",
         "target_time": "20250401_153057EST",
         "total_payout": 0.001
+    },
+    "round2": {
+        "participants": [
+            {
+                "username": "davidynamic",
+                "wallet": "5Co2unDtZKZDzYNZHT2fUMkEnpVWnassfbuabvZmGTrYKgtD",
+                "commitment": "bc64a7b517b4e0a23c61300bb2e0601641fac6b387c76a1a9abb3d425c230235",
+                "guess": "live stream, video, cat, kitten, animal rescue, shelter, FFRC, Friends of Felines, Defiance Ohio, cage-free, no-kill, adoption, pet cam, live chat, animal welfare",
+                "salt": "iojoiuior",
+                "valid": true,
+                "score": 0.051624,
+                "payout": 0.000667
+            },
+            {
+                "username": "track_data_",
+                "wallet": "5EFfNQedRehT16SDHG84HKwTcEDcf9sX76CHFLBVPY1Jkytt",
+                "commitment": "c4bd4f6ed4fbdd80a94d6842700bde38a28f2ebb5dc764454c0df209ccb3a87c",
+                "guess": "Cat shelter with some cats walking around, others lying around curled up and some perched up on top, attended by two ladies talking with each other and petting a cat",
+                "salt": "cat-salt",
+                "valid": true,
+                "score": 0.011867,
+                "payout": 0.000333
+            }
+        ],
+        "target_image": "round2/target20250401_163057EST.jpg",
+        "target_time": "20250401_163057EST",
+        "total_payout": 0.001
     }
 }
