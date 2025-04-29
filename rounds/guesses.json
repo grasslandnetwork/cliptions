@@ -53,7 +53,7 @@
                 "salt": "iojoiuior",
                 "valid": true,
                 "score": 0.051624,
-                "payout": 0.000667
+                "payout": 0.001646
             },
             {
                 "username": "track_data_",
@@ -63,11 +63,11 @@
                 "salt": "cat-salt",
                 "valid": true,
                 "score": 0.011867,
-                "payout": 0.000333
+                "payout": 0.000823
             }
         ],
         "target_image": "round2/target20250401_163057EST.jpg",
         "target_time": "20250401_163057EST",
-        "total_payout": 0.001
+        "total_payout": 0.002469
     }
 }
