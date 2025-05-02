@@ -3,18 +3,22 @@ from clip_embedder import ClipEmbedder
 import numpy as np
 import re
 import torch
+from interfaces import IScoreValidator, IEmbedder
+from scoring_strategies import IScoringStrategy, BaselineAdjustedStrategy
 
-def calculate_rankings(target_image_path, guesses):
+def calculate_rankings(target_image_path, guesses, validator=None):
     """Calculate rankings for guesses based on similarity to target image.
     
     Args:
         target_image_path: Path to the target image
         guesses: List of text guesses to rank
+        validator: Instance of IScoreValidator (defaults to ScoreValidator if None)
     
     Returns:
         List of tuples (guess, similarity) sorted by similarity (highest to lowest)
     """
-    validator = ScoreValidator()
+    # Use dependency injection with default implementation
+    validator = validator or ScoreValidator()
     
     # Get target image embedding
     image_embedding = validator.embedder.get_image_embedding(target_image_path)
@@ -103,9 +107,17 @@ def display_results(ranked_results, payouts, prize_pool):
     print(f"Total prize pool: {prize_pool:.9f}")
     print(f"Total payout: {sum(payouts):.9f}")
 
-class ScoreValidator:
-    def __init__(self):
-        self.embedder = ClipEmbedder()
+class ScoreValidator(IScoreValidator):
+    def __init__(self, embedder=None, scoring_strategy=None):
+        """Initialize the score validator.
+        
+        Args:
+            embedder: Optional implementation of IEmbedder (defaults to ClipEmbedder)
+            scoring_strategy: Optional implementation of IScoringStrategy
+                             (defaults to BaselineAdjustedStrategy)
+        """
+        self.embedder = embedder or ClipEmbedder()
+        self.scoring_strategy = scoring_strategy or BaselineAdjustedStrategy()
         self.baseline_text = "[UNUSED]"
         self.max_tokens = 77  # CLIP's maximum token limit
         self._init_baseline()
@@ -136,18 +148,12 @@ class ScoreValidator:
         # Encode text
         text_features = self.embedder.get_text_embedding(guess)
         
-        # Fix dimension alignment - ensure image_features is 1D
-        if image_features.ndim > 1:
-            image_features = image_features.flatten()
-        
-        # Calculate raw similarity
-        raw_score = np.dot(text_features, image_features)
-        
-        # Calculate relative to baseline
-        baseline_score = np.dot(self.baseline_features, image_features)
-        adjusted_score = (raw_score - baseline_score) / (1 - baseline_score)
-        
-        return max(0.0, adjusted_score)
+        # Use the strategy to calculate the score
+        return self.scoring_strategy.calculate_score(
+            image_features=image_features,
+            text_features=text_features,
+            baseline_features=self.baseline_features
+        )
 
 if __name__ == "__main__":
     if len(sys.argv) < 4:
