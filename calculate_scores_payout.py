@@ -14,17 +14,16 @@ def calculate_rankings(target_image_path, guesses):
     Returns:
         List of tuples (guess, similarity) sorted by similarity (highest to lowest)
     """
-    embedder = ClipEmbedder()
+    validator = ScoreValidator()
     
     # Get target image embedding
-    image_embedding = embedder.get_image_embedding(target_image_path)
+    image_embedding = validator.embedder.get_image_embedding(target_image_path)
     
-    # Calculate similarity for each guess
+    # Calculate adjusted similarity for each guess
     similarities = []
     for guess in guesses:
-        text_embedding = embedder.get_text_embedding(guess)
-        similarity = float(np.dot(image_embedding, text_embedding))
-        similarities.append((guess, similarity))
+        adjusted_score = validator.calculate_adjusted_score(image_embedding, guess)
+        similarities.append((guess, adjusted_score))
     
     # Sort by similarity score (highest to lowest)
     return sorted(similarities, key=lambda x: x[1], reverse=True)
