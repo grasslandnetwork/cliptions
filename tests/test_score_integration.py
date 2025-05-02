@@ -1,6 +1,8 @@
 import pytest
 import os
 import numpy as np
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from calculate_scores_payout import calculate_rankings, calculate_payouts, ScoreValidator
 
 @pytest.fixture
