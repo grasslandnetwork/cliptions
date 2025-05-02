@@ -7,8 +7,10 @@ import argparse
 from calculate_scores_payout import ScoreValidator, calculate_payouts
 import numpy as np
 from verify_commitments import verify_round_commitments
+from interfaces import IScoreValidator, IEmbedder
+from scoring_strategies import RawSimilarityStrategy
 
-class LegacyScoreValidator:
+class LegacyScoreValidator(IScoreValidator):
     """Replicates the scoring logic used before baseline adjustment was added.
     
     This version matches the original scoring used for round0, which:
@@ -17,9 +19,20 @@ class LegacyScoreValidator:
     - Did not apply special character penalties
     """
     
-    def __init__(self):
-        from clip_embedder import ClipEmbedder
-        self.embedder = ClipEmbedder()
+    def __init__(self, embedder=None, scoring_strategy=None):
+        """Initialize the legacy score validator.
+        
+        Args:
+            embedder: Optional implementation of IEmbedder (defaults to ClipEmbedder)
+            scoring_strategy: Optional implementation of IScoringStrategy 
+                            (defaults to RawSimilarityStrategy)
+        """
+        if embedder is None:
+            from clip_embedder import ClipEmbedder
+            embedder = ClipEmbedder()
+        
+        self.embedder = embedder
+        self.scoring_strategy = scoring_strategy or RawSimilarityStrategy()
     
     def validate_guess(self, guess: str) -> bool:
         """Simple validation only checks if a guess is a non-empty string."""
@@ -33,14 +46,11 @@ class LegacyScoreValidator:
         # Encode text
         text_features = self.embedder.get_text_embedding(guess)
         
-        # Fix dimension alignment if needed
-        if image_features.ndim > 1:
-            image_features = image_features.flatten()
-        
-        # Calculate raw similarity - this is the original formula without adjustments
-        raw_score = float(np.dot(text_features, image_features))
-        
-        return max(0.0, raw_score)
+        # Use the strategy to calculate the score
+        return self.scoring_strategy.calculate_score(
+            image_features=image_features,
+            text_features=text_features
+        )
 
 def get_validator_for_round(round_id, versions_file="scoring_versions.json"):
     """Get the appropriate validator for the round based on the version registry."""
