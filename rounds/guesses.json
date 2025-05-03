@@ -8,7 +8,7 @@
                 "guess": "Cat sanctuary with woman wearing snoopy sweater",
                 "salt": "your-salt-value-here",
                 "valid": true,
-                "score": 0.2782,
+                "score": 0.278243,
                 "payout": 0.001646
             },
             {
@@ -18,13 +18,14 @@
                 "guess": "[-h]",
                 "salt": "cats",
                 "valid": true,
-                "score": 0.1805,
+                "score": 0.180474,
                 "payout": 0.000823
             }
         ],
         "target_image": "round0/target20250223_133057EST.jpg",
         "target_time": "20250223_133057EST",
-        "total_payout": 0.002469
+        "total_payout": 0.002469,
+        "prize_pool": 0.002469
     },
     "round1": {
         "participants": [
@@ -41,7 +42,8 @@
         ],
         "target_image": "round1/target20250401_153057EST.jpg",
         "target_time": "20250401_153057EST",
-        "total_payout": 0.001
+        "total_payout": 0.001,
+        "prize_pool": 0.001
     },
     "round2": {
         "participants": [
@@ -68,6 +70,7 @@
         ],
         "target_image": "round2/target20250401_163057EST.jpg",
         "target_time": "20250401_163057EST",
-        "total_payout": 0.002469
+        "total_payout": 0.002469,
+        "prize_pool": 0.002469
     }
 }
