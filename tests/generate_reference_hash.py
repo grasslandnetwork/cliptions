@@ -12,7 +12,7 @@ def generate_reference_hash():
     embedder = ClipEmbedder()
     
     # Use correct path from tests directory
-    image_path = os.path.join("fixtures", "example.jpg")
+    image_path = os.path.join(os.path.dirname(__file__), "fixtures", "example.jpg")
     
     embedding = embedder.get_image_embedding(image_path)
     embedding_bytes = embedding.tobytes()
