@@ -1,7 +1,9 @@
 import pytest
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from calculate_scores_payout import ScoreValidator
 import numpy as np
-import os
 from PIL import Image
 import torch
 
@@ -70,3 +72,4 @@ def test_full_scoring_flow(validator):
     assert validator.calculate_adjusted_score(
         np.zeros((1, 512)), invalid_guess
     ) == 0.0
+ 
