@@ -73,12 +73,12 @@ def get_validator_for_round(round_id, versions_file="scoring_versions.json"):
     # Default to current validator
     return ScoreValidator()
 
-def process_round_payouts(round_id, prize_pool, save_to_file=True, verify_commitments=True):
+def process_round_payouts(round_id, prize_pool=None, save_to_file=True, verify_commitments=True):
     """Process payouts for a specific round.
     
     Args:
         round_id: The ID of the round to process (e.g., 'round1')
-        prize_pool: Total amount to distribute
+        prize_pool: Total amount to distribute (optional if already defined in the round data)
         save_to_file: Whether to save results back to guesses.json
         verify_commitments: Whether to verify commitments before processing
         
@@ -97,6 +97,17 @@ def process_round_payouts(round_id, prize_pool, save_to_file=True, verify_commit
     if round_id not in round_data:
         print(f"Error: Round {round_id} not found in guesses.json")
         sys.exit(1)
+    
+    # Check for existing prize pool in the round data
+    if prize_pool is None:
+        existing_prize_pool = round_data[round_id].get('prize_pool')
+        if existing_prize_pool is None:
+            print(f"Error: No prize pool defined for {round_id}. Please provide a prize pool.")
+            sys.exit(1)
+        prize_pool = existing_prize_pool
+    else:
+        # Store the prize pool in the round data for future use
+        round_data[round_id]['prize_pool'] = prize_pool
     
     # Get target image path and participants
     target_image = Path(f"rounds/{round_data[round_id]['target_image']}")
@@ -177,11 +188,10 @@ def process_round_payouts(round_id, prize_pool, save_to_file=True, verify_commit
     
     return round_data
 
-def process_all_rounds(prize_pool, save_to_file=True, verify_commitments=True):
+def process_all_rounds(save_to_file=True, verify_commitments=True):
     """Process payouts for all rounds that have participants but no payouts.
     
     Args:
-        prize_pool: Total amount to distribute per round
         save_to_file: Whether to save results back to guesses.json
         verify_commitments: Whether to verify commitments before processing
         
@@ -205,8 +215,14 @@ def process_all_rounds(prize_pool, save_to_file=True, verify_commitments=True):
             continue
             
         # Skip rounds that already have payouts calculated
-        if round_data[round_id]['total_payout'] is not None:
+        if round_data[round_id].get('total_payout') is not None:
             print(f"Skipping {round_id} - payouts already calculated")
+            continue
+            
+        # Check if prize pool is defined for this round
+        prize_pool = round_data[round_id].get('prize_pool')
+        if prize_pool is None:
+            print(f"Skipping {round_id} - no prize pool defined")
             continue
             
         print(f"Processing {round_id}...")
@@ -223,7 +239,7 @@ if __name__ == "__main__":
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--round', type=str, help="Process a specific round (e.g., round1)")
     group.add_argument('--all', action='store_true', help="Process all rounds that need payouts")
-    parser.add_argument('--prize-pool', type=float, required=True, help="Prize pool amount")
+    parser.add_argument('--prize-pool', type=float, help="Prize pool amount (only required for new rounds)")
     parser.add_argument('--no-save', action='store_true', help="Don't save results back to guesses.json")
     parser.add_argument('--skip-verify', action='store_true', help="Skip commitment verification")
     
@@ -232,4 +248,4 @@ if __name__ == "__main__":
     if args.round:
         process_round_payouts(args.round, args.prize_pool, not args.no_save, not args.skip_verify)
     else:  # args.all
-        process_all_rounds(args.prize_pool, not args.no_save, not args.skip_verify) 
+        process_all_rounds(not args.no_save, not args.skip_verify) 
