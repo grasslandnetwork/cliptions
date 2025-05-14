@@ -9,8 +9,9 @@ import json
 import io
 import base64
 import argparse
+from interfaces import IEmbedder
 
-class ClipEmbedder:
+class ClipEmbedder(IEmbedder):
     """Generates CLIP embeddings for images and text using the CLIP model."""
     
     def __init__(self, model_name: str = "openai/clip-vit-base-patch32"):
