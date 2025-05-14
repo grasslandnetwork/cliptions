@@ -1,28 +1,33 @@
 import sys
 from clip_embedder import ClipEmbedder
 import numpy as np
+import re
+import torch
+from interfaces import IScoreValidator, IEmbedder
+from scoring_strategies import IScoringStrategy, BaselineAdjustedStrategy
 
-def calculate_rankings(target_image_path, guesses):
+def calculate_rankings(target_image_path, guesses, validator=None):
     """Calculate rankings for guesses based on similarity to target image.
     
     Args:
         target_image_path: Path to the target image
         guesses: List of text guesses to rank
+        validator: Instance of IScoreValidator (defaults to ScoreValidator if None)
     
     Returns:
         List of tuples (guess, similarity) sorted by similarity (highest to lowest)
     """
-    embedder = ClipEmbedder()
+    # Use dependency injection with default implementation
+    validator = validator or ScoreValidator()
     
     # Get target image embedding
-    image_embedding = embedder.get_image_embedding(target_image_path)
+    image_embedding = validator.embedder.get_image_embedding(target_image_path)
     
-    # Calculate similarity for each guess
+    # Calculate adjusted similarity for each guess
     similarities = []
     for guess in guesses:
-        text_embedding = embedder.get_text_embedding(guess)
-        similarity = float(np.dot(image_embedding, text_embedding))
-        similarities.append((guess, similarity))
+        adjusted_score = validator.calculate_adjusted_score(image_embedding, guess)
+        similarities.append((guess, adjusted_score))
     
     # Sort by similarity score (highest to lowest)
     return sorted(similarities, key=lambda x: x[1], reverse=True)
@@ -101,6 +106,54 @@ def display_results(ranked_results, payouts, prize_pool):
     
     print(f"Total prize pool: {prize_pool:.9f}")
     print(f"Total payout: {sum(payouts):.9f}")
+
+class ScoreValidator(IScoreValidator):
+    def __init__(self, embedder=None, scoring_strategy=None):
+        """Initialize the score validator.
+        
+        Args:
+            embedder: Optional implementation of IEmbedder (defaults to ClipEmbedder)
+            scoring_strategy: Optional implementation of IScoringStrategy
+                             (defaults to BaselineAdjustedStrategy)
+        """
+        self.embedder = embedder or ClipEmbedder()
+        self.scoring_strategy = scoring_strategy or BaselineAdjustedStrategy()
+        self.baseline_text = "[UNUSED]"
+        self.max_tokens = 77  # CLIP's maximum token limit
+        self._init_baseline()
+    
+    def _init_baseline(self):
+        """Initialize baseline score for relative scoring"""
+        self.baseline_features = self.embedder.get_text_embedding(self.baseline_text)
+    
+    def validate_guess(self, guess: str) -> bool:
+        """Check if guess meets basic validity criteria"""
+        # Check if guess is a string with content
+        if not guess or not isinstance(guess, str) or len(guess.strip()) == 0:
+            return False
+        
+        # CLIP can handle up to 77 tokens, but we'll estimate
+        # Average token is ~4 characters in English, so ~300 chars
+        # This is a rough estimate; the actual tokenizer would be more accurate
+        if len(guess) > 300:  # Conservative estimate
+            return False
+            
+        return True
+    
+    def calculate_adjusted_score(self, image_features, guess: str) -> float:
+        """Calculate score with baseline adjustment"""
+        if not self.validate_guess(guess):
+            return 0.0
+            
+        # Encode text
+        text_features = self.embedder.get_text_embedding(guess)
+        
+        # Use the strategy to calculate the score
+        return self.scoring_strategy.calculate_score(
+            image_features=image_features,
+            text_features=text_features,
+            baseline_features=self.baseline_features
+        )
 
 if __name__ == "__main__":
     if len(sys.argv) < 4:
