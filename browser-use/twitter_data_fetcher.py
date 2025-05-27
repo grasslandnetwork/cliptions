@@ -43,6 +43,7 @@ def load_llm_config(config_file_path: str = None) -> dict:
 def check_daily_spending_limit(usage_tracker: OpenAIUsageTracker, daily_limit: float, project_ids: list = None) -> dict:
     """
     Check if current daily spending is under the limit.
+    Daily reset occurs at 00:00 UTC.
     
     Args:
         usage_tracker: OpenAI usage tracker instance
@@ -52,7 +53,7 @@ def check_daily_spending_limit(usage_tracker: OpenAIUsageTracker, daily_limit: f
     Returns:
         Dict with can_proceed, current_spending, remaining_budget
     """
-    today = datetime.now().date()
+    today = datetime.utcnow().date()
     
     # If project filtering is requested, fetch project-specific data
     if project_ids:
