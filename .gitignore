@@ -177,3 +177,6 @@ Thumbs.db
 browser-use/browser_data/
 browser-use/chrome-profile-data/
 browser-use/chrome-profile-data-test/
+
+# Config files with sensitive data (use .template files instead)
+config/llm.yaml

@@ -162,8 +162,14 @@ Browser-use enables automated browser interaction for retrieving Twitter data. F
 1. **Environment Variables**
    Create a `.env` file in your project root:
    ```bash
+   # Twitter credentials for browser automation
    TWITTER_NAME=your_twitter_username
    TWITTER_PASSWORD=your_twitter_password
+   
+   # OpenAI configuration
+   OPENAI_API_KEY=your_openai_api_key
+   OPENAI_API_KEY_FOR_USAGE_AND_COSTS=your_openai_admin_key
+   OPENAI_PROJECT_ID=your_openai_project_id
    ```
    
    Or set them in your shell:
@@ -171,14 +177,23 @@ Browser-use enables automated browser interaction for retrieving Twitter data. F
    # For macOS/Linux
    export TWITTER_NAME=your_twitter_username
    export TWITTER_PASSWORD=your_twitter_password
+   export OPENAI_API_KEY=your_openai_api_key
+   export OPENAI_API_KEY_FOR_USAGE_AND_COSTS=your_openai_admin_key
+   export OPENAI_PROJECT_ID=your_openai_project_id
    
    # For Windows (Command Prompt)
    set TWITTER_NAME=your_twitter_username
    set TWITTER_PASSWORD=your_twitter_password
+   set OPENAI_API_KEY=your_openai_api_key
+   set OPENAI_API_KEY_FOR_USAGE_AND_COSTS=your_openai_admin_key
+   set OPENAI_PROJECT_ID=your_openai_project_id
    
    # For Windows (PowerShell)
    $env:TWITTER_NAME="your_twitter_username"
    $env:TWITTER_PASSWORD="your_twitter_password"
+   $env:OPENAI_API_KEY="your_openai_api_key"
+   $env:OPENAI_API_KEY_FOR_USAGE_AND_COSTS="your_openai_admin_key"
+   $env:OPENAI_PROJECT_ID="your_openai_project_id"
    ```
 
 2. **Python Environment Setup**
@@ -203,6 +218,36 @@ Browser-use enables automated browser interaction for retrieving Twitter data. F
    # Install browser (Chromium recommended)
    playwright install --with-deps chromium
    ```
+
+4. **Configuration Setup**
+   ```bash
+   # Copy the template configuration file
+   cp config/llm.yaml.template config/llm.yaml
+   
+   # The config file uses environment variables for sensitive data:
+   # - ${OPENAI_PROJECT_ID} will be replaced with your project ID
+   # - Daily spending limits and model settings are configurable
+   # - Cost tracking can be enabled/disabled as needed
+   ```
+
+##### OpenAI Cost Management
+The system includes built-in cost tracking and spending limits to prevent unexpected charges:
+
+- **Daily Spending Limits**: Configurable via `config/llm.yaml` (default: $5.00/day)
+- **Project-Specific Tracking**: Only tracks costs for your specific OpenAI project
+- **Real-Time Monitoring**: Checks spending before each browser automation run
+- **Automatic Prevention**: Stops execution if daily limit would be exceeded
+
+**Required OpenAI Setup:**
+1. Create an [OpenAI Admin Key](https://platform.openai.com/settings/organization/admin-keys) for cost tracking
+2. Get your Project ID from the OpenAI dashboard
+3. Set environment variables as shown above
+
+**Cost Tracking Features:**
+- Tracks actual API usage via OpenAI's Usage and Costs APIs
+- Provides spending breakdowns by model and time period
+- Syncs data before each execution to ensure accurate limits
+- Supports project isolation to avoid tracking other OpenAI usage
 
 ##### Usage Instructions for LLM
 When using browser-use to collect Twitter data, provide these instructions to the LLM:
@@ -230,6 +275,30 @@ Return data in this format:
     {"username": "user2", "guess": "guess text"}
   ]
 }
+
+##### Example Usage with Cost Tracking
+```bash
+# Set required environment variables
+export OPENAI_PROJECT_ID="proj_your_project_id_here"
+export OPENAI_API_KEY_FOR_USAGE_AND_COSTS="your_admin_key_here"
+export TWITTER_NAME="your_twitter_username"
+export TWITTER_PASSWORD="your_twitter_password"
+
+# Run Twitter data extraction with automatic cost tracking
+python browser-use/twitter_data_fetcher.py --round 1 --target-time "20250523_133057EST"
+
+# Example output:
+# ✅ OpenAI usage tracker initialized
+# 💰 Daily spending check for project proj_eQM5yuxSlkAmAQIf7mEpL00m:
+#    Current: $2.45
+#    Limit: $5.00
+#    Remaining: $2.55
+# 🔄 Syncing latest usage data for project proj_eQM5yuxSlkAmAQIf7mEpL00m...
+# 🚀 Starting Twitter data extraction session: twitter_round_1_20250125_143022
+# ... browser automation runs ...
+# ⏱️ Execution completed in 45.2 seconds
+# 📊 Tracking execution costs...
+# 💰 Cost tracking completed
 ```
 
 ### Development Setup
