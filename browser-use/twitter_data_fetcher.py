@@ -105,7 +105,7 @@ def track_execution_costs(usage_tracker: OpenAIUsageTracker, session_id: str) ->
         'sync_result': sync_result
     }
 
-async def fetch_round_guesses(round_number: int, target_time_str: str = None, config_file_path: str = None) -> dict:
+async def fetch_round_guesses(round_number: int, target_time_str: str = None, config_file_path: str = None, round_reveal_url: str = None) -> dict:
     """
     Uses Browser Use to fetch RealMir game guesses from Twitter for a specific round.
 
@@ -113,6 +113,7 @@ async def fetch_round_guesses(round_number: int, target_time_str: str = None, co
         round_number: The round number to fetch guesses for.
         target_time_str: The target time string (e.g., "20250223_133057EST") associated with the round.
         config_file_path: Path to LLM config file (defaults to config/llm.yaml)
+        round_reveal_url: Optional URL to the specific tweet where round reveals/guesses are posted.
 
     Returns:
         A dictionary containing the parsed JSON data from Twitter,
@@ -212,34 +213,67 @@ async def fetch_round_guesses(round_number: int, target_time_str: str = None, co
         max_tokens=llm_config.get('max_tokens', 4000)
     )
 
-    # Actual Twitter task for production
-    task = f"""
-        1. Go to https://twitter.com
-        2. Log in using sensitive_data['x_name'] and sensitive_data['x_password']
-        3. Search for "RealMir Round {round_number} Target: {target_time_str}"
-        4. Extract all user guesses for this round from any tweets in the search results
-        5. For each guess, collect:
-           - Twitter username
-           - Their guess time
-           - The original tweet text
-        6. Format as JSON with the structure {{
-            "round_number": {round_number},
-            "target_time": "{target_time_str}",
-            "guesses": [
-                {{
-                    "username": "username_here",
-                    "guess_time": "guess_time_here",
-                    "tweet_text": "full_tweet_text_here"
-                }},
-                // ...more guesses
-            ]
-        }}
-    """
+    # Define initial actions to run without LLM (faster and cheaper)
+    if round_reveal_url:
+        print(f"Navigating directly to round reveal: {round_reveal_url}")
+        initial_actions = [
+            {'open_tab': {'url': round_reveal_url}},  # Go directly to the reveal tweet
+        ]
+        task = f"""
+            You are now on the specific Twitter post where RealMir Round {round_number} reveals/guesses are posted (Target: {target_time_str}). Your task is to:
+            
+            1. If not already logged in, log in using sensitive_data['x_name'] and sensitive_data['x_password']
+            2. DO NOT click the "Reply" button. Instead, scroll down to see the existing replies to this post.
+            3. Look through all the replies below this post to find user reveals for this round.
+            4. Extract all user reveals from the replies, collecting:
+               - Twitter username (the @handle of the person who replied)
+               - Their reveal text (the revealed prediction they posted in their reply)
+            5. Continue scrolling if needed to see more replies.
+            6. Format the results as JSON with this exact structure:
+            {{
+                "round_number": {round_number},
+                "target_time": "{target_time_str}",
+                "guesses": [
+                    {{
+                        "username": "username_here",
+                        "reveal": "full_reveal_text_here"
+                    }}
+                ]
+            }}
+        """
+    else:
+        print(f"Searching for round reveal for Round {round_number} on realmir_testnet profile.")
+        initial_actions = [
+            {'open_tab': {'url': 'https://x.com'}},  # Go to Twitter/X
+            {'open_tab': {'url': 'https://x.com/realmir_testnet'}},  # Navigate to realmir_testnet account
+        ]
+        task = f"""
+            You are now on the realmir_testnet Twitter account page. Your task is to:
+            
+            1. If not already logged in, log in using sensitive_data['x_name'] and sensitive_data['x_password']
+            2. Find the tweet containing "RealMir Round {round_number} Target: {target_time_str}"
+            3. Look through all the replies to that specific tweet to find user reveals for this round
+            4. Extract all user reveals from the replies, collecting:
+               - Twitter username (the @handle of the person who replied)
+               - Their reveal text (the revealed prediction they posted in their reply)
+            5. Format the results as JSON with this exact structure:
+            {{
+                "round_number": {round_number},
+                "target_time": "{target_time_str}",
+                "guesses": [
+                    {{
+                        "username": "username_here",
+                        "reveal": "full_reveal_text_here"
+                    }}
+                ]
+            }}
+        """
 
     # For testing purposes, provide a test mode option
     if os.environ.get('TWITTER_UTILS_TEST_MODE', 'false').lower() == 'true':
         print("Running in test mode with simplified task...")
-        task = "Go to example.com and tell me the main heading on the page."
+        initial_actions = [{'open_tab': {'url': 'https://example.com'}}]
+        task = "Tell me the main heading on this example.com page."
     else:
         print(f"Running Twitter task for Round {round_number}, target time: {target_time_str}...")
 
@@ -252,7 +286,8 @@ async def fetch_round_guesses(round_number: int, target_time_str: str = None, co
         llm=llm,
         use_vision=True,
         sensitive_data=sensitive_data,
-        browser_context=browser_context
+        browser_context=browser_context,
+        initial_actions=initial_actions
     )
 
     raw_result = None
@@ -304,12 +339,28 @@ async def fetch_round_guesses(round_number: int, target_time_str: str = None, co
                 # Get the last successful result
                 for result in reversed(raw_result.all_results):
                     if result.is_done and result.success and result.extracted_content:
+                        extracted = result.extracted_content
+                        print(f"Found extracted content: {extracted}")
                         try:
-                            if isinstance(result.extracted_content, str) and result.extracted_content.strip().startswith('{'):
-                                return json.loads(result.extracted_content)
+                            # Try to parse as JSON if it looks like JSON
+                            if isinstance(extracted, str) and extracted.strip().startswith('{'):
+                                return json.loads(extracted)
                         except json.JSONDecodeError:
                             pass
-                        return {"output": result.extracted_content}
+                        # Return the extracted content directly
+                        return {"output": extracted}
+            
+            # Check if we can get the final result using the final_result() method
+            if hasattr(raw_result, 'final_result'):
+                final_result = raw_result.final_result()
+                if final_result:
+                    print(f"Found final result: {final_result}")
+                    try:
+                        if isinstance(final_result, str) and final_result.strip().startswith('{'):
+                            return json.loads(final_result)
+                    except json.JSONDecodeError:
+                        pass
+                    return {"output": final_result}
             
             # Fallback to returning the string representation
             return {"output": str(raw_result)}
