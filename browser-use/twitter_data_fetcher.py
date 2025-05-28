@@ -210,7 +210,8 @@ async def fetch_round_guesses(round_number: int, target_time_str: str = None, co
     llm = ChatOpenAI(
         model=llm_config.get('model', 'gpt-4o'),
         temperature=llm_config.get('temperature', 0.1),
-        max_tokens=llm_config.get('max_tokens', 4000)
+        max_tokens=llm_config.get('max_tokens', 4000),
+        openai_api_key=llm_config.get('api_key')
     )
 
     # Define initial actions to run without LLM (faster and cheaper)

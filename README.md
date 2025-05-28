@@ -224,10 +224,11 @@ Browser-use enables automated browser interaction for retrieving Twitter data. F
    # Copy the template configuration file
    cp config/llm.yaml.template config/llm.yaml
    
-   # The config file uses environment variables for sensitive data:
-   # - ${OPENAI_PROJECT_ID} will be replaced with your project ID
-   # - Daily spending limits and model settings are configurable
-   # - Cost tracking can be enabled/disabled as needed
+   # Edit config/llm.yaml to set your API key and project ID:
+   # Replace "YOUR_API_KEY_HERE" with your actual OpenAI API key for browser-use
+   # Replace "YOUR_PROJECT_ID_HERE" with your actual OpenAI project ID
+   # Daily spending limits and model settings are configurable
+   # Cost tracking can be enabled/disabled as needed
    ```
 
 ##### OpenAI Cost Management
