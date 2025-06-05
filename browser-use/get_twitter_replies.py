@@ -60,6 +60,7 @@ class TwitterReply(BaseModel):
     url: str
     author: str
     text_preview: str
+    was_spam_flagged: bool = False
 
 class TwitterReplies(BaseModel):
     """Model for collection of Twitter replies"""
@@ -129,26 +130,39 @@ class TwitterReplyExtractor:
         
         CRITICAL INSTRUCTIONS - READ CAREFULLY:
         
-        1. DO NOT CLICK ON ANYTHING AT ALL - No buttons, no links, no interactive elements
+        1. DO NOT CLICK ON ANYTHING AT ALL initially - No buttons, no links, no interactive elements
         2. The page should already show the main tweet - just observe what's there
-        3. Use ONLY the scroll_down action to see more content
+        3. Use ONLY the scroll_down action to see more content initially
         4. Look for reply tweets that are already visible or become visible after scrolling
-        5. Extract information from what you can see on the page, don't interact with elements
+        5. Extract information from what you can see on the page, don't interact with elements initially
+        
+        IMPORTANT: After scrolling and finding visible replies, also look for:
+        - "Show probable spam" button/link at the bottom of replies
+        - "Show additional replies" button/link  
+        - "Show more replies" button/link
+        - Any similar text that indicates hidden replies
+        
+        If you find such a button/link, CLICK IT to reveal additional replies that may be hidden.
+        Many legitimate replies get flagged as spam, especially from AI agents or new accounts.
         
         What you're looking for:
         - Reply tweets that appear below the main tweet after scrolling
         - Each reply will have a username (like @username) 
         - Each reply will have its own tweet URL/status link
         - Reply text content
+        - HIDDEN/SPAM replies that need to be revealed by clicking "Show probable spam"
         
         Steps to follow:
         1. Look at the current page content for any visible replies
         2. Use scroll_down action to see more content  
         3. Continue scrolling to load more replies
         4. Extract information from visible replies
-        5. DO NOT click on "Reply", "Comment", "Post" or any buttons
+        5. Look for "Show probable spam" or similar buttons
+        6. If found, click the "Show probable spam" button to reveal hidden replies
+        7. Extract the newly revealed replies as well
+        8. DO NOT click on "Reply", "Comment", "Post" or composition buttons
         
-        For each reply tweet you can see, extract:
+        For each reply tweet you can see (including spam-flagged ones), extract:
         - The direct URL (if visible in page elements)
         - The username/handle (@username)
         - Preview of the reply text
@@ -161,12 +175,13 @@ class TwitterReplyExtractor:
                 {{
                     "url": "extracted_or_constructed_url",
                     "author": "@username", 
-                    "text_preview": "reply text..."
+                    "text_preview": "reply text...",
+                    "was_spam_flagged": true/false
                 }}
             ]
         }}
         
-        REMEMBER: ONLY use scroll_down action. NO CLICKING on anything!
+        REMEMBER: First scroll to find visible replies, then look for and click "Show probable spam" to reveal hidden ones!
         """
         
         # Create browser context with persistent cookies
