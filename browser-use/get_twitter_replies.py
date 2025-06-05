@@ -11,10 +11,12 @@ import pathlib
 import yaml
 import re
 from typing import List, Dict
+from datetime import datetime
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from browser_use import Agent, Browser, BrowserContextConfig
 from pydantic import BaseModel
+from browser_use_cost_tracker import create_cost_tracker_from_config
 
 # Load environment variables
 load_dotenv()
@@ -35,7 +37,14 @@ def load_llm_config(config_file_path: str = None) -> dict:
             'openai': {
                 'model': 'gpt-4o',
                 'temperature': 0.1,
-                'max_tokens': 4000
+                'max_tokens': 4000,
+                'daily_spending_limit_usd': 5.00
+            },
+            'cost_tracking': {
+                'enabled': True
+            },
+            'browser_use': {
+                'max_steps': 50
             }
         }
     
@@ -72,10 +81,18 @@ class TwitterReplyExtractor:
     """Extract reply URLs from Twitter threads using Browser Use"""
     
     def __init__(self, config_file_path: str = None):
-        """Initialize the extractor with configuration"""
+        """Initialize the extractor with configuration and cost tracking"""
         # Load configuration
         self.config = load_llm_config(config_file_path)
         print(f"Loaded LLM config: {self.config}")
+        
+        # Initialize cost tracker from config
+        self.cost_tracker = create_cost_tracker_from_config(self.config)
+        
+        # Validate spending limits and sync data if cost tracking is enabled
+        if self.cost_tracker.enabled:
+            self.cost_tracker.validate_spending_limit()
+            self.cost_tracker.sync_latest_data()
         
         # Initialize LLM with config settings
         llm_config = self.config['openai']
@@ -118,6 +135,10 @@ class TwitterReplyExtractor:
         """
         
         print(f"Extracting reply URLs from: {tweet_url}")
+        
+        # Generate session ID and start execution tracking
+        session_id = self.cost_tracker.generate_session_id("twitter_replies")
+        start_time = self.cost_tracker.log_execution_start(session_id, f"Extracting replies from {tweet_url}")
         
         # Define initial actions to run without LLM (faster and cheaper)
         initial_actions = [
@@ -204,6 +225,9 @@ class TwitterReplyExtractor:
             max_steps = self.config.get('browser_use', {}).get('max_steps', 50)
             result = await agent.run(max_steps=max_steps)
             
+            # Log execution completion and track costs
+            self.cost_tracker.log_execution_end(start_time, session_id)
+            
             # Handle different result types
             if isinstance(result, str):
                 try:
@@ -238,6 +262,8 @@ class TwitterReplyExtractor:
             
         except Exception as e:
             print(f"Error during extraction: {str(e)}")
+            # Still log execution end even on error
+            self.cost_tracker.log_execution_end(start_time, session_id)
             # Return empty result on error
             return TwitterReplies(
                 original_tweet_url=tweet_url,
