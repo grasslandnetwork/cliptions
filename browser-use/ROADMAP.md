@@ -1,12 +1,12 @@
 # Browser Use - Roadmap: RealMir Modular Twitter Automation
 
-**Goal:** Create a modular Twitter automation system for the RealMir prediction network, supporting both Validator and Miner workflows through separate, reusable components following SOLID principles.
+**Goal:** Create a modular Twitter automation system for the RealMir prediction network, supporting both Validator and Miner workflows through separate, reusable components that implement a shared set of interfaces.
 
 ## Architecture Overview
 
-Following the design pattern established in `browser-use/get_twitter_replies.py`, we will create specialized modules for each aspect of the RealMir game flow. Each module will be:
+Instead of a monolithic script, the system will be composed of specialized modules that conform to a strict **interface-based design**. `get_twitter_replies.py` serves as the first proof-of-concept and will be refactored to implement our formal `TwitterTask` interface. This ensures all modules are interchangeable, testable, and adhere to SOLID principles.
 
-- **Single Responsibility**: One clear purpose per module
+- **Single Responsibility**: Each module performs one job (e.g., collect commitments, post a reveal).
 - **Open/Closed**: Extensible without modification
 - **Dependency Inversion**: Use abstractions, not concrete implementations
 - **Interface Segregation**: Clean, focused interfaces
@@ -36,7 +36,7 @@ Following the design pattern established in `browser-use/get_twitter_replies.py`
 ### **Task 2.2:** Commitment Collection Module  
 *   **Module:** `browser-use/validator/collect_commitments.py`
 *   **Purpose:** Extract miner commitments from announcement tweet replies
-*   **Extends:** `get_twitter_replies.py` pattern
+*   **Implements:** `TwitterExtractionInterface`
 *   **Inputs:** Announcement tweet URL
 *   **Outputs:** Structured list of commitments (username, hash, payout address)
 *   **Status:** Not Started
@@ -58,7 +58,7 @@ Following the design pattern established in `browser-use/get_twitter_replies.py`
 ### **Task 2.5:** Reveal Collection Module
 *   **Module:** `browser-use/validator/collect_reveals.py`
 *   **Purpose:** Extract miner reveals from target frame tweet replies  
-*   **Extends:** `get_twitter_replies.py` pattern
+*   **Implements:** `TwitterExtractionInterface`
 *   **Inputs:** Target frame tweet URL
 *   **Outputs:** Structured list of reveals (username, plaintext, salt)
 *   **Status:** Not Started
@@ -138,34 +138,36 @@ Following the design pattern established in `browser-use/get_twitter_replies.py`
 
 ## Design Principles & Standards
 
-### **Module Template** (Following `get_twitter_replies.py`)
-Each module should include:
-- **Configuration Management**: YAML config loading with environment variable substitution
-- **Error Handling**: Graceful degradation and informative error messages  
-- **Browser Context**: Persistent sessions with cookie management
-- **Structured Output**: Pydantic models for type safety and validation
-- **Cost Tracking**: OpenAI usage monitoring and spending limits
-- **Testing Interface**: Test mode for development and CI
-- **Async/Await**: Non-blocking operations for better performance
-- **Logging**: Comprehensive status reporting
+### **Core Interfaces** (e.g., in `browser-use/core/interfaces.py`)
+- **`TwitterTask` (ABC):** An abstract base class defining the contract for any automated Twitter action.
+  - `async def execute(self, **kwargs) -> BaseModel:`: Standard execution method.
+  - `setup_agent(...)`: Configures the `browser-use` agent.
+  - `validate_output(...)`: Ensures the result conforms to a Pydantic model.
+- **`TwitterExtractionInterface` (Inherits `TwitterTask`):** Specialized for data collection.
+- **`TwitterPostingInterface` (Inherits `TwitterTask`):** Specialized for creating content.
+
+### **Module Implementation**
+Each module will be a concrete implementation of a core interface. This replaces the "Module Template" concept with a formal, enforceable contract. Common functionality (config loading, browser context) will be handled in a base class that implements the `TwitterTask` interface.
 
 ### **Shared Infrastructure**
-- **Common Base Classes**: `TwitterAutomationBase`, `ValidatorModuleBase`, `MinerModuleBase`
-- **Shared Models**: `CommitmentData`, `RevealData`, `RoundConfig`, `PayoutInfo`
+- **Core Interfaces**: `TwitterTask`, `TwitterExtractionInterface`, `TwitterPostingInterface`.
+- **Abstract Base Classes**: `BaseTwitterTask` to provide shared setup and execution logic.
+- **Shared Pydantic Models**: `CommitmentData`, `RevealData`, `RoundConfig`, `PayoutInfo` for type-safe data transfer.
 - **Configuration Management**: Centralized config loading and validation
 - **Error Handling**: Standardized exception hierarchy
 - **Testing Utilities**: Mock generators, test data factories
 
 ## Next Steps
 
-**Immediate Priority:** Start with **Task 2.2** (Commitment Collection Module) as it directly extends the proven `get_twitter_replies.py` pattern and provides immediate value for validator workflows.
+**Immediate Priority:** Define and implement the core interfaces and base classes (`TwitterTask`, `BaseTwitterTask`).
 
 **Recommended Approach:**
-1. Create the base classes and shared models first
-2. Implement commitment collection by adapting `get_twitter_replies.py`
-3. Build reveal collection using the same pattern
-4. Add the posting modules (announcements, responses, results)
-5. Create orchestrators to tie everything together
+1.  Create `browser-use/core/interfaces.py` and define the abstract base classes.
+2.  Create `browser-use/core/base_task.py` for shared logic (config, browser setup).
+3.  Refactor `get_twitter_replies.py` to be the first concrete implementation of the `TwitterExtractionInterface`.
+4.  Implement **Task 2.2** (Commitment Collection Module) as a new implementation of the same interface.
+5.  Continue building other modules by implementing the appropriate interfaces.
+6.  Create orchestrators that operate on the `TwitterTask` abstraction, not concrete classes.
 
 This modular approach ensures each component can be developed, tested, and deployed independently while maintaining consistency across the entire system.
 
@@ -178,7 +180,7 @@ This modular approach ensures each component can be developed, tested, and deplo
 - **From Manual Process to Automated Orchestration**: Full automation of round management, fee collection, and payout distribution
 
 **Immediate Benefits:**
-- **Reusability**: Core reply extraction logic from `get_twitter_replies.py` can be extended for commitments and reveals
-- **Testability**: Each module can be unit tested in isolation  
-- **Maintainability**: Clear separation of concerns makes debugging and updates easier
-- **Scalability**: New features can be added without modifying existing modules
+- **True Modularity**: Modules are truly interchangeable, not just similar in pattern.
+- **Testability**: Easy to mock dependencies by creating a test implementation of an interface.
+- **Maintainability**: Clear contracts make the system easier to understand and debug.
+- **Scalability**: New features can be added by creating new classes that conform to existing interfaces.
