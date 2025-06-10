@@ -172,3 +172,9 @@ Thumbs.db
 
 # For emacs
 *~
+
+# Browser Use data (cookies, profiles, etc.)
+browser-use/browser_data/
+
+# Config files with sensitive data (use .template files instead)
+config/llm.yaml
