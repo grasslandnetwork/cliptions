@@ -11,14 +11,12 @@ import asyncio
 from datetime import datetime, timedelta
 from pathlib import Path
 
-# Add browser directory to path
-browser_path = Path(__file__).parent / "browser"
-sys.path.insert(0, str(browser_path))
-sys.path.append(str(browser_path / "validator"))
-sys.path.append(str(browser_path / "core"))
+# Ensure project root is in path
+ROOT_DIR = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(ROOT_DIR))
 
-# Import modules directly
-from announce_round import (
+# Import module via package path
+from browser.validator.announce_round import (
     RoundAnnouncementTask,
     create_standard_round_announcement,
     create_custom_round_announcement
