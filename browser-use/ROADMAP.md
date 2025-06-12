@@ -47,7 +47,7 @@ Instead of a monolithic script, the system will be composed of specialized modul
 *   **Status:** Not Started
 
 ### **Task 2.4:** Validator: Entry Fee Assignment
-*   **Module:** `browser-use/validator/assign_entry_fees.py`
+*   **Module:** `browser-use/validator/assign_entry_fees.py`  
 *   **Implements:** `TwitterPostingInterface`
 *   **Purpose:** Reply to each commitment with the TAO payment address.
 *   **Status:** Not Started
