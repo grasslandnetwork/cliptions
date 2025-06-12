@@ -56,7 +56,7 @@ async def demo_round_announcement():
         reveal_deadline=now + timedelta(hours=36),
         prize_pool=0.010,
         instructions="This is a special demo round with custom parameters",
-        hashtags=["#RealMir", "#Demo", "#CustomRound"]
+        hashtags=["#realmir", "$TAO", "#customround"]
     )
     
     custom_content = task.format_content(custom_data)

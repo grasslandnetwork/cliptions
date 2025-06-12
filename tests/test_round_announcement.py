@@ -90,7 +90,8 @@ class TestRoundAnnouncementTask:
         assert "💰 Entry Fee: 0.001 TAO" in content
         assert "🏆 Prize Pool: 0.001 TAO" in content
         assert "ℹ️ This is a test round" in content
-        assert "#RealMir" in content
+        assert "#realmir" in content
+        assert "$TAO" in content
         assert "1. Reply with your commitment hash + wallet address" in content
     
     def test_format_content_no_instructions(self, task):
@@ -108,7 +109,8 @@ class TestRoundAnnouncementTask:
         
         assert "🎯 NEW ROUND: test_round_2" in content
         assert "ℹ️" not in content  # No instructions section
-        assert "#RealMir" in content
+        assert "#realmir" in content
+        assert "$TAO" in content
     
     def test_extract_tweet_id_from_url(self, task):
         """Test tweet ID extraction from various URL formats"""
@@ -261,7 +263,7 @@ class TestUtilityFunctions:
             reveal_deadline=reveal_deadline,
             prize_pool=0.008,
             instructions="Custom instructions",
-            hashtags=["#Custom", "#Test"]
+            hashtags=["#realmir", "$TAO", "#custom"]
         )
         
         assert data.round_id == "custom_round"
@@ -270,7 +272,7 @@ class TestUtilityFunctions:
         assert data.commitment_deadline == commit_deadline
         assert data.reveal_deadline == reveal_deadline
         assert data.instructions == "Custom instructions"
-        assert data.hashtags == ["#Custom", "#Test"]
+        assert data.hashtags == ["#realmir", "$TAO", "#custom"]
     
     def test_create_custom_round_announcement_default_hashtags(self):
         """Test creating a custom round announcement with default hashtags"""
@@ -284,7 +286,7 @@ class TestUtilityFunctions:
             prize_pool=0.001
         )
         
-        assert data.hashtags == ["#RealMir", "#TAO", "#BittensorPrediction"]
+        assert data.hashtags == ["#realmir", "$TAO"]
 
 
 # Integration test that would require actual browser automation

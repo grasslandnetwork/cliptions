@@ -29,7 +29,7 @@ class RoundAnnouncementData(BaseModel):
     reveal_deadline: datetime = Field(..., description="Deadline for reveal submissions")
     prize_pool: float = Field(..., description="Total prize pool in TAO")
     instructions: str = Field(default="", description="Additional instructions for participants")
-    hashtags: list[str] = Field(default_factory=lambda: ["#RealMir", "#TAO", "#BittensorPrediction"])
+    hashtags: list[str] = Field(default_factory=lambda: ["#realmir", "$TAO"])
 
 
 class RoundAnnouncementResult(BaseModel):
@@ -279,5 +279,5 @@ def create_custom_round_announcement(
         reveal_deadline=reveal_deadline,
         prize_pool=prize_pool,
         instructions=instructions,
-        hashtags=hashtags or ["#RealMir", "#TAO", "#BittensorPrediction"]
+        hashtags=hashtags or ["#realmir", "$TAO"]
     ) 
