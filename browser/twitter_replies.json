@@ -1,0 +1,18 @@
+{
+  "original_tweet_url": "https://x.com/realmir_testnet/status/1907159517013422578",
+  "total_replies_found": 2,
+  "replies": [
+    {
+      "url": "https://x.com/davidynamic/status/1907165981706760445",
+      "author": "David Thompson",
+      "text_preview": "Commit: bc64a7b517b4e0a23c61300bb2e0601641fac6b387c76a1a9abb3d425c230235 Wallet: 5Co2unDtZKZDzYNZHT2fUMkEnpVWnassfbuabvZmGTrYKgtD",
+      "was_spam_flagged": false
+    },
+    {
+      "url": "https://x.com/track_data_/status/1907160947845710103",
+      "author": "Track Data",
+      "text_preview": "Commit: c4bd4f6ed4fbdd80a94d6842700bde38a28f2ebb5dc764454c0df209ccb3a87c Wallet: 5EFfNQedRehT16SDHG84HKwTcEDcf9sX76CHFLBVPY1Jkytt1",
+      "was_spam_flagged": false
+    }
+  ]
+}

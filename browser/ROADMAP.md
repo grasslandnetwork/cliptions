@@ -29,25 +29,25 @@ Instead of a monolithic script, the system will be composed of specialized modul
 *This phase focuses on the initial round setup and the commitment interaction between Validator and Miner.*
 
 ### **Task 2.1:** Validator: Round Announcement
-*   **Module:** `browser-use/validator/announce_round.py`
+*   **Module:** `browser/validator/announce_round.py`
 *   **Implements:** `TwitterPostingInterface`
 *   **Purpose:** Post the initial round announcement tweet.
-*   **Status:** Not Started
+*   **Status:** ✅ Completed
 
 ### **Task 2.2:** Miner: Commitment Submission
-*   **Module:** `browser-use/miner/submit_commitment.py`
+*   **Module:** `browser/miner/submit_commitment.py`
 *   **Implements:** `TwitterPostingInterface`
 *   **Purpose:** Reply to an announcement with a commitment hash.
 *   **Status:** Not Started
 
 ### **Task 2.3:** Validator: Commitment Collection  
-*   **Module:** `browser-use/validator/collect_commitments.py`
+*   **Module:** `browser/validator/collect_commitments.py`
 *   **Purpose:** Extract all miner commitments from the announcement tweet replies.
 *   **Implements:** `TwitterExtractionInterface`
 *   **Status:** Not Started
 
 ### **Task 2.4:** Validator: Entry Fee Assignment
-*   **Module:** `browser-use/validator/assign_entry_fees.py`  
+*   **Module:** `browser/validator/assign_entry_fees.py`  
 *   **Implements:** `TwitterPostingInterface`
 *   **Purpose:** Reply to each commitment with the TAO payment address.
 *   **Status:** Not Started
@@ -126,7 +126,7 @@ Instead of a monolithic script, the system will be composed of specialized modul
 
 ## Design Principles & Standards
 
-### **Core Interfaces** (e.g., in `browser-use/core/interfaces.py`)
+### **Core Interfaces** (e.g., in `browser/core/interfaces.py`)
 - **`TwitterTask` (ABC):** An abstract base class defining the contract for any automated Twitter action.
   - `async def execute(self, **kwargs) -> BaseModel:`: Standard execution method.
   - `setup_agent(...)`: Configures the `browser-use` agent.
@@ -147,15 +147,16 @@ Each module will be a concrete implementation of a core interface. This replaces
 
 ## Next Steps
 
-**Immediate Priority:** Define and implement the core interfaces and base classes (`TwitterTask`, `BaseTwitterTask`).
+**Immediate Priority:** ✅ Completed - Core interfaces and base classes implemented.
 
 **Recommended Approach:**
-1.  Create `browser-use/core/interfaces.py` and define the abstract base classes.
-2.  Create `browser-use/core/base_task.py` for shared logic (config, browser setup).
-3.  Implement the **Commitment Workflow (Phase 2)** modules, starting with the interfaces they need (`TwitterPostingInterface`, `TwitterExtractionInterface`).
-4.  Build the `test_commitment_workflow.py` to test the interaction between the Phase 2 modules.
-5.  Proceed to the Reveal Workflow, implementing and testing the modules for that stage.
-6.  Finally, build the orchestrators to tie the full vertical slices together.
+1.  ✅ Create `browser/core/interfaces.py` and define the abstract base classes.
+2.  ✅ Create `browser/core/base_task.py` for shared logic (config, browser setup).
+3.  ✅ Implement the **Commitment Workflow (Phase 2)** Round Announcement module.
+4.  Continue with remaining Phase 2 modules (`TwitterPostingInterface`, `TwitterExtractionInterface`).
+5.  Build the `test_commitment_workflow.py` to test the interaction between the Phase 2 modules.
+6.  Proceed to the Reveal Workflow, implementing and testing the modules for that stage.
+7.  Finally, build the orchestrators to tie the full vertical slices together.
 
 This modular approach ensures each component can be developed, tested, and deployed independently while maintaining consistency across the entire system.
 
