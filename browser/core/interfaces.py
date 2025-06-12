@@ -8,7 +8,14 @@ must implement, ensuring consistency and testability across the system.
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional
 from pydantic import BaseModel
-from browser_use import Agent, BrowserContext
+from browser_use import Agent
+# Browser_use may not expose BrowserContext in newer versions, so use Any for context
+after_import_browser_context = False
+try:
+    from browser_use import BrowserContext  # type: ignore
+    after_import_browser_context = True
+except ImportError:
+    from typing import Any as BrowserContext  # type: ignore
 
 
 class TwitterTask(ABC):

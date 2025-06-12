@@ -11,14 +11,11 @@ from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 from pathlib import Path
 
-# Add the project root to Python path
+# Add project root to path for package import
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-# Import by adding the browser directory to path
-browser_path = Path(__file__).parent.parent / "browser"
-sys.path.insert(0, str(browser_path))
-
-from validator.announce_round import (
+# Import via package path
+from browser.validator.announce_round import (
     RoundAnnouncementTask,
     RoundAnnouncementData,
     RoundAnnouncementResult,

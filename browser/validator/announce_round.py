@@ -16,9 +16,9 @@ try:
     from ..core.interfaces import TwitterPostingInterface
     from ..core.base_task import BaseTwitterTask
 except ImportError:
-    # Fall back to direct imports (when used as standalone)
-    from interfaces import TwitterPostingInterface
-    from base_task import BaseTwitterTask
+    # Fall back to direct imports (when used as standalone via sys.path tweaks)
+    from core.interfaces import TwitterPostingInterface
+    from core.base_task import BaseTwitterTask
 
 
 class RoundAnnouncementData(BaseModel):

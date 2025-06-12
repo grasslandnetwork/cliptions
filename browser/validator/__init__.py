@@ -11,7 +11,7 @@ This package contains modules that implement the Validator side of the RealMir p
 - Results publication
 """
 
-# Note: Imports are handled dynamically to avoid relative import issues
-# from .announce_round import RoundAnnouncementTask
+# Note: Expose RoundAnnouncementTask for easy import
+from .announce_round import RoundAnnouncementTask
 
 __all__ = ['RoundAnnouncementTask'] 
