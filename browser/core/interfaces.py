@@ -54,7 +54,7 @@ class TwitterTask(ABC):
         pass
     
     @abstractmethod
-    def setup_agent(self, **kwargs) -> Agent:
+    async def setup_agent(self, **kwargs) -> Agent:
         """
         Configure and return the browser-use agent for this task.
         

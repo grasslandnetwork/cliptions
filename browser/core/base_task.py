@@ -143,7 +143,7 @@ class BaseTwitterTask(TwitterTask):
         # Initialize browser for persistent sessions
         self.browser_instance = Browser()
     
-    def setup_agent(self, task: str, initial_actions: Optional[list] = None, **kwargs) -> Agent:
+    async def setup_agent(self, task: str, initial_actions: Optional[list] = None, **kwargs) -> Agent:
         """
         Configure and return the browser-use agent for this task.
         
@@ -166,9 +166,7 @@ class BaseTwitterTask(TwitterTask):
         
         # Create browser context if not already created
         if self._browser_context is None:
-            self._browser_context = asyncio.run(
-                self.browser_instance.new_context(config=self.browser_config)
-            )
+            self._browser_context = await self.browser_instance.new_context(config=self.browser_config)
             print("Created persistent browser context with cookies support")
         
         # Create and configure agent
