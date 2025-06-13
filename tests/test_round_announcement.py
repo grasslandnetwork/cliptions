@@ -35,14 +35,15 @@ class TestRoundAnnouncementData:
             entry_fee=0.001,
             commitment_deadline=now + timedelta(hours=24),
             reveal_deadline=now + timedelta(hours=48),
-            prize_pool=0.001
+            livestream_url="https://www.youtube.com/watch?v=SMCRQj9Hbx8"
         )
         
         assert data.round_id == "test_round_1"
         assert data.entry_fee == 0.001
-        assert data.prize_pool == 0.001
-        assert len(data.hashtags) == 3
-        assert "#RealMir" in data.hashtags
+        assert data.livestream_url == "https://www.youtube.com/watch?v=SMCRQj9Hbx8"
+        assert len(data.hashtags) == 2
+        assert "#realmir" in data.hashtags
+        assert "$TAO" in data.hashtags
     
     def test_custom_hashtags(self):
         """Test creating announcement data with custom hashtags"""
@@ -54,7 +55,7 @@ class TestRoundAnnouncementData:
             entry_fee=0.002,
             commitment_deadline=now + timedelta(hours=12),
             reveal_deadline=now + timedelta(hours=36),
-            prize_pool=0.005,
+            livestream_url="https://www.youtube.com/watch?v=SMCRQj9Hbx8",
             hashtags=custom_hashtags
         )
         
@@ -78,7 +79,7 @@ class TestRoundAnnouncementTask:
             entry_fee=0.001,
             commitment_deadline=now + timedelta(hours=24),
             reveal_deadline=now + timedelta(hours=48),
-            prize_pool=0.001,
+            livestream_url="https://www.youtube.com/watch?v=SMCRQj9Hbx8",
             instructions="This is a test round"
         )
     
@@ -86,13 +87,15 @@ class TestRoundAnnouncementTask:
         """Test the content formatting functionality"""
         content = task.format_content(sample_data)
         
-        assert "🎯 NEW ROUND: test_round_1" in content
-        assert "💰 Entry Fee: 0.001 TAO" in content
-        assert "🏆 Prize Pool: 0.001 TAO" in content
-        assert "ℹ️ This is a test round" in content
-        assert "#realmir" in content
-        assert "$TAO" in content
-        assert "1. Reply with your commitment hash + wallet address" in content
+        assert "#testround1 #roundannouncement #realmir $TAO" in content
+        assert "TEST ROUND 1 - Hash Your Prediction" in content
+        assert "How To Play:" in content
+        assert f"1. Watch: https://www.youtube.com/watch?v=SMCRQj9Hbx8" in content
+        assert "2. Generate your commitment hash (see instructions)" in content
+        assert "3. Reply BEFORE" in content
+        assert "Reply with:" in content
+        assert "Commit: [hash]" in content
+        assert "Wallet: [address]" in content
     
     def test_format_content_no_instructions(self, task):
         """Test content formatting without instructions"""
@@ -102,15 +105,14 @@ class TestRoundAnnouncementTask:
             entry_fee=0.002,
             commitment_deadline=now + timedelta(hours=24),
             reveal_deadline=now + timedelta(hours=48),
-            prize_pool=0.002
+            livestream_url="https://www.youtube.com/watch?v=SMCRQj9Hbx8"
         )
         
         content = task.format_content(data)
         
-        assert "🎯 NEW ROUND: test_round_2" in content
-        assert "ℹ️" not in content  # No instructions section
-        assert "#realmir" in content
-        assert "$TAO" in content
+        assert "#testround2 #roundannouncement #realmir $TAO" in content
+        assert "TEST ROUND 2 - Hash Your Prediction" in content
+        assert f"1. Watch: https://www.youtube.com/watch?v=SMCRQj9Hbx8" in content
     
     def test_extract_tweet_id_from_url(self, task):
         """Test tweet ID extraction from various URL formats"""
@@ -195,7 +197,7 @@ class TestRoundAnnouncementTask:
                 entry_fee=0.003,
                 commitment_deadline=now + timedelta(hours=24),
                 reveal_deadline=now + timedelta(hours=48),
-                prize_pool=0.003
+                livestream_url="https://www.youtube.com/watch?v=SMCRQj9Hbx8"
             )
             
             assert isinstance(result, RoundAnnouncementResult)
@@ -220,11 +222,14 @@ class TestUtilityFunctions:
     
     def test_create_standard_round_announcement(self):
         """Test creating a standard round announcement"""
-        data = create_standard_round_announcement("standard_round")
+        data = create_standard_round_announcement(
+            "standard_round",
+            "https://www.youtube.com/watch?v=SMCRQj9Hbx8"
+        )
         
         assert data.round_id == "standard_round"
+        assert data.livestream_url == "https://www.youtube.com/watch?v=SMCRQj9Hbx8"
         assert data.entry_fee == 0.001
-        assert data.prize_pool == 0.001
         assert data.commitment_deadline > datetime.now()
         assert data.reveal_deadline > data.commitment_deadline
     
@@ -232,15 +237,15 @@ class TestUtilityFunctions:
         """Test creating a standard round announcement with custom parameters"""
         data = create_standard_round_announcement(
             "custom_standard",
+            "https://www.youtube.com/watch?v=SMCRQj9Hbx8",
             entry_fee=0.005,
-            prize_pool=0.010,
             commitment_hours=12,
             reveal_hours=36
         )
         
         assert data.round_id == "custom_standard"
+        assert data.livestream_url == "https://www.youtube.com/watch?v=SMCRQj9Hbx8"
         assert data.entry_fee == 0.005
-        assert data.prize_pool == 0.010
         
         # Check timing is approximately correct (within 1 minute)
         now = datetime.now()
@@ -258,17 +263,17 @@ class TestUtilityFunctions:
         
         data = create_custom_round_announcement(
             round_id="custom_round",
+            livestream_url="https://www.youtube.com/watch?v=SMCRQj9Hbx8",
             entry_fee=0.002,
             commitment_deadline=commit_deadline,
             reveal_deadline=reveal_deadline,
-            prize_pool=0.008,
             instructions="Custom instructions",
             hashtags=["#realmir", "$TAO", "#custom"]
         )
         
         assert data.round_id == "custom_round"
+        assert data.livestream_url == "https://www.youtube.com/watch?v=SMCRQj9Hbx8"
         assert data.entry_fee == 0.002
-        assert data.prize_pool == 0.008
         assert data.commitment_deadline == commit_deadline
         assert data.reveal_deadline == reveal_deadline
         assert data.instructions == "Custom instructions"
@@ -280,10 +285,10 @@ class TestUtilityFunctions:
         
         data = create_custom_round_announcement(
             round_id="default_hashtags",
+            livestream_url="https://www.youtube.com/watch?v=SMCRQj9Hbx8",
             entry_fee=0.001,
             commitment_deadline=now + timedelta(hours=24),
-            reveal_deadline=now + timedelta(hours=48),
-            prize_pool=0.001
+            reveal_deadline=now + timedelta(hours=48)
         )
         
         assert data.hashtags == ["#realmir", "$TAO"]

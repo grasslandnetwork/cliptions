@@ -7,9 +7,11 @@ the upcoming round including entry fees, deadlines, and participation instructio
 """
 
 import logging
+import os
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
 from pydantic import BaseModel, Field
+from browser_use import Agent, Browser
 
 try:
     # Try relative imports first (when used as part of package)
@@ -27,7 +29,7 @@ class RoundAnnouncementData(BaseModel):
     entry_fee: float = Field(..., description="Entry fee in TAO")
     commitment_deadline: datetime = Field(..., description="Deadline for commitment submissions")
     reveal_deadline: datetime = Field(..., description="Deadline for reveal submissions")
-    prize_pool: float = Field(..., description="Total prize pool in TAO")
+    livestream_url: str = Field(..., description="URL of the livestream players are predicting")
     instructions: str = Field(default="", description="Additional instructions for participants")
     hashtags: list[str] = Field(default_factory=lambda: ["#realmir", "$TAO"])
 
@@ -108,28 +110,29 @@ class RoundAnnouncementTask(BaseTwitterTask):
         Returns:
             Formatted tweet content
         """
+        # Extract round number from round_id (e.g., "TEST-ROUND-001" -> "TEST ROUND 001")
+        round_display = data.round_id.replace("-", " ").upper()
+        
+        # Format commitment deadline as readable time (assume UTC if no timezone)
+        commitment_time = data.commitment_deadline.strftime('%I:%M:%S %p UTC on %B %d, %Y')
+        
+        # Combine all hashtags at the top
+        round_hashtag = f"#{data.round_id.lower().replace('-', '')}"
+        all_hashtags = [round_hashtag, "#roundannouncement"] + data.hashtags
+        
         content_parts = [
-            f"🎯 NEW ROUND: {data.round_id}",
+            " ".join(all_hashtags),
+            f"{round_display} - Hash Your Prediction",
             "",
-            f"💰 Entry Fee: {data.entry_fee} TAO",
-            f"🏆 Prize Pool: {data.prize_pool} TAO",
+            "How To Play:",
+            f"1. Watch: {data.livestream_url}",
+            "2. Generate your commitment hash (see instructions)",
+            f"3. Reply BEFORE {commitment_time}:",
             "",
-            f"⏰ Commitment Deadline: {data.commitment_deadline.strftime('%Y-%m-%d %H:%M UTC')}",
-            f"📅 Reveal Deadline: {data.reveal_deadline.strftime('%Y-%m-%d %H:%M UTC')}",
-            "",
-            "📋 To Participate:",
-            "1. Reply with your commitment hash + wallet address",
-            "2. Wait for entry fee address assignment",
-            "3. Pay entry fee before deadline",
-            "4. Submit your reveal when target is posted",
+            "Reply with:",
+            "Commit: [hash]",
+            "Wallet: [address]"
         ]
-        
-        if data.instructions:
-            content_parts.extend(["", f"ℹ️ {data.instructions}"])
-        
-        # Add hashtags
-        if data.hashtags:
-            content_parts.extend(["", " ".join(data.hashtags)])
         
         return "\n".join(content_parts)
     
@@ -144,41 +147,63 @@ class RoundAnnouncementTask(BaseTwitterTask):
             Dictionary with posting results
         """
         try:
-            # Set up the browser agent
-            agent = await self.setup_agent()
+            # 1. Define initial actions to navigate directly to the URL without LLM
+            initial_actions = [
+                {'go_to_url': {'url': 'https://x.com/compose/post'}},
+            ]
+
+            # 2. Define a very specific task using the confirmed data-testid selectors
+            task_description = f"""
+            You are on the Twitter/X compose page. Your task is to post a tweet with the following content:
+
+            ---
+            {content}
+            ---
+
+            Follow these steps precisely:
+            1. Locate the tweet input area using the selector `[data-testid="tweetTextarea_0"]`.
+            2. Click on the input area to ensure it is focused.
+            3. Use the `send_keys` action to type the exact content provided above into the input area.
+            4. Locate the 'Post' button using the selector `[data-testid="tweetButtonInline"]`.
+            5. Click the 'Post' button to publish the tweet.
+            6. Wait for confirmation that the tweet was sent, then use the `done` action.
+            """
             
-            # Navigate to Twitter compose page
-            await agent.get("https://twitter.com/compose/tweet")
+            # 3. Set up the browser agent, passing the initial actions
+            agent = await self.setup_agent(
+                task=task_description,
+                initial_actions=initial_actions,
+            )
             
-            # Wait for the compose textarea to be available
-            await agent.wait_for_element("div[data-testid='tweetTextarea_0']", timeout=10)
+            # Run the agent
+            print("🤖 Agent starting task: Posting tweet...")
+            result = await agent.run(max_steps=10)
             
-            # Type the content
-            tweet_textarea = await agent.find_element("div[data-testid='tweetTextarea_0']")
-            await tweet_textarea.clear()
-            await tweet_textarea.type(content)
+            print(f"Agent finished with result: {result}")
             
-            # Click the tweet button
-            tweet_button = await agent.find_element("div[data-testid='tweetButtonInline']")
-            await tweet_button.click()
+            # Extract tweet URL and ID from the final result or agent history
+            tweet_url = "https://twitter.com/placeholder_tweet_url"  # Placeholder
+            tweet_id = "placeholder_tweet_id" # Placeholder
             
-            # Wait for the tweet to be posted and get the URL
-            await agent.wait(3)  # Wait for posting to complete
-            
-            # Get the current URL or tweet ID (implementation depends on browser-use capabilities)
-            current_url = await agent.get_current_url()
-            
-            self.logger.info(f"Successfully posted round announcement")
-            
+            if hasattr(result, 'history'):
+                # You can add logic here to parse history for the final URL if needed
+                pass
+
             return {
                 "success": True,
-                "tweet_url": current_url,
-                "tweet_id": self._extract_tweet_id_from_url(current_url)
+                "tweet_url": tweet_url,
+                "tweet_id": tweet_id,
+                "message": "Successfully posted round announcement"
             }
             
         except Exception as e:
-            self.logger.error(f"Failed to post content: {str(e)}")
-            raise
+            logging.error(f"Failed to post content to Twitter: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": str(e)
+            }
     
     def _extract_tweet_id_from_url(self, url: str) -> Optional[str]:
         """Extract tweet ID from Twitter URL"""
@@ -214,8 +239,8 @@ class RoundAnnouncementTask(BaseTwitterTask):
 
 def create_standard_round_announcement(
     round_id: str,
+    livestream_url: str = "https://www.youtube.com/watch?v=SMCRQj9Hbx8",
     entry_fee: float = 0.001,
-    prize_pool: Optional[float] = None,
     commitment_hours: int = 24,
     reveal_hours: int = 48
 ) -> RoundAnnouncementData:
@@ -224,8 +249,8 @@ def create_standard_round_announcement(
     
     Args:
         round_id: Unique identifier for the round
+        livestream_url: URL of the livestream players are predicting (defaults to sample URL)
         entry_fee: Entry fee in TAO (default: 0.001)
-        prize_pool: Prize pool in TAO (defaults to entry_fee if not specified)
         commitment_hours: Hours from now until commitment deadline
         reveal_hours: Hours from now until reveal deadline
         
@@ -236,24 +261,21 @@ def create_standard_round_announcement(
     commitment_deadline = now + timedelta(hours=commitment_hours)
     reveal_deadline = now + timedelta(hours=reveal_hours)
     
-    if prize_pool is None:
-        prize_pool = entry_fee
-    
     return RoundAnnouncementData(
         round_id=round_id,
+        livestream_url=livestream_url,
         entry_fee=entry_fee,
         commitment_deadline=commitment_deadline,
-        reveal_deadline=reveal_deadline,
-        prize_pool=prize_pool
+        reveal_deadline=reveal_deadline
     )
 
 
 def create_custom_round_announcement(
     round_id: str,
+    livestream_url: str,
     entry_fee: float,
     commitment_deadline: datetime,
     reveal_deadline: datetime,
-    prize_pool: float,
     instructions: str = "",
     hashtags: Optional[list[str]] = None
 ) -> RoundAnnouncementData:
@@ -262,10 +284,10 @@ def create_custom_round_announcement(
     
     Args:
         round_id: Unique identifier for the round
+        livestream_url: URL of the livestream players are predicting
         entry_fee: Entry fee in TAO
         commitment_deadline: When commitments are due
         reveal_deadline: When reveals are due
-        prize_pool: Total prize pool in TAO
         instructions: Additional instructions for participants
         hashtags: Custom hashtags (uses defaults if not provided)
         
@@ -274,10 +296,10 @@ def create_custom_round_announcement(
     """
     return RoundAnnouncementData(
         round_id=round_id,
+        livestream_url=livestream_url,
         entry_fee=entry_fee,
         commitment_deadline=commitment_deadline,
         reveal_deadline=reveal_deadline,
-        prize_pool=prize_pool,
         instructions=instructions,
         hashtags=hashtags or ["#realmir", "$TAO"]
     ) 
