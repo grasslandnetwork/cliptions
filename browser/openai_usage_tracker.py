@@ -33,7 +33,7 @@ class OpenAIUsageTracker:
         self.costs_url = "https://api.openai.com/v1/organization/costs"
         
         # Create data directory if it doesn't exist
-        self.data_dir = Path('./browser_data')
+        self.data_dir = Path('./browser/browser_data')
         self.data_dir.mkdir(exist_ok=True)
         
         self.usage_file = self.data_dir / 'openai_actual_usage.json'
