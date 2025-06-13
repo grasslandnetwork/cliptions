@@ -68,30 +68,9 @@ class RoundAnnouncementTask(BaseTwitterTask):
             RoundAnnouncementResult: Result of the announcement posting
         """
         try:
-            # Parse input data
-            if 'data' in kwargs:
-                announcement_data = kwargs['data']
-                if not isinstance(announcement_data, RoundAnnouncementData):
-                    announcement_data = RoundAnnouncementData(**announcement_data)
-            else:
-                announcement_data = RoundAnnouncementData(**kwargs)
-            
-            self.logger.info(f"Starting round announcement for round {announcement_data.round_id}")
-            
-            # Format the announcement content
-            content = self.format_content(announcement_data)
-            
-            # Post the announcement
-            result = await self.post_content(content)
-            
-            return RoundAnnouncementResult(
-                success=True,
-                tweet_url=result.get('tweet_url'),
-                tweet_id=result.get('tweet_id'),
-                round_id=announcement_data.round_id,
-                timestamp=datetime.now()
-            )
-            
+            # Use the base class execute method which includes cleanup
+            result = await super().execute(**kwargs)
+            return result
         except Exception as e:
             self.logger.error(f"Failed to post round announcement: {str(e)}")
             return RoundAnnouncementResult(
@@ -99,6 +78,41 @@ class RoundAnnouncementTask(BaseTwitterTask):
                 round_id=kwargs.get('round_id', 'unknown'),
                 error_message=str(e)
             )
+    
+    async def _execute_task(self, **kwargs) -> RoundAnnouncementResult:
+        """
+        Internal task execution method called by the base class.
+        
+        Args:
+            **kwargs: Should contain RoundAnnouncementData fields or a 'data' key
+                     with RoundAnnouncementData instance
+        
+        Returns:
+            RoundAnnouncementResult: Result of the announcement posting
+        """
+        # Parse input data
+        if 'data' in kwargs:
+            announcement_data = kwargs['data']
+            if not isinstance(announcement_data, RoundAnnouncementData):
+                announcement_data = RoundAnnouncementData(**announcement_data)
+        else:
+            announcement_data = RoundAnnouncementData(**kwargs)
+        
+        self.logger.info(f"Starting round announcement for round {announcement_data.round_id}")
+        
+        # Format the announcement content
+        content = self.format_content(announcement_data)
+        
+        # Post the announcement
+        result = await self.post_content(content)
+        
+        return RoundAnnouncementResult(
+            success=True,
+            tweet_url=result.get('tweet_url'),
+            tweet_id=result.get('tweet_id'),
+            round_id=announcement_data.round_id,
+            timestamp=datetime.now()
+        )
     
     def format_content(self, data: RoundAnnouncementData) -> str:
         """
@@ -219,7 +233,7 @@ class RoundAnnouncementTask(BaseTwitterTask):
         
         return None
     
-    def validate_output(self, result: Any) -> bool:
+    def validate_output(self, result: Any) -> RoundAnnouncementResult:
         """
         Validate that the announcement was posted successfully.
         
@@ -227,12 +241,17 @@ class RoundAnnouncementTask(BaseTwitterTask):
             result: The result to validate
             
         Returns:
-            True if valid, False otherwise
+            Validated RoundAnnouncementResult
         """
-        if not isinstance(result, RoundAnnouncementResult):
-            return False
+        if isinstance(result, RoundAnnouncementResult):
+            return result
         
-        return result.success and (result.tweet_url is not None or result.tweet_id is not None)
+        # If it's not already a RoundAnnouncementResult, something went wrong
+        return RoundAnnouncementResult(
+            success=False,
+            round_id="unknown",
+            error_message="Invalid result type returned from task execution"
+        )
 
 
 # Utility functions for creating announcement data
