@@ -6,13 +6,14 @@ import asyncio
 import sys
 from pathlib import Path
 
-# Add the parent directory to sys.path to allow imports
-sys.path.append(str(Path(__file__).parent))
+# Add the project root to sys.path to allow imports
+sys.path.append(str(Path(__file__).parent.parent.parent))
 
 from browser.miner.submit_commitment import (
     CommitmentSubmissionTask,
     create_commitment_submission
 )
+from core.generate_commitment import generate_commitment
 
 async def main():
     # Create a commitment submission task
@@ -30,7 +31,7 @@ async def main():
         )
         
         print("Submitting commitment...")
-        print(f"Commitment Hash: {task.generate_commitment_hash(commitment_data.prediction, commitment_data.salt)}")
+        print(f"Commitment Hash: {generate_commitment(commitment_data.prediction, commitment_data.salt)}")
         print(f"Wallet: {commitment_data.wallet_address}")
         print(f"Replying to: {commitment_data.reply_to_url}")
         
@@ -60,7 +61,7 @@ if __name__ == "__main__":
     
     test_prediction = "Cat sanctuary with caretakers feeding cats"
     test_salt = "test-salt-123"
-    generated_hash = task.generate_commitment_hash(test_prediction, test_salt)
+    generated_hash = generate_commitment(test_prediction, test_salt)
     
     print(f"🔐 Generated Commitment Hash:")
     print(f"Prediction: {test_prediction}")

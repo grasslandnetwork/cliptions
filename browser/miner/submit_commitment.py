@@ -7,7 +7,6 @@ by submitting their cryptographic commitments along with their wallet addresses.
 """
 
 import logging
-import hashlib
 from datetime import datetime
 from typing import Dict, Any, Optional
 from pydantic import BaseModel, Field
@@ -16,10 +15,12 @@ try:
     # Try relative imports first (when used as part of package)
     from ..core.interfaces import TwitterPostingInterface
     from ..core.base_task import BaseTwitterTask
+    from ...core.generate_commitment import generate_commitment
 except ImportError:
     # Fall back to direct imports (when used as standalone via sys.path tweaks)
-    from core.interfaces import TwitterPostingInterface
-    from core.base_task import BaseTwitterTask
+    from browser.core.interfaces import TwitterPostingInterface
+    from browser.core.base_task import BaseTwitterTask
+    from core.generate_commitment import generate_commitment
 
 
 class CommitmentSubmissionData(BaseModel):
@@ -101,7 +102,7 @@ class CommitmentSubmissionTask(BaseTwitterTask):
         
         # Generate commitment hash if not provided
         if not submission_data.commitment_hash:
-            submission_data.commitment_hash = self.generate_commitment_hash(
+            submission_data.commitment_hash = generate_commitment(
                 submission_data.prediction, 
                 submission_data.salt
             )
@@ -120,23 +121,6 @@ class CommitmentSubmissionTask(BaseTwitterTask):
             wallet_address=submission_data.wallet_address,
             timestamp=datetime.now()
         )
-    
-    def generate_commitment_hash(self, prediction: str, salt: str) -> str:
-        """
-        Generate commitment hash from prediction and salt.
-        
-        Args:
-            prediction: The plaintext prediction
-            salt: Salt value to prevent message revelation
-            
-        Returns:
-            Hex string of the commitment hash
-        """
-        if not salt:
-            raise ValueError("Salt is required for generating commitments")
-        
-        data = prediction.encode() + salt.encode()
-        return hashlib.sha256(data).hexdigest()
     
     def format_content(self, data: Dict[str, Any]) -> str:
         """
