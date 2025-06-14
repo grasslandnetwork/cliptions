@@ -44,7 +44,7 @@ Instead of a monolithic script, the system will be composed of specialized modul
 *   **Module:** `browser/validator/collect_commitments.py`
 *   **Purpose:** Extract all miner commitments from the announcement tweet replies.
 *   **Implements:** `TwitterExtractionInterface`
-*   **Status:** Not Started
+*   **Status:** ✅ Completed
 
 ### **Task 2.4:** Validator: Entry Fee Assignment
 *   **Module:** `browser/validator/assign_entry_fees.py`  

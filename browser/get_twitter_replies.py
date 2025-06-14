@@ -16,7 +16,7 @@ from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from browser_use import Agent, Browser, BrowserContextConfig
 from pydantic import BaseModel
-from browser_use_cost_tracker import create_cost_tracker_from_config
+from .core.cost_tracker import create_cost_tracker_from_config
 
 # Load environment variables
 load_dotenv()
