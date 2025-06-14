@@ -7,7 +7,8 @@ import pathlib
 # Add the browser-use directory to the path
 sys.path.insert(0, str(pathlib.Path(__file__).parent.parent / "browser-use"))
 
-from twitter_data_fetcher import load_llm_config
+from browser.twitter_data_fetcher import load_llm_config
+from browser.twitter_data_fetcher import ChatOpenAI
 
 
 class TestBrowserUseAPIKey:
@@ -80,10 +81,10 @@ openai:
         finally:
             os.unlink(temp_config_path)
     
-    @patch('twitter_data_fetcher.ChatOpenAI')
+    @patch('browser.twitter_data_fetcher.ChatOpenAI')
     def test_chat_openai_uses_api_key_from_config(self, mock_chat_openai):
         """Test that ChatOpenAI is initialized with the API key from config"""
-        from twitter_data_fetcher import ChatOpenAI
+        from browser.twitter_data_fetcher import ChatOpenAI
         
         test_api_key = "sk-test-browser-use-key-456"
         

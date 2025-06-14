@@ -6,7 +6,7 @@ import os
 # Add parent directory to path to import generate_commitment
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from generate_commitment import generate_commitment
+from core.generate_commitment import generate_commitment
 
 class TestCommitment(unittest.TestCase):
     def test_commitment_verification(self):

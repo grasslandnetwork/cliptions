@@ -9,7 +9,7 @@ import json
 import io
 import base64
 import argparse
-from interfaces import IEmbedder
+from .interfaces import IEmbedder
 
 class ClipEmbedder(IEmbedder):
     """Generates CLIP embeddings for images and text using the CLIP model."""

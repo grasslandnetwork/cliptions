@@ -1,5 +1,5 @@
 import unittest
-from clip_embedder import ClipEmbedder
+from core.clip_embedder import ClipEmbedder
 from PIL import Image
 import numpy as np
 import base64
@@ -94,7 +94,7 @@ class TestClipEmbedder(unittest.TestCase):
              patch('sys.stdout', new_callable=io.StringIO) as mock_stdout, \
              patch('sys.argv', ['clip_embedder.py', '--mode', 'image']):
             
-            from clip_embedder import main
+            from core.clip_embedder import main
             main()
             
             # Parse output
@@ -121,7 +121,7 @@ class TestClipEmbedder(unittest.TestCase):
              patch('sys.stdout', new_callable=io.StringIO) as mock_stdout, \
              patch('sys.argv', ['clip_embedder.py', '--mode', 'text']):
             
-            from clip_embedder import main
+            from core.clip_embedder import main
             main()
             
             # Parse output
@@ -145,7 +145,7 @@ class TestClipEmbedder(unittest.TestCase):
              patch('sys.stderr', new_callable=io.StringIO) as mock_stderr, \
              patch('sys.argv', ['clip_embedder.py', '--mode', 'text']):
             
-            from clip_embedder import main
+            from core.clip_embedder import main
             with self.assertRaises(SystemExit):
                 main()
             
@@ -160,7 +160,7 @@ class TestClipEmbedder(unittest.TestCase):
              patch('sys.stderr', new_callable=io.StringIO) as mock_stderr, \
              patch('sys.argv', ['clip_embedder.py', '--mode', 'text']):
             
-            from clip_embedder import main
+            from core.clip_embedder import main
             with self.assertRaises(SystemExit):
                 main()
             
@@ -175,7 +175,7 @@ class TestClipEmbedder(unittest.TestCase):
              patch('sys.stderr', new_callable=io.StringIO) as mock_stderr, \
              patch('sys.argv', ['clip_embedder.py', '--mode', 'invalid_mode']):
             
-            from clip_embedder import main
+            from core.clip_embedder import main
             with self.assertRaises(SystemExit):
                 main()
 

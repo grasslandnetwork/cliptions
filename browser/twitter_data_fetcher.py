@@ -7,7 +7,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from browser_use import Agent, Browser, BrowserContextConfig
-from openai_usage_tracker import OpenAIUsageTracker
+from .openai_usage_tracker import OpenAIUsageTracker
 
 # Load environment variables from .env file
 load_dotenv()
