@@ -88,10 +88,10 @@ class TestCollectCommitmentsTask:
     @pytest.fixture
     def task_instance(self, mock_config):
         """Create a CollectCommitmentsTask instance with mocked dependencies"""
-        with patch('browser.validator.collect_commitments.load_llm_config', return_value=mock_config), \
-             patch('browser.validator.collect_commitments.create_cost_tracker_from_config') as mock_tracker, \
-             patch('browser.validator.collect_commitments.ChatOpenAI'), \
-             patch('browser.validator.collect_commitments.Browser'):
+        with patch('browser.core.base_task.BaseTwitterTask.load_llm_config', return_value=mock_config), \
+             patch('browser.core.cost_tracker.create_cost_tracker_from_config') as mock_tracker, \
+             patch('langchain_openai.ChatOpenAI'), \
+             patch('browser_use.Browser'):
             
             mock_tracker.return_value.enabled = False
             task = CollectCommitmentsTask()
@@ -143,16 +143,17 @@ class TestCollectCommitmentsTask:
     
     @pytest.mark.asyncio
     async def test_parse_extraction_result_with_invalid_json(self, task_instance):
-        """Test parsing an invalid JSON result"""
+        """Test parsing an invalid JSON result falls back to text parsing"""
         invalid_result = "This is not JSON"
         announcement_url = "https://x.com/announcement/123"
         
         result = await task_instance._parse_extraction_result(invalid_result, announcement_url)
         
-        assert result.success is False
+        # With the new architecture, invalid JSON falls back to text parsing
+        assert result.success is False  # No commitments found in fallback
         assert len(result.commitments) == 0
         assert result.total_commitments_found == 0
-        assert result.error_message == "Failed to parse extraction result"
+        assert "No commitments found in fallback parsing" in result.error_message
     
     @pytest.mark.asyncio
     async def test_parse_extraction_result_with_missing_fields(self, task_instance):

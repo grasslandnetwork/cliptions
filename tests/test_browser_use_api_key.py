@@ -7,8 +7,8 @@ import pathlib
 # Add the browser-use directory to the path
 sys.path.insert(0, str(pathlib.Path(__file__).parent.parent / "browser-use"))
 
-from browser.twitter_data_fetcher import load_llm_config
-from browser.twitter_data_fetcher import ChatOpenAI
+from browser.core.base_task import BaseTwitterTask
+from langchain_openai import ChatOpenAI
 
 
 class TestBrowserUseAPIKey:
@@ -47,7 +47,8 @@ cost_tracking:
             temp_config_path = f.name
         
         try:
-            config = load_llm_config(temp_config_path)
+            task = BaseTwitterTask()
+            config = task.load_llm_config(temp_config_path)
             
             # Verify the API key is loaded correctly
             assert config['openai']['api_key'] == test_api_key
@@ -74,17 +75,17 @@ openai:
             temp_config_path = f.name
         
         try:
-            config = load_llm_config(temp_config_path)
+            task = BaseTwitterTask()
+            config = task.load_llm_config(temp_config_path)
             # Should load successfully, API key will be None
             assert config['openai'].get('api_key') is None
             assert config['openai']['model'] == 'gpt-4o'
         finally:
             os.unlink(temp_config_path)
     
-    @patch('browser.twitter_data_fetcher.ChatOpenAI')
+    @patch('langchain_openai.ChatOpenAI')
     def test_chat_openai_uses_api_key_from_config(self, mock_chat_openai):
         """Test that ChatOpenAI is initialized with the API key from config"""
-        from browser.twitter_data_fetcher import ChatOpenAI
         
         test_api_key = "sk-test-browser-use-key-456"
         

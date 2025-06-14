@@ -16,53 +16,22 @@ from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from browser_use import Agent, Browser, BrowserContextConfig
 from pydantic import BaseModel
-from .core.cost_tracker import create_cost_tracker_from_config
+# Handle imports for both direct execution and module import
+try:
+    from .core.cost_tracker import create_cost_tracker_from_config
+    from .core.base_task import BaseTwitterTask
+except ImportError:
+    # When running directly, use absolute imports
+    import sys
+    import pathlib
+    sys.path.insert(0, str(pathlib.Path(__file__).parent.parent))
+    from browser.core.cost_tracker import create_cost_tracker_from_config
+    from browser.core.base_task import BaseTwitterTask
 
 # Load environment variables
 load_dotenv()
 
-def load_llm_config(config_file_path: str = None) -> dict:
-    """Load LLM configuration from config/llm.yaml with environment variable substitution"""
-    if config_file_path is None:
-        # Default to config/llm.yaml in project root
-        script_dir = pathlib.Path(__file__).parent.parent  # Go up from browser-use/ to project root
-        config_file_path = script_dir / "config" / "llm.yaml"
-    else:
-        config_file_path = pathlib.Path(config_file_path)
-    
-    if not config_file_path.exists():
-        print(f"Warning: LLM config file not found: {config_file_path}")
-        # Return default config
-        return {
-            'openai': {
-                'model': 'gpt-4o',
-                'temperature': 0.1,
-                'max_tokens': 4000,
-                'daily_spending_limit_usd': 5.00
-            },
-            'cost_tracking': {
-                'enabled': True
-            },
-            'browser_use': {
-                'max_steps': 50
-            }
-        }
-    
-    with open(config_file_path, 'r') as f:
-        config_content = f.read()
-    
-    # Substitute environment variables
-    def replace_env_var(match):
-        env_var = match.group(1)
-        value = os.environ.get(env_var)
-        if value is None:
-            print(f"Warning: Environment variable {env_var} is not set")
-            return match.group(0)  # Return original if env var not found
-        return value
-    
-    config_content = re.sub(r'\$\{([^}]+)\}', replace_env_var, config_content)
-    
-    return yaml.safe_load(config_content)
+# load_llm_config function moved to browser.core.base_task.BaseTwitterTask
 
 class TwitterReply(BaseModel):
     """Model for a Twitter reply"""
@@ -82,8 +51,9 @@ class TwitterReplyExtractor:
     
     def __init__(self, config_file_path: str = None):
         """Initialize the extractor with configuration and cost tracking"""
-        # Load configuration
-        self.config = load_llm_config(config_file_path)
+        # Load configuration using base task utility
+        base_task = BaseTwitterTask()
+        self.config = base_task.load_llm_config(config_file_path)
         print(f"Loaded LLM config: {self.config}")
         
         # Initialize cost tracker from config
@@ -147,62 +117,35 @@ class TwitterReplyExtractor:
         
         # Define the extraction task (LLM will start from the tweet page)
         task = f"""
-        You are now on the Twitter/X tweet page. Your task is to extract ALL reply tweet URLs from this thread.
+        You are on a Twitter/X tweet page. Extract reply information from what you can see.
         
-        CRITICAL INSTRUCTIONS - READ CAREFULLY:
+        SIMPLE STEPS:
+        1. Look at the current page - you should see the main tweet
+        2. Scroll down a few times to see replies below the main tweet
+        3. For each reply you can see, extract the information
+        4. Look for "Show probable spam" or "Show more replies" buttons and click them if present
+        5. Extract any additional replies that become visible
         
-        1. DO NOT CLICK ON ANYTHING AT ALL initially - No buttons, no links, no interactive elements
-        2. The page should already show the main tweet - just observe what's there
-        3. Use ONLY the scroll_down action to see more content initially
-        4. Look for reply tweets that are already visible or become visible after scrolling
-        5. Extract information from what you can see on the page, don't interact with elements initially
+        For each reply, extract:
+        - Username (like @username)
+        - Reply text preview
+        - Try to find the reply URL if visible
         
-        IMPORTANT: After scrolling and finding visible replies, also look for:
-        - "Show probable spam" button/link at the bottom of replies
-        - "Show additional replies" button/link  
-        - "Show more replies" button/link
-        - Any similar text that indicates hidden replies
-        
-        If you find such a button/link, CLICK IT to reveal additional replies that may be hidden.
-        Many legitimate replies get flagged as spam, especially from AI agents or new accounts.
-        
-        What you're looking for:
-        - Reply tweets that appear below the main tweet after scrolling
-        - Each reply will have a username (like @username) 
-        - Each reply will have its own tweet URL/status link
-        - Reply text content
-        - HIDDEN/SPAM replies that need to be revealed by clicking "Show probable spam"
-        
-        Steps to follow:
-        1. Look at the current page content for any visible replies
-        2. Use scroll_down action to see more content  
-        3. Continue scrolling to load more replies
-        4. Extract information from visible replies
-        5. Look for "Show probable spam" or similar buttons
-        6. If found, click the "Show probable spam" button to reveal hidden replies
-        7. Extract the newly revealed replies as well
-        8. DO NOT click on "Reply", "Comment", "Post" or composition buttons
-        
-        For each reply tweet you can see (including spam-flagged ones), extract:
-        - The direct URL (if visible in page elements)
-        - The username/handle (@username)
-        - Preview of the reply text
-        
-        Return results as JSON:
+        Return as JSON:
         {{
             "original_tweet_url": "{tweet_url}",
             "total_replies_found": <number>,
             "replies": [
                 {{
-                    "url": "extracted_or_constructed_url",
-                    "author": "@username", 
+                    "author": "@username",
                     "text_preview": "reply text...",
-                    "was_spam_flagged": true/false
+                    "url": "reply_url_if_found",
+                    "was_spam_flagged": false
                 }}
             ]
         }}
         
-        REMEMBER: First scroll to find visible replies, then look for and click "Show probable spam" to reveal hidden ones!
+        Keep it simple - just scroll, look, and extract what you can see.
         """
         
         # Create browser context with persistent cookies
@@ -222,13 +165,13 @@ class TwitterReplyExtractor:
         try:
             # Run the extraction
             print("Starting extraction with initial navigation...")
-            max_steps = self.config.get('browser_use', {}).get('max_steps', 50)
+            max_steps = self.config.get('browser_use', {}).get('max_steps', 15)  # Reduced from 50 to 15
             result = await agent.run(max_steps=max_steps)
             
             # Log execution completion and track costs
             self.cost_tracker.log_execution_end(start_time, session_id)
             
-            # Handle different result types
+            # Handle different result types (simplified original approach)
             if isinstance(result, str):
                 try:
                     # Try to parse as JSON if it looks like JSON
@@ -275,6 +218,8 @@ class TwitterReplyExtractor:
             if 'browser_context' in locals():
                 await browser_context.close()
                 print("Browser context closed")
+    
+
     
     async def save_results(self, results: TwitterReplies, output_file: str = "twitter_replies.json"):
         """Save extraction results to a JSON file"""
