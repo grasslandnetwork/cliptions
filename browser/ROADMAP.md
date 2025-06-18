@@ -24,6 +24,37 @@ Instead of a monolithic script, the system will be composed of specialized modul
 *   **Task 1.3:** ✅ **Test Infrastructure** (`tests/test_twitter_data_extraction.py`)
     *   **Status:** Completed - Structural testing framework ready for modular components
 
+## Phase 1.5: Data Layer Refactoring
+
+*To ensure a scalable and maintainable architecture, we are introducing a data abstraction layer. This will create a single source of truth for all round data and decouple our application logic from the underlying storage mechanism (currently JSON files, eventually a blockchain).*
+
+### **Task 1.5.1: Create Data Directory and Unified Data Model**
+*   **Action:** Create a `data/` directory at project root.
+*   **Action:** Consolidate data from `rounds/guesses.json`, `browser/twitter_replies.json`, and `collected_commitments.json` into a single `data/rounds.json`.
+*   **Status:** ✅ Completed
+
+### **Task 1.5.2: Schema Design and Redundancy Cleanup**
+*   **Action:** Analyze consolidated data structure for redundancies and inconsistencies.
+*   **Action:** Design clean, non-redundant Pydantic models for Round, Participant, Payout, etc.
+*   **Action:** Create `data/models.py` with comprehensive data validation schemas.
+*   **Action:** Remove redundant fields identified in analysis (e.g., duplicate URLs, calculable totals).
+*   **Status:** In Progress
+
+### **Task 1.5.3: Implement Data Access Interface**
+*   **Module:** `browser/core/interfaces.py`
+*   **Purpose:** Define `DataAccessInterface` (ABC) with methods like `get_round`, `save_commitments`, etc.
+*   **Status:** Not Started
+
+### **Task 1.5.4: Implement JSON Data Access Logic**
+*   **Module:** `data/json_data_access.py`
+*   **Purpose:** Create `JsonDataAccess`, a concrete class that implements the `DataAccessInterface` to interact with `data/rounds.json`.
+*   **Status:** Not Started
+
+### **Task 1.5.5: Refactor `collect_commitments.py`**
+*   **Module:** `browser/validator/collect_commitments.py`
+*   **Purpose:** Update the task to accept and use the `DataAccessInterface` for persisting collected commitments, instead of writing to its own JSON file.
+*   **Status:** Not Started
+
 ## Phase 2: Commitment Workflow
 
 *This phase focuses on the initial round setup and the commitment interaction between Validator and Miner.*
@@ -147,16 +178,20 @@ Each module will be a concrete implementation of a core interface. This replaces
 
 ## Next Steps
 
-**Immediate Priority:** ✅ Completed - Core interfaces and base classes implemented.
+**Immediate Priority:** 
+1. **Implement Phase 1.5:** Complete the Data Layer Refactoring to establish a single source of truth.
+2. **Continue with Phase 2:** Once the DAL is in place, proceed with the Commitment Workflow, starting with `Task 2.4: Validator: Entry Fee Assignment`.
 
 **Recommended Approach:**
 1.  ✅ Create `browser/core/interfaces.py` and define the abstract base classes.
 2.  ✅ Create `browser/core/base_task.py` for shared logic (config, browser setup).
 3.  ✅ Implement the **Commitment Workflow (Phase 2)** Round Announcement module.
-4.  Continue with remaining Phase 2 modules (`TwitterPostingInterface`, `TwitterExtractionInterface`).
-5.  Build the `test_commitment_workflow.py` to test the interaction between the Phase 2 modules.
-6.  Proceed to the Reveal Workflow, implementing and testing the modules for that stage.
-7.  Finally, build the orchestrators to tie the full vertical slices together.
+4.  **Implement the Data Layer Refactoring (Phase 1.5)** as outlined above.
+5.  Refactor existing modules like `collect_commitments` to use the new data layer.
+6.  Continue with remaining Phase 2 modules (`assign_entry_fees`).
+7.  Build the `test_commitment_workflow.py` to test the interaction between the Phase 2 modules.
+8.  Proceed to the Reveal Workflow, implementing and testing the modules for that stage.
+9.  Finally, build the orchestrators to tie the full vertical slices together.
 
 This modular approach ensures each component can be developed, tested, and deployed independently while maintaining consistency across the entire system.
 
