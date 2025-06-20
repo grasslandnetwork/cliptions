@@ -8,7 +8,7 @@ import os
 # Add the browser-use directory to the Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'browser-use'))
 
-from twitter_data_fetcher import fetch_round_guesses
+# fetch_round_guesses function is being deprecated - tests will be updated separately
 
 # Define the path to the ground truth data
 # Assumes the script is run from the project root or tests/ directory

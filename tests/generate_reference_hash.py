@@ -4,7 +4,7 @@ import os
 # Add parent directory to Python path to find clip_embedder
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from clip_embedder import ClipEmbedder
+from core.clip_embedder import ClipEmbedder
 import hashlib
 
 def generate_reference_hash():

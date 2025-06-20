@@ -8,7 +8,12 @@ Handles daily spending limits, session tracking, and project-specific cost monit
 
 from datetime import datetime
 from typing import Optional, List, Dict
-from openai_usage_tracker import OpenAIUsageTracker
+try:
+    # When run as part of the package
+    from ..openai_usage_tracker import OpenAIUsageTracker
+except ImportError:
+    # When run as a standalone script for testing
+    from openai_usage_tracker import OpenAIUsageTracker
 
 
 class BrowserUseCostTracker:

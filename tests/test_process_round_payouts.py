@@ -7,11 +7,11 @@ import numpy as np
 
 # Add parent directory to path to import the module
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from process_round_payouts import process_round_payouts, process_all_rounds, get_validator_for_round, LegacyScoreValidator
+from core.process_round_payouts import process_round_payouts, process_all_rounds, get_validator_for_round, LegacyScoreValidator
 
 class TestProcessRoundPayouts(unittest.TestCase):
-    @patch('process_round_payouts.get_validator_for_round')
-    @patch('process_round_payouts.verify_round_commitments')
+    @patch('core.process_round_payouts.get_validator_for_round')
+    @patch('core.process_round_payouts.verify_round_commitments')
     @patch('builtins.input')  # Add patch for input function
     def test_process_round_payouts_valid_commitments(self, mock_input, mock_verify_commitments, mock_get_validator):
         """Test processing payouts for a round with valid commitments."""
@@ -69,7 +69,7 @@ class TestProcessRoundPayouts(unittest.TestCase):
         mock_file = mock_open(read_data=test_guesses_json)
         
         # Mock Path.exists to return True
-        with patch('process_round_payouts.Path') as MockPath:
+        with patch('core.process_round_payouts.Path') as MockPath:
             mock_path_instance = MagicMock()
             MockPath.return_value = mock_path_instance
             mock_path_instance.exists.return_value = True
@@ -100,8 +100,8 @@ class TestProcessRoundPayouts(unittest.TestCase):
         # Check total payout was updated
         self.assertEqual(result["test_round"]["total_payout"], 1.0)
 
-    @patch('process_round_payouts.get_validator_for_round')
-    @patch('process_round_payouts.verify_round_commitments')
+    @patch('core.process_round_payouts.get_validator_for_round')
+    @patch('core.process_round_payouts.verify_round_commitments')
     @patch('builtins.input')  # Add patch for input function
     def test_process_round_payouts_invalid_commitments_continue(self, mock_input, mock_verify_commitments, mock_get_validator):
         """Test processing payouts for a round with invalid commitments, user chooses to continue."""
@@ -159,7 +159,7 @@ class TestProcessRoundPayouts(unittest.TestCase):
         mock_file = mock_open(read_data=test_guesses_json)
         
         # Mock Path.exists to return True
-        with patch('process_round_payouts.Path') as MockPath:
+        with patch('core.process_round_payouts.Path') as MockPath:
             mock_path_instance = MagicMock()
             MockPath.return_value = mock_path_instance
             mock_path_instance.exists.return_value = True
@@ -174,8 +174,8 @@ class TestProcessRoundPayouts(unittest.TestCase):
         # Verify the processing was completed anyway
         self.assertEqual(result["test_round"]["total_payout"], 1.0)
 
-    @patch('process_round_payouts.get_validator_for_round')
-    @patch('process_round_payouts.verify_round_commitments')
+    @patch('core.process_round_payouts.get_validator_for_round')
+    @patch('core.process_round_payouts.verify_round_commitments')
     @patch('builtins.input')  # Add patch for input function
     def test_process_round_payouts_invalid_commitments_abort(self, mock_input, mock_verify_commitments, mock_get_validator):
         """Test processing payouts for a round with invalid commitments, user chooses to abort."""
@@ -213,7 +213,7 @@ class TestProcessRoundPayouts(unittest.TestCase):
         mock_file = mock_open(read_data=test_guesses_json)
         
         # Mock Path.exists to return True
-        with patch('process_round_payouts.Path') as MockPath:
+        with patch('core.process_round_payouts.Path') as MockPath:
             mock_path_instance = MagicMock()
             MockPath.return_value = mock_path_instance
             mock_path_instance.exists.return_value = True
@@ -229,7 +229,7 @@ class TestProcessRoundPayouts(unittest.TestCase):
         # Validator should not be used since we aborted
         mock_get_validator.assert_not_called()
     
-    @patch('process_round_payouts.process_round_payouts')
+    @patch('core.process_round_payouts.process_round_payouts')
     def test_process_all_rounds(self, mock_process_round):
         """Test processing all rounds that need payouts."""
         # Create test guesses with multiple rounds
@@ -301,7 +301,7 @@ class TestProcessRoundPayouts(unittest.TestCase):
         mock_file = mock_open(read_data=test_guesses_json)
         
         # Mock Path.exists to return True
-        with patch('process_round_payouts.Path') as MockPath:
+        with patch('core.process_round_payouts.Path') as MockPath:
             mock_path_instance = MagicMock()
             MockPath.return_value = mock_path_instance
             mock_path_instance.exists.return_value = True
@@ -318,8 +318,8 @@ class TestProcessRoundPayouts(unittest.TestCase):
         mock_process_round.assert_any_call("round1", 1.0, False, True)
         mock_process_round.assert_any_call("round2", 0.5, False, True)
     
-    @patch('process_round_payouts.ScoreValidator')
-    @patch('process_round_payouts.LegacyScoreValidator')
+    @patch('core.process_round_payouts.ScoreValidator')
+    @patch('core.process_round_payouts.LegacyScoreValidator')
     def test_get_validator_for_round(self, MockLegacyValidator, MockScoreValidator):
         """Test getting the appropriate validator for a round."""
         # Create mock validator instances
@@ -347,7 +347,7 @@ class TestProcessRoundPayouts(unittest.TestCase):
             }
         }
         ''')):
-            with patch('process_round_payouts.Path.exists', return_value=True):
+            with patch('core.process_round_payouts.Path.exists', return_value=True):
                 # Should return LegacyScoreValidator for round0
                 validator = get_validator_for_round("round0")
                 self.assertEqual(validator, mock_legacy_instance)

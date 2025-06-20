@@ -1,5 +1,5 @@
 import unittest
-from calculate_scores_payout import calculate_payouts
+from core.calculate_scores_payout import calculate_payouts
 
 class TestCalculatePayouts(unittest.TestCase):
     def test_two_player_payout(self):

@@ -1,10 +1,10 @@
 import sys
-from clip_embedder import ClipEmbedder
+from .clip_embedder import ClipEmbedder
 import numpy as np
 import re
 import torch
-from interfaces import IScoreValidator, IEmbedder
-from scoring_strategies import IScoringStrategy, BaselineAdjustedStrategy
+from .interfaces import IScoreValidator, IEmbedder
+from .scoring_strategies import IScoringStrategy, BaselineAdjustedStrategy
 
 def calculate_rankings(target_image_path, guesses, validator=None):
     """Calculate rankings for guesses based on similarity to target image.
