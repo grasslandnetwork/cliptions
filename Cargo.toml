@@ -1,0 +1,67 @@
+[package]
+name = "realmir-core"
+version = "0.1.0"
+edition = "2021"
+description = "RealMir prediction market core functionality implemented in Rust"
+license = "MIT"
+
+[lib]
+name = "realmir_core"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# Python integration
+pyo3 = { version = "0.22.2", features = ["extension-module", "abi3-py38"] }
+
+# Cryptography
+sha2 = "0.10.8"
+hex = "0.4"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Date/time handling
+chrono = { version = "0.4", features = ["serde"] }
+
+# Error handling
+thiserror = "1.0"
+
+# Math and arrays
+ndarray = "0.16"
+
+# Random number generation
+rand = "0.8"
+
+# Parallel processing
+rayon = "1.7"
+
+# Argument parsing for CLI tools
+clap = { version = "4.0", features = ["derive"] }
+
+# Temporary file handling
+tempfile = "3.0"
+
+[dev-dependencies]
+# Testing
+rstest = "0.21"
+proptest = "1.0"
+
+# Benchmarking
+criterion = "0.5"
+
+[[bench]]
+name = "scoring_benchmark"
+harness = false
+
+[[bin]]
+name = "calculate_scores"
+path = "src/bin/calculate_scores.rs"
+
+[[bin]]
+name = "process_payouts"
+path = "src/bin/process_payouts.rs"
+
+[[bin]]
+name = "verify_commitments"
+path = "src/bin/verify_commitments.rs"
