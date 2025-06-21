@@ -2,16 +2,25 @@
 name = "realmir-core"
 version = "0.1.0"
 edition = "2021"
-description = "RealMir prediction market core functionality implemented in Rust"
+description = "RealMir prediction market core functionality implemented in Rust with optional Python bindings"
 license = "MIT"
+authors = ["RealMir Team"]
+repository = "https://github.com/your-org/realmir"
+keywords = ["prediction-market", "machine-learning", "embeddings", "commitments"]
+categories = ["science", "algorithms"]
 
 [lib]
 name = "realmir_core"
 crate-type = ["cdylib", "rlib"]
 
+[features]
+default = []
+# Python bindings feature - enables PyO3 integration
+python = ["pyo3"]
+
 [dependencies]
-# Python integration
-pyo3 = { version = "0.22.2", features = ["extension-module", "abi3-py38"] }
+# Python integration (optional)
+pyo3 = { version = "0.22.2", features = ["extension-module", "abi3-py38"], optional = true }
 
 # Cryptography
 sha2 = "0.10.8"

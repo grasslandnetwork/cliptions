@@ -7,12 +7,11 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
-use pyo3::prelude::*;
 use serde_json;
 
 use crate::commitment::{CommitmentVerifier};
-use crate::embedder::{EmbedderTrait, MockEmbedder};
-use crate::scoring::{ScoringStrategy, BaselineAdjustedStrategy, ScoreValidator, process_participants};
+use crate::embedder::{EmbedderTrait};
+use crate::scoring::{ScoringStrategy, ScoreValidator, process_participants};
 use crate::types::{RoundData, RoundStatus, Participant, ScoringResult, RoundConfig};
 use crate::error::{RoundError, Result};
 
@@ -290,93 +289,15 @@ pub struct RoundStats {
     pub status: RoundStatus,
 }
 
-/// Python wrapper for RoundProcessor
-#[pyclass]
-pub struct PyRoundProcessor {
-    inner: RoundProcessor<MockEmbedder, BaselineAdjustedStrategy>,
-}
 
-#[pymethods]
-impl PyRoundProcessor {
-    #[new]
-    pub fn new(rounds_file: String) -> Self {
-        let embedder = MockEmbedder::clip_like();
-        let strategy = BaselineAdjustedStrategy::new();
-        Self {
-            inner: RoundProcessor::new(rounds_file, embedder, strategy),
-        }
-    }
-    
-    pub fn load_rounds(&mut self) -> PyResult<()> {
-        self.inner.load_rounds().map_err(|e| e.into())
-    }
-    
-    pub fn verify_commitments(&mut self, round_id: &str) -> PyResult<Vec<bool>> {
-        self.inner.verify_commitments(round_id).map_err(|e| e.into())
-    }
-    
-    pub fn process_round_payouts(&mut self, round_id: &str) -> PyResult<Vec<(String, String, f64, usize, f64)>> {
-        let results = self.inner.process_round_payouts(round_id).map_err(|e| PyErr::from(e))?;
-        
-        // Convert to Python-friendly format
-        let py_results = results.iter().map(|r| (
-            r.participant.user_id.clone(),
-            r.participant.guess.text.clone(),
-            r.effective_score(),
-            r.rank.unwrap_or(0),
-            r.payout.unwrap_or(0.0),
-        )).collect();
-        
-        Ok(py_results)
-    }
-    
-    pub fn get_round_ids(&mut self) -> PyResult<Vec<String>> {
-        self.inner.get_round_ids().map_err(|e| e.into())
-    }
-}
-
-/// Python function for processing round payouts
-#[pyfunction]
-pub fn py_process_round_payouts(
-    rounds_file: String,
-    round_id: String,
-) -> PyResult<Vec<(String, String, f64, usize, f64)>> {
-    let embedder = MockEmbedder::clip_like();
-    let strategy = BaselineAdjustedStrategy::new();
-    let mut processor = RoundProcessor::new(rounds_file, embedder, strategy);
-    
-    let results = processor.process_round_payouts(&round_id).map_err(|e| PyErr::from(e))?;
-    
-    // Convert to Python-friendly format
-    let py_results = results.iter().map(|r| (
-        r.participant.user_id.clone(),
-        r.participant.guess.text.clone(),
-        r.effective_score(),
-        r.rank.unwrap_or(0),
-        r.payout.unwrap_or(0.0),
-    )).collect();
-    
-    Ok(py_results)
-}
-
-/// Python function for verifying round commitments
-#[pyfunction]
-pub fn py_verify_round_commitments(
-    rounds_file: String,
-    round_id: String,
-) -> PyResult<Vec<bool>> {
-    let embedder = MockEmbedder::clip_like();
-    let strategy = BaselineAdjustedStrategy::new();
-    let mut processor = RoundProcessor::new(rounds_file, embedder, strategy);
-    
-    processor.verify_commitments(&round_id).map_err(|e| e.into())
-}
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use tempfile::NamedTempFile;
     use crate::types::Guess;
+    use crate::embedder::MockEmbedder;
+    use crate::scoring::BaselineAdjustedStrategy;
     
     fn create_test_processor() -> (RoundProcessor<MockEmbedder, BaselineAdjustedStrategy>, String) {
         let temp_file = NamedTempFile::new().unwrap();

@@ -5,8 +5,9 @@
 //! them until the reveal phase, preventing gaming of the system.
 
 use sha2::{Digest, Sha256};
-use pyo3::prelude::*;
 use crate::error::{CommitmentError, Result};
+
+
 
 /// Commitment generator for creating cryptographic commitments
 #[derive(Debug, Clone)]
@@ -138,53 +139,7 @@ impl Default for CommitmentVerifier {
     }
 }
 
-/// Python wrapper for CommitmentGenerator
-#[pyclass]
-pub struct PyCommitmentGenerator {
-    inner: CommitmentGenerator,
-}
 
-#[pymethods]
-impl PyCommitmentGenerator {
-    /// Create a new commitment generator
-    #[new]
-    pub fn new() -> Self {
-        Self {
-            inner: CommitmentGenerator::new(),
-        }
-    }
-    
-    /// Generate a commitment hash
-    pub fn generate(&self, message: &str, salt: &str) -> PyResult<String> {
-        self.inner.generate(message, salt).map_err(|e| e.into())
-    }
-    
-    /// Generate a random salt
-    pub fn generate_salt(&self) -> String {
-        self.inner.generate_salt()
-    }
-    
-    /// Verify a commitment
-    pub fn verify(&self, message: &str, salt: &str, commitment: &str) -> bool {
-        CommitmentVerifier::new().verify(message, salt, commitment)
-    }
-}
-
-/// Python function for generating commitments
-/// 
-/// This is a direct replacement for the Python generate_commitment function
-#[pyfunction]
-pub fn py_generate_commitment(message: &str, salt: &str) -> PyResult<String> {
-    CommitmentGenerator::new()
-        .generate(message, salt)
-        .map_err(|e| e.into())
-}
-
-/// Python function for verifying commitments
-#[pyfunction]
-pub fn py_verify_commitment(message: &str, salt: &str, commitment: &str) -> bool {
-    CommitmentVerifier::new().verify(message, salt, commitment)
-}
 
 #[cfg(test)]
 mod tests {
@@ -301,16 +256,18 @@ mod tests {
     }
     
     #[test]
-    fn test_python_compatibility() {
-        // Test that our implementation matches the Python version
+    fn test_rust_core_functionality() {
+        // Test that our core implementation works correctly
+        let generator = CommitmentGenerator::new();
+        let verifier = CommitmentVerifier::new();
         let message = "test message";
         let salt = "test_salt";
         
-        let commitment = py_generate_commitment(message, salt).unwrap();
-        assert!(py_verify_commitment(message, salt, &commitment));
+        let commitment = generator.generate(message, salt).unwrap();
+        assert!(verifier.verify(message, salt, &commitment));
         
         // Test with different inputs
-        assert!(!py_verify_commitment("different message", salt, &commitment));
-        assert!(!py_verify_commitment(message, "different_salt", &commitment));
+        assert!(!verifier.verify("different message", salt, &commitment));
+        assert!(!verifier.verify(message, "different_salt", &commitment));
     }
 }

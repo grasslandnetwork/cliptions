@@ -4,9 +4,8 @@
 //! image and text embeddings, as well as payout calculation based on rankings.
 
 use ndarray::Array1;
-use pyo3::prelude::*;
 use std::sync::Arc;
-use crate::embedder::{EmbedderTrait, MockEmbedder, cosine_similarity};
+use crate::embedder::{EmbedderTrait, cosine_similarity};
 use crate::error::{ScoringError, Result};
 use crate::types::{Participant, ScoringResult};
 
@@ -190,6 +189,13 @@ impl<E: EmbedderTrait, S: ScoringStrategy> ScoreValidator<E, S> {
             self.baseline_features.as_ref(),
         )
     }
+    
+    /// Get image embedding for a given image path
+    /// 
+    /// This is a convenience method for Python bindings
+    pub fn get_image_embedding(&self, image_path: &str) -> Result<Array1<f64>> {
+        self.embedder.get_image_embedding(image_path)
+    }
 }
 
 /// Calculate rankings for guesses based on similarity to target image
@@ -340,86 +346,12 @@ pub fn process_participants<E: EmbedderTrait, S: ScoringStrategy>(
     Ok(results)
 }
 
-/// Python wrapper for ScoreValidator
-#[pyclass]
-pub struct PyScoreValidator {
-    inner: ScoreValidator<MockEmbedder, BaselineAdjustedStrategy>,
-}
 
-#[pymethods]
-impl PyScoreValidator {
-    #[new]
-    pub fn new() -> Self {
-        let embedder = MockEmbedder::clip_like();
-        let strategy = BaselineAdjustedStrategy::new();
-        Self {
-            inner: ScoreValidator::new(embedder, strategy),
-        }
-    }
-    
-    pub fn validate_guess(&self, guess: &str) -> bool {
-        self.inner.validate_guess(guess)
-    }
-    
-    pub fn calculate_adjusted_score(&self, image_path: &str, guess: &str) -> PyResult<f64> {
-        let image_features = self.inner.embedder.get_image_embedding(image_path)
-            .map_err(|e| PyErr::from(e))?;
-        self.inner.calculate_adjusted_score(&image_features, guess)
-            .map_err(|e| PyErr::from(e))
-    }
-}
-
-/// Python function for calculating cosine similarity
-#[pyfunction]
-pub fn py_calculate_cosine_similarity(a: Vec<f64>, b: Vec<f64>) -> PyResult<f64> {
-    let arr_a = Array1::from_vec(a);
-    let arr_b = Array1::from_vec(b);
-    cosine_similarity(&arr_a, &arr_b).map_err(|e| e.into())
-}
-
-/// Python function for calculating baseline adjusted similarity
-#[pyfunction]
-pub fn py_calculate_baseline_adjusted_similarity(
-    image_features: Vec<f64>,
-    text_features: Vec<f64>,
-    baseline_features: Vec<f64>,
-) -> PyResult<f64> {
-    let strategy = BaselineAdjustedStrategy::new();
-    let img_arr = Array1::from_vec(image_features);
-    let txt_arr = Array1::from_vec(text_features);
-    let base_arr = Array1::from_vec(baseline_features);
-    
-    strategy.calculate_score(&img_arr, &txt_arr, Some(&base_arr))
-        .map_err(|e| e.into())
-}
-
-/// Python function for calculating rankings
-#[pyfunction]
-pub fn py_calculate_rankings(
-    target_image_path: &str,
-    guesses: Vec<String>,
-) -> PyResult<Vec<(String, f64)>> {
-    let embedder = MockEmbedder::clip_like();
-    let strategy = BaselineAdjustedStrategy::new();
-    let validator = ScoreValidator::new(embedder, strategy);
-    
-    calculate_rankings(target_image_path, &guesses, &validator)
-        .map_err(|e| e.into())
-}
-
-/// Python function for calculating payouts
-#[pyfunction]
-pub fn py_calculate_payouts(
-    ranked_results: Vec<(String, f64)>,
-    prize_pool: f64,
-) -> PyResult<Vec<f64>> {
-    calculate_payouts(&ranked_results, prize_pool)
-        .map_err(|e| e.into())
-}
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::embedder::MockEmbedder;
     
     #[test]
     fn test_raw_similarity_strategy() {

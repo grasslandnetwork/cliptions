@@ -4,7 +4,6 @@
 //! for ergonomic error definitions and proper error propagation.
 
 use thiserror::Error;
-use pyo3::prelude::*;
 
 /// Result type alias for RealMir operations
 pub type Result<T> = std::result::Result<T, RealMirError>;
@@ -32,9 +31,6 @@ pub enum RealMirError {
     
     #[error("JSON error: {0}")]
     Json(#[from] serde_json::Error),
-    
-    #[error("Python error: {0}")]
-    Python(#[from] PyErr),
 }
 
 /// Commitment-related errors
@@ -124,25 +120,4 @@ pub enum ValidationError {
     
     #[error("Invalid participant data")]
     InvalidParticipant,
-}
-
-/// Convert RealMirError to PyErr for Python integration
-impl From<RealMirError> for PyErr {
-    fn from(err: RealMirError) -> PyErr {
-        match err {
-            RealMirError::Commitment(_) => {
-                pyo3::exceptions::PyValueError::new_err(err.to_string())
-            },
-            RealMirError::Validation(_) => {
-                pyo3::exceptions::PyValueError::new_err(err.to_string())
-            },
-            RealMirError::Io(_) => {
-                pyo3::exceptions::PyIOError::new_err(err.to_string())
-            },
-            RealMirError::Json(_) => {
-                pyo3::exceptions::PyValueError::new_err(err.to_string())
-            },
-            _ => pyo3::exceptions::PyRuntimeError::new_err(err.to_string()),
-        }
-    }
 }
