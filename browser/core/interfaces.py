@@ -6,7 +6,7 @@ must implement, ensuring consistency and testability across the system.
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 from pydantic import BaseModel
 from browser_use import Agent
 # Browser_use may not expose BrowserContext in newer versions, so use Any for context
@@ -184,4 +184,102 @@ class PostingError(TwitterTaskError):
 
 class ValidationError(TwitterTaskError):
     """Exception raised when output validation fails."""
-    pass 
+    pass
+
+
+class DataAccessInterface(ABC):
+    """
+    Abstract interface for data access operations.
+    
+    This interface defines the contract for all data storage implementations,
+    allowing the system to be decoupled from specific storage mechanisms.
+    """
+    
+    @abstractmethod
+    async def get_round(self, round_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Retrieve a specific round by ID.
+        
+        Args:
+            round_id: The unique identifier of the round
+            
+        Returns:
+            Round data dictionary or None if not found
+        """
+        pass
+    
+    @abstractmethod
+    async def save_round(self, round_id: str, round_data: Dict[str, Any]) -> bool:
+        """
+        Save or update a round's data.
+        
+        Args:
+            round_id: The unique identifier of the round
+            round_data: Complete round data dictionary
+            
+        Returns:
+            True if save was successful, False otherwise
+        """
+        pass
+    
+    @abstractmethod
+    async def list_rounds(self) -> List[str]:
+        """
+        List all available round IDs.
+        
+        Returns:
+            List of round identifiers
+        """
+        pass
+    
+    @abstractmethod
+    async def save_commitments(self, round_id: str, commitments: List[Dict[str, Any]]) -> bool:
+        """
+        Save collected commitments for a round.
+        
+        Args:
+            round_id: The round identifier
+            commitments: List of commitment data dictionaries
+            
+        Returns:
+            True if save was successful, False otherwise
+        """
+        pass
+    
+    @abstractmethod
+    async def get_commitments(self, round_id: str) -> List[Dict[str, Any]]:
+        """
+        Get all commitments for a specific round.
+        
+        Args:
+            round_id: The round identifier
+            
+        Returns:
+            List of commitment data dictionaries
+        """
+        pass
+    
+    @abstractmethod
+    async def update_participant(self, round_id: str, username: str, updates: Dict[str, Any]) -> bool:
+        """
+        Update participant data within a round.
+        
+        Args:
+            round_id: The round identifier
+            username: The participant's username
+            updates: Dictionary of fields to update
+            
+        Returns:
+            True if update was successful, False otherwise
+        """
+        pass
+    
+    @abstractmethod
+    async def get_all_rounds(self) -> Dict[str, Any]:
+        """
+        Get all rounds data.
+        
+        Returns:
+            Dictionary containing all rounds data
+        """
+        pass 

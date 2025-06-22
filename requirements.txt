@@ -23,6 +23,7 @@ gradio==5.10.0
 json-repair
 langchain-mistralai==0.2.4
 PyYAML>=6.0
+pydantic>=2.0.0
 
 # Optional dependencies for specific features
 # requests>=2.25.0  # For additional web functionality 
