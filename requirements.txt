@@ -15,6 +15,7 @@ Pillow>=9.0.0
 # Testing dependencies (required for running tests)
 pytest>=7.0.0 
 pytest-asyncio>=0.21.0 
+maturin==1.8.7  # For building and testing the Rust core
 
 # Browser Use
 browser-use==0.1.40
