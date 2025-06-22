@@ -42,6 +42,9 @@ impl CommitmentGenerator {
     /// # Errors
     /// Returns `CommitmentError::EmptySalt` if the salt is empty
     pub fn generate(&self, message: &str, salt: &str) -> Result<String> {
+        if message.trim().is_empty() {
+            return Err(CommitmentError::EmptyMessage.into());
+        }
         if salt.is_empty() {
             return Err(CommitmentError::EmptySalt.into());
         }
@@ -185,6 +188,23 @@ mod tests {
         let result = generator.generate("message", "");
         
         assert!(matches!(result, Err(crate::error::RealMirError::Commitment(CommitmentError::EmptySalt))));
+    }
+    
+    #[test]
+    fn test_empty_message() {
+        let generator = CommitmentGenerator::new();
+        
+        // Test completely empty message
+        let result = generator.generate("", "salt");
+        assert!(matches!(result, Err(crate::error::RealMirError::Commitment(CommitmentError::EmptyMessage))));
+        
+        // Test whitespace-only message
+        let result = generator.generate("   ", "salt");
+        assert!(matches!(result, Err(crate::error::RealMirError::Commitment(CommitmentError::EmptyMessage))));
+        
+        // Test tab and newline only
+        let result = generator.generate("\t\n  ", "salt");
+        assert!(matches!(result, Err(crate::error::RealMirError::Commitment(CommitmentError::EmptyMessage))));
     }
     
     #[test]

@@ -48,6 +48,13 @@ impl<E: EmbedderTrait, S: ScoringStrategy> RoundProcessor<E, S> {
                 path: self.rounds_file.clone() 
             })?;
         
+        // Handle empty file case
+        if content.trim().is_empty() {
+            let empty_rounds: HashMap<String, RoundData> = HashMap::new();
+            self.save_rounds(&empty_rounds)?;
+            return Ok(());
+        }
+        
         let rounds: HashMap<String, RoundData> = serde_json::from_str(&content)?;
         self.rounds_cache = rounds;
         

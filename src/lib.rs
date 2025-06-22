@@ -18,14 +18,16 @@
 //! Core traits define interfaces for embedding models and scoring strategies, allowing
 //! for easy extension and testing.
 
-// Public modules
+// Core library modules
 pub mod commitment;
-pub mod scoring;
 pub mod embedder;
-pub mod round;
-pub mod types;
 pub mod error;
+pub mod models;
+pub mod round;
+pub mod scoring;
+pub mod types;
 
+// Python bindings module (conditional compilation)
 #[cfg(feature = "python")]
 pub mod python_bridge;
 

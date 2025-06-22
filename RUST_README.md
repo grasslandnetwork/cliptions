@@ -39,6 +39,122 @@ src/
 - **CLI Tools**: High-performance command-line utilities
 - **Python Bindings**: Optional PyO3 integration for Python compatibility
 
+## Data Models & Schema Consistency
+
+The RealMir system uses a **dual-language data architecture** where Rust serves as the single source of truth for data structures, while Python uses mirrored Pydantic models for validation and interface safety.
+
+### Architecture Overview
+
+```
+src/models.rs          ←→  browser/data_models.py
+(Rust Structs)             (Pydantic Models)
+     ↓                           ↓
+Core Business Logic         Browser Automation
+     ↓                           ↓
+JSON Serialization      ←→  JSON Validation
+     ↓                           ↓
+    Consistent Data Exchange
+```
+
+### Key Components
+
+#### **1. Rust Data Models (`src/models.rs`)**
+```rust
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[cfg_attr(feature = "python", derive(FromPyObject))]
+pub struct Commitment {
+    pub username: String,
+    pub commitment_hash: String,
+    pub wallet_address: String,
+    pub tweet_url: String,
+    pub timestamp: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[cfg_attr(feature = "python", derive(FromPyObject))]
+pub struct Round {
+    pub round_id: String,
+    pub announcement_url: String,
+    pub livestream_url: String,
+    pub entry_fee: f64,
+    pub commitment_deadline: String,
+    pub reveal_deadline: String,
+    #[serde(default)]
+    pub commitments: Vec<Commitment>,
+}
+```
+
+#### **2. Python Mirror Models (`browser/data_models.py`)**
+```python
+class Commitment(BaseModel):
+    username: str
+    commitment_hash: str
+    wallet_address: str
+    tweet_url: str
+    timestamp: datetime
+
+class Round(BaseModel):
+    round_id: str
+    announcement_url: str
+    livestream_url: str
+    entry_fee: float
+    commitment_deadline: datetime
+    reveal_deadline: datetime
+    commitments: List[Commitment] = Field(default_factory=list)
+```
+
+#### **3. Schema Consistency Lock (`tests/test_schema_consistency.py`)**
+```python
+def test_commitment_schema_consistency():
+    # Create Pydantic model instance
+    commitment = Commitment(username="@test", ...)
+    
+    # Convert to JSON-compatible dict
+    commitment_dict = commitment.model_dump(mode="json")
+    
+    # Test Rust deserialization via PyO3 bridge
+    test_deserialize_commitment(commitment_dict)  # ← Calls Rust function
+```
+
+### Benefits of This Approach
+
+✅ **Single Source of Truth**: Rust structs define the canonical data schema  
+✅ **Type Safety**: Both languages provide compile-time validation  
+✅ **Automatic Consistency**: Tests fail immediately if schemas drift apart  
+✅ **Performance**: Rust handles core data processing, Python handles UI/automation  
+✅ **Maintainability**: Changes require updating both sides, preventing bugs  
+
+### Schema Consistency Testing
+
+The system includes automated tests that ensure Python and Rust data models stay synchronized:
+
+```bash
+# Run schema consistency tests
+pytest tests/test_schema_consistency.py
+
+# These tests will FAIL if:
+# - Field names don't match between Python and Rust
+# - Field types are incompatible  
+# - Required fields are missing
+# - Serialization formats differ
+```
+
+### Development Workflow
+
+1. **Define data structure in Rust** (`src/models.rs`)
+2. **Create matching Pydantic model** (`browser/data_models.py`) 
+3. **Run consistency tests** to verify compatibility
+4. **Use Pydantic models** in Python browser automation code
+5. **Use Rust structs** in core business logic
+
+### Why This Design?
+
+**Problem**: Browser automation (Python) needs to validate unstructured data from LLMs and web scraping, but core logic (Rust) needs type safety and performance.
+
+**Solution**: Use Pydantic's validation strength in Python for the "messy" interface layer, then pass validated data to Rust for reliable processing.
+
+**Alternative Rejected**: Trying to generate one language's models from the other adds build complexity and tool dependencies. Our approach is simple and reliable.
+
 ## Performance Improvements
 
 | Operation | Python | Rust | Speedup |

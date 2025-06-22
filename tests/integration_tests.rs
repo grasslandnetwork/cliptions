@@ -3,10 +3,7 @@
 //! These tests verify that all components work together correctly
 //! and provide end-to-end testing of the complete system.
 
-use std::collections::HashMap;
-use std::fs;
 use tempfile::NamedTempFile;
-use chrono::Utc;
 
 use realmir_core::commitment::{CommitmentGenerator, CommitmentVerifier};
 use realmir_core::embedder::{MockEmbedder, EmbedderTrait};
@@ -93,7 +90,7 @@ fn test_commitment_system_integration() {
         ("Hello, World!", "salt123"),
         ("Another message", "different_salt"),
         ("Special characters: !@#$%^&*()", "unicode_salt_🎉"),
-        ("", "empty_message_salt"), // Edge case: empty message
+        ("", "empty_message_salt"), // Edge case: empty message (should fail)
     ];
     
     for (message, salt) in test_cases {
@@ -157,11 +154,12 @@ fn test_score_validator_integration() {
     let validator = ScoreValidator::new(embedder, strategy);
     
     // Test various guess validations
+    let long_string = "x".repeat(400);
     let test_guesses = vec![
         ("Valid guess", true),
         ("", false), // Empty
         ("   ", false), // Whitespace only
-        (&"x".repeat(400), false), // Too long
+        (long_string.as_str(), false), // Too long
         ("Normal length guess with punctuation!", true),
         ("Numbers 123 and symbols @#$", true),
     ];
@@ -171,7 +169,7 @@ fn test_score_validator_integration() {
     }
     
     // Test score calculation
-    let image_features = validator.embedder.get_image_embedding("test.jpg").unwrap();
+    let image_features = validator.get_image_embedding("test.jpg").unwrap();
     let score = validator.calculate_adjusted_score(&image_features, "valid guess").unwrap();
     assert!(score >= 0.0); // Should be non-negative for baseline adjusted
 }

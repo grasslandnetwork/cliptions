@@ -24,35 +24,33 @@ Instead of a monolithic script, the system will be composed of specialized modul
 *   **Task 1.3:** ✅ **Test Infrastructure** (`tests/test_twitter_data_extraction.py`)
     *   **Status:** Completed - Structural testing framework ready for modular components
 
-## Phase 1.5: Data Layer Refactoring
+## Phase 1.5: Rust-Driven Data Layer & Python/Rust Bridge (Revised)
 
-*To ensure a scalable and maintainable architecture, we are introducing a data abstraction layer. This will create a single source of truth for all round data and decouple our application logic from the underlying storage mechanism (currently JSON files, eventually a blockchain).*
+*Goal: Establish Rust as the single source of truth for core data models while using Pydantic for interface validation in Python. Ensure consistency between Rust structs and Pydantic models via the Python/Rust bridge and dedicated integration tests.*
 
-### **Task 1.5.1: Create Data Directory and Unified Data Model**
-*   **Action:** Create a `data/` directory at project root.
-*   **Action:** Consolidate data from `rounds/guesses.json`, `browser/twitter_replies.json`, and `collected_commitments.json` into a single `data/rounds.json`.
-*   **Status:** ✅ Completed
+### **Task 1.5.1: Define Core Data Models in Rust**
+*   **Action:** Create `src/models.rs` to house all core data structures.
+*   **Action:** Define structs for `Round`, `Commitment`, `Participant`, etc., using `serde`.
+*   **Status:** ✅ Completed - Created `src/models.rs` with `Commitment` and `Round` structs using serde and PyO3 derives
 
-### **Task 1.5.2: Schema Design and Redundancy Cleanup**
-*   **Action:** Analyze consolidated data structure for redundancies and inconsistencies.
-*   **Action:** Design clean, non-redundant Pydantic models for Round, Participant, Payout, etc.
-*   **Action:** Create `data/models.py` with comprehensive data validation schemas.
-*   **Action:** Remove redundant fields identified in analysis (e.g., duplicate URLs, calculable totals).
-*   **Status:** In Progress
+### **Task 1.5.2: Create Mirror Pydantic Models**
+*   **Action:** Create `browser/data_models.py` for the Pydantic model definitions.
+*   **Action:** Define Pydantic models that mirror the structure of the Rust structs.
+*   **Status:** ✅ Completed - Created `browser/data_models.py` with corresponding Pydantic models for `Commitment` and `Round`
 
-### **Task 1.5.3: Implement Data Access Interface**
-*   **Module:** `browser/core/interfaces.py`
-*   **Purpose:** Define `DataAccessInterface` (ABC) with methods like `get_round`, `save_commitments`, etc.
-*   **Status:** Not Started
+### **Task 1.5.3: Implement Schema Consistency Test**
+*   **Action:** Create `tests/test_schema_consistency.py`.
+*   **Action:** Write tests that pass data from each Pydantic model to the Rust core, ensuring they can be successfully deserialized into their corresponding Rust structs. This test will serve as our "consistency lock."
+*   **Status:** ✅ Completed - Created comprehensive schema consistency tests with 3 test cases, all passing
 
-### **Task 1.5.4: Implement JSON Data Access Logic**
-*   **Module:** `data/json_data_access.py`
-*   **Purpose:** Create `JsonDataAccess`, a concrete class that implements the `DataAccessInterface` to interact with `data/rounds.json`.
+### **Task 1.5.4: Implement Rust Data Access Layer**
+*   **Action:** Create a Rust module (e.g., `src/data_access.rs`) to handle loading from and saving to `data/rounds.json`.
+*   **Action:** Expose these data access functions to Python via `python_bridge.rs`.
 *   **Status:** Not Started
 
 ### **Task 1.5.5: Refactor `collect_commitments.py`**
-*   **Module:** `browser/validator/collect_commitments.py`
-*   **Purpose:** Update the task to accept and use the `DataAccessInterface` for persisting collected commitments, instead of writing to its own JSON file.
+*   **Action:** Update `collect_commitments.py` to use the new Pydantic models for validation.
+*   **Action:** After validation, the task will call the new Rust data access functions (via the bridge) to persist the collected commitments.
 *   **Status:** Not Started
 
 ## Phase 2: Commitment Workflow

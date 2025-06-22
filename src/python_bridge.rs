@@ -5,7 +5,9 @@
 //! the core functionality through a Python API.
 
 use pyo3::prelude::*;
+use pyo3::types::PyModule;
 use ndarray::Array1;
+use serde_json;
 
 use crate::commitment::{CommitmentGenerator, CommitmentVerifier};
 use crate::scoring::{ScoringStrategy, BaselineAdjustedStrategy, ScoreValidator, calculate_rankings, calculate_payouts};
@@ -254,33 +256,69 @@ pub fn py_verify_round_commitments(
 }
 
 // =============================================================================
-// Python Module Definition
+// Schema Consistency Test Bindings
 // =============================================================================
 
-/// Python module definition
-/// 
-/// This exposes the Rust functionality to Python through PyO3 bindings.
-/// All major functions are available as Python functions.
+/// Test function to deserialize a Commitment from a Python dict.
+/// Used for ensuring Pydantic models and Rust structs are in sync.
+#[pyfunction]
+fn test_deserialize_commitment(commitment_dict: &Bound<'_, pyo3::types::PyDict>) -> PyResult<()> {
+    // Convert Python dict to JSON string, then deserialize to Rust struct
+    let json_str = commitment_dict.call_method0("__str__")?
+        .extract::<String>()?
+        .replace("'", "\""); // Convert single quotes to double quotes for valid JSON
+    
+    // Alternative approach: use Python's json module
+    let json_module = PyModule::import_bound(commitment_dict.py(), "json")?;
+    let json_str = json_module
+        .getattr("dumps")?
+        .call1((commitment_dict,))?
+        .extract::<String>()?;
+    
+    let _: crate::models::Commitment = serde_json::from_str(&json_str)
+        .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("JSON deserialization failed: {}", e)))?;
+    
+    Ok(())
+}
+
+/// Test function to deserialize a Round from a Python dict.
+/// Used for ensuring Pydantic models and Rust structs are in sync.
+#[pyfunction]
+fn test_deserialize_round(round_dict: &Bound<'_, pyo3::types::PyDict>) -> PyResult<()> {
+    // Convert Python dict to JSON string, then deserialize to Rust struct
+    let json_module = PyModule::import_bound(round_dict.py(), "json")?;
+    let json_str = json_module
+        .getattr("dumps")?
+        .call1((round_dict,))?
+        .extract::<String>()?;
+    
+    let _: crate::models::Round = serde_json::from_str(&json_str)
+        .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("JSON deserialization failed: {}", e)))?;
+    
+    Ok(())
+}
+
+/// Main Python module definition
 #[pymodule]
 fn realmir_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    // Add commitment functions
+    // Classes
+    m.add_class::<PyCommitmentGenerator>()?;
+    m.add_class::<PyScoreValidator>()?;
+    m.add_class::<PyRoundProcessor>()?;
+
+    // Functions
     m.add_function(wrap_pyfunction!(py_generate_commitment, m)?)?;
     m.add_function(wrap_pyfunction!(py_verify_commitment, m)?)?;
-    
-    // Add scoring functions
     m.add_function(wrap_pyfunction!(py_calculate_cosine_similarity, m)?)?;
     m.add_function(wrap_pyfunction!(py_calculate_baseline_adjusted_similarity, m)?)?;
     m.add_function(wrap_pyfunction!(py_calculate_rankings, m)?)?;
     m.add_function(wrap_pyfunction!(py_calculate_payouts, m)?)?;
-    
-    // Add round processing functions
     m.add_function(wrap_pyfunction!(py_process_round_payouts, m)?)?;
     m.add_function(wrap_pyfunction!(py_verify_round_commitments, m)?)?;
-    
-    // Add classes
-    m.add_class::<PyCommitmentGenerator>()?;
-    m.add_class::<PyScoreValidator>()?;
-    m.add_class::<PyRoundProcessor>()?;
-    
+
+    // Schema test functions
+    m.add_function(wrap_pyfunction!(test_deserialize_commitment, m)?)?;
+    m.add_function(wrap_pyfunction!(test_deserialize_round, m)?)?;
+
     Ok(())
 } 

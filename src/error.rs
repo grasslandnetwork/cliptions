@@ -36,6 +36,9 @@ pub enum RealMirError {
 /// Commitment-related errors
 #[derive(Error, Debug)]
 pub enum CommitmentError {
+    #[error("Message cannot be empty")]
+    EmptyMessage,
+    
     #[error("Salt is required for generating commitments")]
     EmptySalt,
     
