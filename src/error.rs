@@ -24,7 +24,10 @@ pub enum RealMirError {
     Round(#[from] RoundError),
     
     #[error("Validation error: {0}")]
-    Validation(#[from] ValidationError),
+    ValidationError(String),
+    
+    #[error("Configuration error: {0}")]
+    ConfigError(String),
     
     #[error("I/O error: {0}")]
     Io(#[from] std::io::Error),
