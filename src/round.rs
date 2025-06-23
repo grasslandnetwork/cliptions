@@ -282,6 +282,56 @@ impl<E: EmbedderTrait, S: ScoringStrategy> RoundProcessor<E, S> {
             status: round.status.clone(),
         })
     }
+
+    /// Save current rounds cache to file
+    pub fn save_current_rounds(&self) -> Result<()> {
+        self.save_rounds(&self.rounds_cache)
+    }
+
+    /// Reveal a participant's guess and salt, updating their data
+    pub fn reveal_participant(&mut self, round_id: &str, user_id: &str, guess_text: &str, salt: &str) -> Result<()> {
+        let round = self.get_round_mut(round_id)?;
+
+        // Find the participant
+        let participant = round.participants.iter_mut()
+            .find(|p| p.user_id == user_id)
+            .ok_or_else(|| RoundError::RoundNotFound { 
+                round_id: format!("User {} not found in round {}", user_id, round_id)
+            })?;
+
+        // Update the participant's guess and salt
+        participant.guess = crate::types::Guess::new(guess_text.to_string());
+        participant.salt = Some(salt.to_string());
+        participant.verified = true;
+
+        // Update round timestamp
+        round.updated_at = chrono::Utc::now();
+
+        Ok(())
+    }
+
+    /// Process scoring for a round (alias for process_round_payouts)
+    pub fn process_round_scoring(&mut self, round_id: &str) -> Result<Vec<ScoringResult>> {
+        self.process_round_payouts(round_id)
+    }
+
+    /// Get statistics for all rounds
+    pub fn get_round_stats_all(&mut self) -> Result<Vec<RoundStats>> {
+        if self.rounds_cache.is_empty() {
+            self.load_rounds()?;
+        }
+        
+        let mut all_stats = Vec::new();
+        
+        for round_id in self.rounds_cache.keys().cloned().collect::<Vec<_>>() {
+            match self.get_round_stats(&round_id) {
+                Ok(stats) => all_stats.push(stats),
+                Err(_) => continue, // Skip rounds that can't be processed
+            }
+        }
+
+        Ok(all_stats)
+    }
 }
 
 /// Statistics for a round

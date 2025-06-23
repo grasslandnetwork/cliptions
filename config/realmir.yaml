@@ -1,0 +1,23 @@
+# RealMIR Configuration
+realmir:
+  # OpenAI Configuration
+  openai:
+    api_key: "your-openai-api-key-here"
+    project_id: "your-project-id"
+    
+  # Spending Configuration
+  spending:
+    daily_limit: 50.0
+    alert_threshold: 0.8
+    
+  # Discord Bot Configuration
+  discord:
+    guild_id: null  # Leave null for global commands
+    admin_role: "RealMIR Admin"
+    
+  # Round Configuration
+  rounds:
+    default_prize_pool: 100.0
+    max_guess_length: 300
+    use_baseline_adjustment: true
+    baseline_text: "[UNUSED]"

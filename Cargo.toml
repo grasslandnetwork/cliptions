@@ -17,6 +17,8 @@ crate-type = ["cdylib", "rlib"]
 default = []
 # Python bindings feature - enables PyO3 integration
 python = ["pyo3"]
+# Discord bot feature - enables Discord integration
+discord = ["serenity", "tokio"]
 
 [dependencies]
 # Python integration (optional)
@@ -53,6 +55,10 @@ rayon = "1.7"
 # Argument parsing for CLI tools
 clap = { version = "4.0", features = ["derive"] }
 
+# Discord bot dependencies (optional)
+serenity = { version = "0.12", features = ["client", "gateway", "rustls_backend", "model", "cache"], optional = true }
+tokio = { version = "1.0", features = ["macros", "rt-multi-thread"], optional = true }
+
 [dev-dependencies]
 # Testing
 rstest = "0.21"
@@ -77,3 +83,8 @@ path = "src/bin/process_payouts.rs"
 [[bin]]
 name = "verify_commitments"
 path = "src/bin/verify_commitments.rs"
+
+[[bin]]
+name = "realmir_discord_bot"
+path = "src/bin/discord_bot.rs"
+required-features = ["discord"]
