@@ -583,7 +583,10 @@ cost_tracking:
         let temp_dir = TempDir::new().unwrap();
         let config_path = create_test_config(&temp_dir);
         
-        // Set environment variable
+        // Save the current environment variable if it exists
+        let original_api_key = env::var("OPENAI_API_KEY").ok();
+        
+        // Set our test environment variable
         env::set_var("OPENAI_API_KEY", "env-override-key");
         
         let config_manager = ConfigManager::with_path(&config_path).unwrap();
@@ -592,7 +595,10 @@ cost_tracking:
         // Should use environment variable value
         assert_eq!(config.openai.api_key, "env-override-key");
         
-        // Clean up
-        env::remove_var("OPENAI_API_KEY");
+        // Restore the original environment variable
+        match original_api_key {
+            Some(key) => env::set_var("OPENAI_API_KEY", key),
+            None => env::remove_var("OPENAI_API_KEY"),
+        }
     }
 }
