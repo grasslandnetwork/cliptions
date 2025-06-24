@@ -20,11 +20,14 @@
 
 // Core library modules
 pub mod commitment;
+pub mod config;
 pub mod embedder;
 pub mod error;
 pub mod models;
+pub mod payout;
 pub mod round;
 pub mod scoring;
+pub mod social;
 pub mod types;
 
 // Python bindings module (conditional compilation)
@@ -36,6 +39,9 @@ pub use commitment::{CommitmentGenerator, CommitmentVerifier};
 pub use scoring::{ScoringStrategy, BaselineAdjustedStrategy, RawSimilarityStrategy, ScoreValidator};
 pub use embedder::{EmbedderTrait, MockEmbedder};
 pub use round::{RoundProcessor};
+pub use payout::{PayoutCalculator, PayoutConfig, PayoutInfo};
+pub use config::{ConfigManager, CostTracker, RealMirConfig, OpenAIConfig, SpendingStatus};
+pub use social::{SocialWorkflow, AnnouncementFormatter, UrlParser, HashtagManager, AnnouncementData, TweetId};
 pub use types::{Guess, Participant, ScoringResult, RoundData};
 pub use error::{RealMirError, Result};
 
