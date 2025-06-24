@@ -92,7 +92,3 @@ path = "src/bin/process_payouts.rs"
 [[bin]]
 name = "verify_commitments"
 path = "src/bin/verify_commitments.rs"
-
-[[bin]]
-name = "realmir"
-path = "src/bin/realmir.rs"
