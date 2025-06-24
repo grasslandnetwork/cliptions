@@ -53,8 +53,11 @@ image = "0.25"
 # Base64 encoding/decoding
 base64 = "0.22"
 
-# Process execution
-tokio = { version = "1.0", features = ["process", "io-util", "rt"] }
+# Candle ML framework for native CLIP support
+candle-core = "0.8.0"
+candle-nn = "0.8.0"
+candle-transformers = "0.8.0"
+tokenizers = "0.21.0"
 
 # Parallel processing
 rayon = "1.7"
