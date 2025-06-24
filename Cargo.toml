@@ -65,6 +65,9 @@ rayon = "1.7"
 # Argument parsing for CLI tools
 clap = { version = "4.0", features = ["derive"] }
 
+# Colored terminal output
+colored = "2.0"
+
 [dev-dependencies]
 # Testing
 rstest = "0.21"
@@ -89,3 +92,7 @@ path = "src/bin/process_payouts.rs"
 [[bin]]
 name = "verify_commitments"
 path = "src/bin/verify_commitments.rs"
+
+[[bin]]
+name = "realmir"
+path = "src/bin/realmir.rs"
