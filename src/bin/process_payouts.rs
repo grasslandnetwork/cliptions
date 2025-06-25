@@ -11,7 +11,7 @@ use clap::Parser;
 use colored::Colorize;
 
 use realmir_core::embedder::{MockEmbedder, ClipEmbedder, EmbedderTrait};
-use realmir_core::scoring::BaselineAdjustedStrategy;
+use realmir_core::scoring::ClipBatchStrategy;
 use realmir_core::round::RoundProcessor;
 use realmir_core::config::ConfigManager;
 
@@ -232,7 +232,7 @@ fn validate_inputs(args: &Args) -> Result<(), String> {
 }
 
 fn create_processor_and_process(args: &Args) -> Result<ProcessingResults, Box<dyn std::error::Error>> {
-    let strategy = BaselineAdjustedStrategy::new();
+    let strategy = ClipBatchStrategy::new();
     
     // Create processor and process based on embedder type
     if args.use_clip {
@@ -300,7 +300,7 @@ fn create_processor_and_process(args: &Args) -> Result<ProcessingResults, Box<dy
 }
 
 fn process_with_processor<E: EmbedderTrait>(
-    processor: RoundProcessor<E, BaselineAdjustedStrategy>,
+    processor: RoundProcessor<E, ClipBatchStrategy>,
     args: &Args
 ) -> Result<ProcessingResults, Box<dyn std::error::Error>> {
     if args.all {
@@ -322,7 +322,7 @@ struct ProcessingResults {
 }
 
 fn process_all_rounds(
-    mut processor: RoundProcessor<impl EmbedderTrait, BaselineAdjustedStrategy>, 
+    mut processor: RoundProcessor<impl EmbedderTrait, ClipBatchStrategy>, 
     args: &Args
 ) -> Result<ProcessingResults, Box<dyn std::error::Error>> {
     
@@ -390,7 +390,7 @@ fn process_all_rounds(
 }
 
 fn process_single_round(
-    mut processor: RoundProcessor<impl EmbedderTrait, BaselineAdjustedStrategy>, 
+    mut processor: RoundProcessor<impl EmbedderTrait, ClipBatchStrategy>, 
     round_id: &str,
     args: &Args
 ) -> Result<ProcessingResults, Box<dyn std::error::Error>> {

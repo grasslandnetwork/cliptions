@@ -10,7 +10,7 @@ use clap::Parser;
 use colored::Colorize;
 
 use realmir_core::embedder::{MockEmbedder, ClipEmbedder, EmbedderTrait};
-use realmir_core::scoring::{BaselineAdjustedStrategy, ScoreValidator, calculate_rankings, calculate_payouts};
+use realmir_core::scoring::{ClipBatchStrategy, ScoreValidator, calculate_rankings, calculate_payouts};
 use realmir_core::config::ConfigManager;
 
 #[derive(Parser)]
@@ -52,7 +52,7 @@ struct Args {
     output: String,
 
     /// Save results to file
-    #[arg(long, short)]
+    #[arg(long)]
     output_file: Option<PathBuf>,
 
     /// Use real CLIP embedder instead of mock (requires model files)
@@ -320,7 +320,7 @@ fn calculate_with_embedder<E: EmbedderTrait>(
     guesses: &[String]
 ) -> Result<(Vec<(String, f64)>, Vec<f64>), Box<dyn std::error::Error>> {
     
-    let strategy = BaselineAdjustedStrategy::new();
+    let strategy = ClipBatchStrategy::new();
     let validator = ScoreValidator::new(embedder, strategy);
 
     // Calculate rankings
@@ -589,7 +589,7 @@ mod tests {
     #[test]
     fn test_calculate_scores_basic() {
         let embedder = MockEmbedder::clip_like();
-        let strategy = BaselineAdjustedStrategy::new();
+        let strategy = ClipBatchStrategy::new();
         let validator = ScoreValidator::new(embedder, strategy);
         
         let guesses = vec![

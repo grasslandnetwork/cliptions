@@ -36,7 +36,7 @@ pub mod python_bridge;
 
 // Re-export commonly used types
 pub use commitment::{CommitmentGenerator, CommitmentVerifier};
-pub use scoring::{ScoringStrategy, BaselineAdjustedStrategy, RawSimilarityStrategy, ScoreValidator};
+pub use scoring::{ScoringStrategy, ClipBatchStrategy, ScoreValidator};
 pub use embedder::{EmbedderTrait, MockEmbedder};
 pub use round::{RoundProcessor};
 pub use payout::{PayoutCalculator, PayoutConfig, PayoutInfo};

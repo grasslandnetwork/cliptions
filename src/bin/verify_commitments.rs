@@ -11,7 +11,7 @@ use clap::Parser;
 use colored::Colorize;
 
 use realmir_core::embedder::{MockEmbedder, ClipEmbedder, EmbedderTrait};
-use realmir_core::scoring::BaselineAdjustedStrategy;
+use realmir_core::scoring::ClipBatchStrategy;
 use realmir_core::round::RoundProcessor;
 use realmir_core::config::ConfigManager;
 
@@ -242,7 +242,7 @@ fn validate_inputs(args: &Args) -> Result<(), String> {
 }
 
 fn create_processor_and_verify(args: &Args) -> Result<VerificationResults, Box<dyn std::error::Error>> {
-    let strategy = BaselineAdjustedStrategy::new();
+    let strategy = ClipBatchStrategy::new();
     
     // Create processor and verify based on embedder type
     if args.use_clip {
@@ -310,7 +310,7 @@ fn create_processor_and_verify(args: &Args) -> Result<VerificationResults, Box<d
 }
 
 fn verify_with_processor<E: EmbedderTrait>(
-    mut processor: RoundProcessor<E, BaselineAdjustedStrategy>,
+    mut processor: RoundProcessor<E, ClipBatchStrategy>,
     args: &Args
 ) -> Result<VerificationResults, Box<dyn std::error::Error>> {
     
@@ -337,7 +337,7 @@ struct VerificationResults {
 }
 
 fn verify_all_rounds<E: EmbedderTrait>(
-    mut processor: RoundProcessor<E, BaselineAdjustedStrategy>,
+    mut processor: RoundProcessor<E, ClipBatchStrategy>,
     args: &Args
 ) -> Result<VerificationResults, Box<dyn std::error::Error>> {
     
@@ -375,7 +375,7 @@ fn verify_all_rounds<E: EmbedderTrait>(
                 let invalid_count = verification_results.len() - valid_count;
 
                 let verification_len = verification_results.len();
-                results.rounds.push((round_id.clone(), verification_results, participants));
+                results.rounds.push((round_id.to_string(), verification_results, participants));
                 results.total_rounds_processed += 1;
                 results.total_participants += verification_len;
                 results.total_valid += valid_count;
@@ -410,7 +410,7 @@ fn verify_all_rounds<E: EmbedderTrait>(
 }
 
 fn verify_single_round<E: EmbedderTrait>(
-    mut processor: RoundProcessor<E, BaselineAdjustedStrategy>,
+    mut processor: RoundProcessor<E, ClipBatchStrategy>,
     round_id: &str,
     args: &Args
 ) -> Result<VerificationResults, Box<dyn std::error::Error>> {
@@ -447,7 +447,7 @@ fn verify_single_round<E: EmbedderTrait>(
 }
 
 fn process_round_verification<E: EmbedderTrait>(
-    processor: &mut RoundProcessor<E, BaselineAdjustedStrategy>,
+    processor: &mut RoundProcessor<E, ClipBatchStrategy>,
     round_id: &str,
     args: &Args
 ) -> Result<(Vec<bool>, Vec<realmir_core::types::Participant>), Box<dyn std::error::Error>> {

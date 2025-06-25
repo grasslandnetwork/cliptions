@@ -40,6 +40,7 @@ chrono = { version = "0.4", features = ["serde"] }
 
 # Error handling
 thiserror = "1.0"
+anyhow = "1.0"
 
 # Math and arrays
 ndarray = "0.16"
@@ -48,7 +49,7 @@ ndarray = "0.16"
 rand = "0.8"
 
 # Image processing
-image = "0.25"
+image = { version = "0.25", features = ["png", "jpeg", "webp"] }
 
 # Base64 encoding/decoding
 base64 = "0.22"
@@ -58,6 +59,7 @@ candle-core = "0.8.0"
 candle-nn = "0.8.0"
 candle-transformers = "0.8.0"
 tokenizers = "0.21.0"
+hf-hub = "0.3.0"
 
 # Parallel processing
 rayon = "1.7"
@@ -67,6 +69,9 @@ clap = { version = "4.0", features = ["derive"] }
 
 # Colored terminal output
 colored = "2.0"
+
+# HTTP client for downloading models
+reqwest = { version = "0.12", features = ["blocking"] }
 
 [dev-dependencies]
 # Testing
