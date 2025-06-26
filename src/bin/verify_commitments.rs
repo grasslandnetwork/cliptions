@@ -63,9 +63,9 @@ struct Args {
     #[arg(long, short)]
     output_file: Option<PathBuf>,
 
-    /// Use real CLIP embedder instead of mock (for consistency checks)
+    /// Use MockEmbedder instead of CLIP for testing (fast, deterministic)
     #[arg(long)]
-    use_clip: bool,
+    use_mock: bool,
 
     /// Path to CLIP model directory (optional, uses default if not specified)
     #[arg(long)]
@@ -244,8 +244,18 @@ fn validate_inputs(args: &Args) -> Result<(), String> {
 fn create_processor_and_verify(args: &Args) -> Result<VerificationResults, Box<dyn std::error::Error>> {
     let strategy = ClipBatchStrategy::new();
     
-    // Create processor and verify based on embedder type
-    if args.use_clip {
+    // Create processor and verify based on embedder type (defaults to CLIP)
+    if args.use_mock {
+        if args.verbose {
+            println!("{} Using MockEmbedder for verification", 
+                "Info:".blue().bold()
+            );
+        }
+        let embedder = MockEmbedder::clip_like();
+        let processor = RoundProcessor::new(args.rounds_file.to_string_lossy().to_string(), embedder, strategy);
+        verify_with_processor(processor, args)
+    } else {
+        // Default: Use CLIP embedder
         if let Some(model_path) = &args.clip_model {
             match ClipEmbedder::from_path(&model_path.to_string_lossy()) {
                 Ok(embedder) => {
@@ -297,15 +307,6 @@ fn create_processor_and_verify(args: &Args) -> Result<VerificationResults, Box<d
                 }
             }
         }
-    } else {
-        if args.verbose {
-            println!("{} Using MockEmbedder for verification", 
-                "Info:".blue().bold()
-            );
-        }
-        let embedder = MockEmbedder::clip_like();
-        let processor = RoundProcessor::new(args.rounds_file.to_string_lossy().to_string(), embedder, strategy);
-        verify_with_processor(processor, args)
     }
 }
 

@@ -25,14 +25,14 @@ fair payouts based on similarity rankings. Supports multiple output formats and
 configuration options for production use.
 
 Examples:
-  # Basic usage with mock embedder (for testing)
+  # Basic usage with CLIP embedder (semantic scoring)
   calculate_scores target.jpg 100.0 \"ocean waves\" \"mountain sunset\" \"city lights\"
   
-  # Use real CLIP model with verbose output
-  calculate_scores --use-clip --verbose target.jpg 100.0 \"guess1\" \"guess2\"
+  # Use MockEmbedder for fast testing
+  calculate_scores --use-mock target.jpg 100.0 \"guess1\" \"guess2\"
   
-  # Save results to JSON file
-  calculate_scores --output json --output-file results.json target.jpg 100.0 \"guess1\"
+  # Save results to JSON file with verbose output
+  calculate_scores --verbose --output json --output-file results.json target.jpg 100.0 \"guess1\"
   
   # Load configuration from file
   calculate_scores --config config.yaml target.jpg 100.0 \"guess1\" \"guess2\"
@@ -54,10 +54,6 @@ struct Args {
     /// Save results to file
     #[arg(long)]
     output_file: Option<PathBuf>,
-
-    /// Use real CLIP embedder instead of mock (requires model files)
-    #[arg(long)]
-    use_clip: bool,
 
     /// Path to CLIP model directory (optional, uses default if not specified)
     #[arg(long)]
@@ -86,6 +82,10 @@ struct Args {
     /// Show detailed similarity breakdown
     #[arg(long)]
     detailed: bool,
+
+    /// Use MockEmbedder instead of CLIP for testing (fast, deterministic)
+    #[arg(long)]
+    use_mock: bool,
 }
 
 fn main() {
@@ -254,8 +254,17 @@ fn calculate_scores_with_embedder(
     guesses: &[String]
 ) -> Result<(Vec<(String, f64)>, Vec<f64>), Box<dyn std::error::Error>> {
     
-    // Create embedder based on user preference
-    if args.use_clip {
+    // Create embedder based on user preference (defaults to CLIP)
+    if args.use_mock {
+        if args.verbose {
+            println!("{} Using MockEmbedder for testing", 
+                "Info:".blue().bold()
+            );
+        }
+        let embedder = MockEmbedder::clip_like();
+        calculate_with_embedder(embedder, args, guesses)
+    } else {
+        // Default: Use CLIP embedder
         if let Some(model_path) = &args.clip_model {
             match ClipEmbedder::from_path(&model_path.to_string_lossy()) {
                 Ok(embedder) => {
@@ -303,14 +312,6 @@ fn calculate_scores_with_embedder(
                 }
             }
         }
-    } else {
-        if args.verbose {
-            println!("{} Using MockEmbedder for testing", 
-                "Info:".blue().bold()
-            );
-        }
-        let embedder = MockEmbedder::clip_like();
-        calculate_with_embedder(embedder, args, guesses)
     }
 }
 
@@ -531,7 +532,6 @@ mod tests {
             guesses: vec!["test guess".to_string()],
             output: "table".to_string(),
             output_file: None,
-            use_clip: false,
             clip_model: None,
             verbose: false,
             no_color: false,
@@ -539,6 +539,7 @@ mod tests {
             min_guess_length: 1,
             max_guess_length: 200,
             detailed: false,
+            use_mock: false,
         };
         
         // This will fail if the test image doesn't exist, which is expected
@@ -556,7 +557,6 @@ mod tests {
             guesses: vec!["test".to_string()],
             output: "table".to_string(),
             output_file: None,
-            use_clip: false,
             clip_model: None,
             verbose: false,
             no_color: false,
@@ -564,6 +564,7 @@ mod tests {
             min_guess_length: 1,
             max_guess_length: 200,
             detailed: false,
+            use_mock: false,
         };
         
         let result = validate_inputs(&args);

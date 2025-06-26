@@ -11,7 +11,7 @@ use serde_json;
 
 use crate::commitment::{CommitmentGenerator, CommitmentVerifier};
 use crate::scoring::{ScoringStrategy, ClipBatchStrategy, ScoreValidator, calculate_rankings, calculate_payouts};
-use crate::embedder::{MockEmbedder, cosine_similarity};
+use crate::embedder::{MockEmbedder, ClipEmbedder, cosine_similarity};
 use crate::round::{RoundProcessor};
 use crate::error::{RealMirError};
 
@@ -133,16 +133,36 @@ pub fn py_calculate_cosine_similarity(a: Vec<f64>, b: Vec<f64>) -> PyResult<f64>
 
 /// Python function for calculating rankings
 #[pyfunction]
+#[pyo3(signature = (target_image_path, guesses, use_mock = false))]
 pub fn py_calculate_rankings(
     target_image_path: &str,
     guesses: Vec<String>,
+    use_mock: bool,
 ) -> PyResult<Vec<(String, f64)>> {
-    let embedder = MockEmbedder::clip_like();
     let strategy = ClipBatchStrategy::new();
-    let validator = ScoreValidator::new(embedder, strategy);
     
-    calculate_rankings(target_image_path, &guesses, &validator)
-        .map_err(|e| e.into())
+    if use_mock {
+        let embedder = MockEmbedder::clip_like();
+        let validator = ScoreValidator::new(embedder, strategy);
+        calculate_rankings(target_image_path, &guesses, &validator)
+            .map_err(|e| e.into())
+    } else {
+        // Try CLIP first, fall back to MockEmbedder
+        match ClipEmbedder::new() {
+            Ok(embedder) => {
+                let validator = ScoreValidator::new(embedder, strategy);
+                calculate_rankings(target_image_path, &guesses, &validator)
+                    .map_err(|e| e.into())
+            }
+            Err(_) => {
+                // Fall back to MockEmbedder
+                let embedder = MockEmbedder::clip_like();
+                let validator = ScoreValidator::new(embedder, strategy);
+                calculate_rankings(target_image_path, &guesses, &validator)
+                    .map_err(|e| e.into())
+            }
+        }
+    }
 }
 
 /// Python function for calculating payouts
@@ -206,13 +226,27 @@ impl PyRoundProcessor {
 
 /// Python function for processing round payouts
 #[pyfunction]
+#[pyo3(signature = (rounds_file, round_id, use_mock = false))]
 pub fn py_process_round_payouts(
     rounds_file: String,
     round_id: String,
+    use_mock: bool,
 ) -> PyResult<Vec<(String, String, f64, usize, f64)>> {
-    let embedder = MockEmbedder::clip_like();
     let strategy = ClipBatchStrategy::new();
-    let mut processor = RoundProcessor::new(rounds_file, embedder, strategy);
+    
+    let mut processor = if use_mock {
+        let embedder = MockEmbedder::clip_like();
+        RoundProcessor::new(rounds_file, embedder, strategy)
+    } else {
+        // Try CLIP first, fall back to MockEmbedder
+        match ClipEmbedder::new() {
+            Ok(embedder) => RoundProcessor::new(rounds_file, embedder, strategy),
+            Err(_) => {
+                let embedder = MockEmbedder::clip_like();
+                RoundProcessor::new(rounds_file, embedder, strategy)
+            }
+        }
+    };
     
     let results = processor.process_round_payouts(&round_id).map_err(|e| PyErr::from(e))?;
     
@@ -230,13 +264,27 @@ pub fn py_process_round_payouts(
 
 /// Python function for verifying round commitments
 #[pyfunction]
+#[pyo3(signature = (rounds_file, round_id, use_mock = false))]
 pub fn py_verify_round_commitments(
     rounds_file: String,
     round_id: String,
+    use_mock: bool,
 ) -> PyResult<Vec<bool>> {
-    let embedder = MockEmbedder::clip_like();
     let strategy = ClipBatchStrategy::new();
-    let mut processor = RoundProcessor::new(rounds_file, embedder, strategy);
+    
+    let mut processor = if use_mock {
+        let embedder = MockEmbedder::clip_like();
+        RoundProcessor::new(rounds_file, embedder, strategy)
+    } else {
+        // Try CLIP first, fall back to MockEmbedder
+        match ClipEmbedder::new() {
+            Ok(embedder) => RoundProcessor::new(rounds_file, embedder, strategy),
+            Err(_) => {
+                let embedder = MockEmbedder::clip_like();
+                RoundProcessor::new(rounds_file, embedder, strategy)
+            }
+        }
+    };
     
     processor.verify_commitments(&round_id).map_err(|e| e.into())
 }
