@@ -530,14 +530,14 @@ All critical gaps identified in the original analysis have been **successfully i
 | **Score Calculation** | ✅ `test_score_validator_score_calculation` | ✅ `test_full_scoring_flow` | **Both covered** |
 | **Guess Length Filtering** | ✅ `test_score_validator_guess_validation` | ✅ `test_length_filtering` | **Both covered** |
 | **CLIP Batch Processing** | ✅ `test_clip_batch_strategy` | ✅ `test_clip_batch_similarities` | **Both covered** |
-| **Raw Similarity Strategy** | ❌ **Missing** | ✅ `test_raw_similarity_strategy` | **Need Rust raw similarity** |
+
 | **Negative Score Handling** | ❌ **Missing** | ✅ `test_strategies_handle_negative_scores` | **Need Rust negative score test** |
 | **Batch Processing** | ✅ `test_score_validator_batch_processing` | ❌ **Missing** | **Need Python batch test** |
 | **Performance Testing** | ✅ `test_score_validator_performance` | ❌ **Missing** | **Need Python performance test** |
 | **Error Handling** | ✅ `test_score_validator_error_handling` | ❌ **Missing** | **Need Python error test** |
 | **Edge Cases** | ✅ `test_score_validator_edge_cases` | ❌ **Missing** | **Need Python edge case test** |
-| **Rankings Use Adjusted Scores** | ❌ **Missing** | ✅ `test_rankings_use_adjusted_scores` | **Need Rust ranking test** |
-| **Payouts Match Score Ordering** | ❌ **Missing** | ✅ `test_payouts_match_score_ordering` | **Need Rust payout test** |
+
+
 | **Invalid Guesses Get Zero Score** | ❌ **Missing** | ✅ `test_invalid_guesses_get_zero_score` | **Need Rust zero score test** |
 
 | **🎮 Round Management Features** | **Rust Tests** | **Python Tests** | **Coverage Gap** |
