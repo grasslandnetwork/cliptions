@@ -149,6 +149,24 @@ All CLI tools support advanced features for production use:
 - `--config <path>` - Load YAML configuration
 - `--continue-on-error` - Continue batch processing on errors
 
+### Getting Help
+
+Each CLI tool provides comprehensive built-in documentation with examples and detailed option descriptions:
+
+```bash
+# Get help for any command
+./target/release/generate_commitment --help
+./target/release/calculate_scores --help
+./target/release/process_payouts --help
+./target/release/verify_commitments --help
+```
+
+The built-in help includes:
+- **Usage syntax** with required and optional parameters
+- **Real-world examples** for common use cases
+- **Complete option reference** with descriptions and defaults
+- **Configuration guidance** for YAML files and advanced features
+
 ## Score and Payout Calculation
 The system calculates payouts based on similarity rankings between guesses and the target image.
 
