@@ -165,10 +165,8 @@ pub struct RoundConfig {
     pub prize_pool: f64,
     /// Maximum length for guesses
     pub max_guess_length: usize,
-    /// Whether to use baseline adjustment
-    pub use_baseline_adjustment: bool,
-    /// Baseline text for adjustment (if applicable)
-    pub baseline_text: Option<String>,
+    /// Scoring version to use for this round
+    pub scoring_version: String,
 }
 
 impl Default for RoundConfig {
@@ -176,8 +174,7 @@ impl Default for RoundConfig {
         Self {
             prize_pool: 100.0,
             max_guess_length: 300,
-            use_baseline_adjustment: true,
-            baseline_text: Some("[UNUSED]".to_string()),
+            scoring_version: "v0.3".to_string(),
         }
     }
 }

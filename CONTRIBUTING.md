@@ -419,6 +419,48 @@ cargo test --test integration_tests --no-default-features
 cargo bench --no-default-features
 ```
 
+## Scoring Strategy Evolution
+
+### Current Strategy: CLIP Batch (v0.3 - Planned)
+The current implementation uses `ClipBatchStrategy` which leverages proper CLIP model.forward() 
+with softmax to create competitive rankings. This approach fixes the ranking inversion bug 
+where semantic descriptions were ranked lower than exploit strings.
+
+### Historical Strategies (Preserved in scoring_versions.json)
+- **v0.1**: Original scoring without baseline adjustment (applied to round0)
+- **v0.2**: Added baseline adjustment to prevent exploit strings (applied to round1-3)
+
+### Migration from Baseline to CLIP Batch
+The baseline adjustment approach has been deprecated in favor of the CLIP batch strategy 
+because:
+1. CLIP's native batch processing provides more accurate semantic rankings
+2. Eliminates the need for artificial baseline adjustments
+3. Provides competitive scoring through softmax normalization
+4. Better aligns with CLIP's intended usage patterns
+
+### Data Model Requirements
+Each round in the data must include a `scoring_version` field that references the version 
+used for that round's scoring calculations. This ensures:
+- **Reproducibility**: Ability to recalculate scores using the same method
+- **Audit Trail**: Clear record of which scoring strategy was applied
+- **Data Integrity**: Prevents confusion when multiple scoring versions exist
+
+Example round data structure:
+```json
+{
+  "round_id": "round4",
+  "scoring_version": "v0.3",
+  "target_image_path": "rounds/round4/target.jpg",
+  "participants": [...],
+  "results": [...]
+}
+```
+
+**Next Steps**: After completing the baseline code removal, we will:
+1. Add v0.3 to scoring_versions.json with the commit hash and set it as the default version
+2. Update Rust round data structures to include the `scoring_version` field
+3. Ensure all new rounds reference the correct scoring version
+
 ## Development Guidelines
 
 - Follow the SOLID principles outlined in the user rules
@@ -487,10 +529,8 @@ All critical gaps identified in the original analysis have been **successfully i
 |--------------------------------------|----------------|------------------|------------------|
 | **Score Calculation** | ✅ `test_score_validator_score_calculation` | ✅ `test_full_scoring_flow` | **Both covered** |
 | **Guess Length Filtering** | ✅ `test_score_validator_guess_validation` | ✅ `test_length_filtering` | **Both covered** |
-| **Baseline Score Adjustment** | ✅ `test_baseline_adjusted_strategy` | ✅ `test_baseline_adjustment` | **Both covered** |
+| **CLIP Batch Processing** | ✅ `test_clip_batch_strategy` | ✅ `test_clip_batch_similarities` | **Both covered** |
 | **Raw Similarity Strategy** | ❌ **Missing** | ✅ `test_raw_similarity_strategy` | **Need Rust raw similarity** |
-| **Baseline-Adjusted Strategy** | ✅ `test_baseline_adjusted_strategy` | ✅ `test_baseline_adjusted_strategy` | **Both covered** |
-| **Baseline Requirement Validation** | ❌ **Missing** | ✅ `test_baseline_adjusted_strategy_requires_baseline` | **Need Rust baseline validation** |
 | **Negative Score Handling** | ❌ **Missing** | ✅ `test_strategies_handle_negative_scores` | **Need Rust negative score test** |
 | **Batch Processing** | ✅ `test_score_validator_batch_processing` | ❌ **Missing** | **Need Python batch test** |
 | **Performance Testing** | ✅ `test_score_validator_performance` | ❌ **Missing** | **Need Python performance test** |

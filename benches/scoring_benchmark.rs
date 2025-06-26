@@ -8,7 +8,7 @@ use std::time::Duration;
 
 use realmir_core::commitment::{CommitmentGenerator, CommitmentVerifier};
 use realmir_core::embedder::MockEmbedder;
-use realmir_core::scoring::{BaselineAdjustedStrategy, ScoreValidator, calculate_rankings, calculate_payouts};
+use realmir_core::scoring::{ClipBatchStrategy, ScoreValidator, calculate_rankings, calculate_payouts};
 
 fn benchmark_commitment_generation(c: &mut Criterion) {
     let generator = CommitmentGenerator::new();
@@ -100,18 +100,16 @@ fn benchmark_embedding_generation(c: &mut Criterion) {
 
 fn benchmark_scoring_strategies(c: &mut Criterion) {
     let embedder = MockEmbedder::new(512);
-    let strategy = BaselineAdjustedStrategy::new();
+    let strategy = ClipBatchStrategy::new();
     
     let image_features = embedder.get_image_embedding("test.jpg").unwrap();
     let text_features = embedder.get_text_embedding("test text").unwrap();
-    let baseline_features = embedder.get_text_embedding("[UNUSED]").unwrap();
     
-    c.bench_function("baseline_adjusted_scoring", |b| {
+    c.bench_function("clip_batch_scoring", |b| {
         b.iter(|| {
             strategy.calculate_score(
                 black_box(&image_features),
                 black_box(&text_features),
-                black_box(Some(&baseline_features))
             ).unwrap()
         })
     });
@@ -119,7 +117,7 @@ fn benchmark_scoring_strategies(c: &mut Criterion) {
 
 fn benchmark_ranking_calculation(c: &mut Criterion) {
     let embedder = MockEmbedder::clip_like();
-    let strategy = BaselineAdjustedStrategy::new();
+    let strategy = ClipBatchStrategy::new();
     let validator = ScoreValidator::new(embedder, strategy);
     
     let mut group = c.benchmark_group("ranking_calculation");
@@ -181,7 +179,7 @@ fn benchmark_payout_calculation(c: &mut Criterion) {
 
 fn benchmark_complete_scoring_pipeline(c: &mut Criterion) {
     let embedder = MockEmbedder::clip_like();
-    let strategy = BaselineAdjustedStrategy::new();
+    let strategy = ClipBatchStrategy::new();
     let validator = ScoreValidator::new(embedder, strategy);
     
     let mut group = c.benchmark_group("complete_scoring_pipeline");

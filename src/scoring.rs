@@ -18,7 +18,6 @@ pub trait ScoringStrategy: Send + Sync {
     /// # Arguments
     /// * `image_features` - The embedding vector for the image
     /// * `text_features` - The embedding vector for the text
-    /// * `baseline_features` - Optional baseline features for adjustment
     /// 
     /// # Returns
     /// The calculated similarity score
@@ -26,7 +25,6 @@ pub trait ScoringStrategy: Send + Sync {
         &self,
         image_features: &Array1<f64>,
         text_features: &Array1<f64>,
-        baseline_features: Option<&Array1<f64>>,
     ) -> Result<f64>;
     
     /// Get the name of this scoring strategy
@@ -57,7 +55,6 @@ impl ScoringStrategy for ClipBatchStrategy {
         &self,
         _image_features: &Array1<f64>,
         _text_features: &Array1<f64>,
-        _baseline_features: Option<&Array1<f64>>,
     ) -> Result<f64> {
         // This method is not used with ClipBatchStrategy
         // All scoring is done via calculate_batch_similarities for proper CLIP results
@@ -337,7 +334,7 @@ mod tests {
         let txt_features = embedder.get_text_embedding("test text").unwrap();
         
         // ClipBatchStrategy should return UnsupportedOperation for individual scoring
-        let result = strategy.calculate_score(&img_features, &txt_features, None);
+        let result = strategy.calculate_score(&img_features, &txt_features);
         assert!(matches!(result, Err(crate::error::RealMirError::Scoring(ScoringError::UnsupportedOperation))));
     }
     

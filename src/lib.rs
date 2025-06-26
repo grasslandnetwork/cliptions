@@ -7,7 +7,7 @@
 //! ## Features
 //! 
 //! - **Commitment System**: Secure commitment generation and verification using SHA-256
-//! - **Scoring Strategies**: Multiple scoring algorithms including baseline-adjusted similarity
+//! - **Scoring Strategies**: Multiple scoring algorithms including CLIP batch processing
 //! - **Embedding Integration**: Interface for CLIP and other embedding models
 //! - **Round Processing**: Complete round lifecycle management
 //! - **Pure Rust Core**: Clean separation between core logic and language bindings

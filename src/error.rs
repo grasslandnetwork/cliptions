@@ -64,9 +64,6 @@ pub enum ScoringError {
     #[error("Invalid similarity score: {score}")]
     InvalidScore { score: f64 },
     
-    #[error("Baseline features not provided")]
-    MissingBaseline,
-    
     #[error("Empty guess list")]
     EmptyGuesses,
     
