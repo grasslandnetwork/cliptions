@@ -64,14 +64,14 @@ pub enum ScoringError {
     #[error("Invalid similarity score: {score}")]
     InvalidScore { score: f64 },
     
-    #[error("Baseline features not provided")]
-    MissingBaseline,
-    
     #[error("Empty guess list")]
     EmptyGuesses,
     
     #[error("Invalid prize pool: {amount}")]
     InvalidPrizePool { amount: f64 },
+    
+    #[error("Operation not supported for this strategy")]
+    UnsupportedOperation,
 }
 
 /// Embedding-related errors
@@ -88,6 +88,9 @@ pub enum EmbeddingError {
     
     #[error("Image processing failed")]
     ImageProcessingFailed,
+    
+    #[error("Invalid tensor shape")]
+    InvalidTensorShape,
     
     #[error("Unsupported format")]
     UnsupportedFormat,

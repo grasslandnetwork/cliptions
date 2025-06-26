@@ -40,6 +40,7 @@ chrono = { version = "0.4", features = ["serde"] }
 
 # Error handling
 thiserror = "1.0"
+anyhow = "1.0"
 
 # Math and arrays
 ndarray = "0.16"
@@ -47,11 +48,30 @@ ndarray = "0.16"
 # Random number generation
 rand = "0.8"
 
+# Image processing
+image = { version = "0.25", features = ["png", "jpeg", "webp"] }
+
+# Base64 encoding/decoding
+base64 = "0.22"
+
+# Candle ML framework for native CLIP support
+candle-core = "0.8.0"
+candle-nn = "0.8.0"
+candle-transformers = "0.8.0"
+tokenizers = "0.21.0"
+hf-hub = "0.3.0"
+
 # Parallel processing
 rayon = "1.7"
 
 # Argument parsing for CLI tools
 clap = { version = "4.0", features = ["derive"] }
+
+# Colored terminal output
+colored = "2.0"
+
+# HTTP client for downloading models
+reqwest = { version = "0.12", features = ["blocking"] }
 
 [dev-dependencies]
 # Testing
@@ -69,6 +89,10 @@ harness = false
 [[bin]]
 name = "calculate_scores"
 path = "src/bin/calculate_scores.rs"
+
+[[bin]]
+name = "generate_commitment"
+path = "src/bin/generate_commitment.rs"
 
 [[bin]]
 name = "process_payouts"

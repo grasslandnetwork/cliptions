@@ -7,7 +7,7 @@
 //! ## Features
 //! 
 //! - **Commitment System**: Secure commitment generation and verification using SHA-256
-//! - **Scoring Strategies**: Multiple scoring algorithms including baseline-adjusted similarity
+//! - **Scoring Strategies**: Multiple scoring algorithms including CLIP batch processing
 //! - **Embedding Integration**: Interface for CLIP and other embedding models
 //! - **Round Processing**: Complete round lifecycle management
 //! - **Pure Rust Core**: Clean separation between core logic and language bindings
@@ -36,7 +36,7 @@ pub mod python_bridge;
 
 // Re-export commonly used types
 pub use commitment::{CommitmentGenerator, CommitmentVerifier};
-pub use scoring::{ScoringStrategy, BaselineAdjustedStrategy, RawSimilarityStrategy, ScoreValidator};
+pub use scoring::{ScoringStrategy, ClipBatchStrategy, ScoreValidator};
 pub use embedder::{EmbedderTrait, MockEmbedder};
 pub use round::{RoundProcessor};
 pub use payout::{PayoutCalculator, PayoutConfig, PayoutInfo};

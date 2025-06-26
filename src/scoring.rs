@@ -5,7 +5,7 @@
 
 use ndarray::Array1;
 use std::sync::Arc;
-use crate::embedder::{EmbedderTrait, cosine_similarity};
+use crate::embedder::EmbedderTrait;
 use crate::error::{ScoringError, Result};
 use crate::types::{Participant, ScoringResult};
 
@@ -18,7 +18,6 @@ pub trait ScoringStrategy: Send + Sync {
     /// # Arguments
     /// * `image_features` - The embedding vector for the image
     /// * `text_features` - The embedding vector for the text
-    /// * `baseline_features` - Optional baseline features for adjustment
     /// 
     /// # Returns
     /// The calculated similarity score
@@ -26,95 +25,44 @@ pub trait ScoringStrategy: Send + Sync {
         &self,
         image_features: &Array1<f64>,
         text_features: &Array1<f64>,
-        baseline_features: Option<&Array1<f64>>,
     ) -> Result<f64>;
     
     /// Get the name of this scoring strategy
     fn name(&self) -> &str;
 }
 
-/// Raw cosine similarity scoring strategy
+/// CLIP batch processing strategy
 /// 
-/// This strategy calculates the raw dot product between normalized vectors,
-/// which is equivalent to cosine similarity for normalized vectors.
+/// This strategy uses proper CLIP model.forward() with softmax to create competitive rankings.
+/// Individual scoring is bypassed in favor of batch processing for correct results.
 #[derive(Debug, Clone)]
-pub struct RawSimilarityStrategy;
+pub struct ClipBatchStrategy;
 
-impl RawSimilarityStrategy {
+impl ClipBatchStrategy {
     pub fn new() -> Self {
         Self
     }
 }
 
-impl Default for RawSimilarityStrategy {
+impl Default for ClipBatchStrategy {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl ScoringStrategy for RawSimilarityStrategy {
+impl ScoringStrategy for ClipBatchStrategy {
     fn calculate_score(
         &self,
-        image_features: &Array1<f64>,
-        text_features: &Array1<f64>,
-        _baseline_features: Option<&Array1<f64>>,
+        _image_features: &Array1<f64>,
+        _text_features: &Array1<f64>,
     ) -> Result<f64> {
-        cosine_similarity(text_features, image_features)
+        // This method is not used with ClipBatchStrategy
+        // All scoring is done via calculate_batch_similarities for proper CLIP results
+        Err(ScoringError::UnsupportedOperation.into())
     }
     
     fn name(&self) -> &str {
-        "RawSimilarity"
-    }
-}
-
-/// Baseline-adjusted similarity scoring strategy
-/// 
-/// This strategy adjusts the raw similarity by comparing it to a baseline,
-/// which helps differentiate between meaningful and random matches.
-#[derive(Debug, Clone)]
-pub struct BaselineAdjustedStrategy;
-
-impl BaselineAdjustedStrategy {
-    pub fn new() -> Self {
-        Self
-    }
-}
-
-impl Default for BaselineAdjustedStrategy {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl ScoringStrategy for BaselineAdjustedStrategy {
-    fn calculate_score(
-        &self,
-        image_features: &Array1<f64>,
-        text_features: &Array1<f64>,
-        baseline_features: Option<&Array1<f64>>,
-    ) -> Result<f64> {
-        let baseline_features = baseline_features
-            .ok_or(ScoringError::MissingBaseline)?;
-        
-        // Calculate raw similarity
-        let raw_score = cosine_similarity(text_features, image_features)?;
-        
-        // Calculate baseline similarity
-        let baseline_score = cosine_similarity(baseline_features, image_features)?;
-        
-        // Adjust score relative to baseline
-        let adjusted_score = if baseline_score >= 1.0 {
-            // Avoid division by zero
-            raw_score
-        } else {
-            (raw_score - baseline_score) / (1.0 - baseline_score)
-        };
-        
-        Ok(adjusted_score.max(0.0))
-    }
-    
-    fn name(&self) -> &str {
-        "BaselineAdjusted"
+        "ClipBatch"
     }
 }
 
@@ -124,36 +72,17 @@ impl ScoringStrategy for BaselineAdjustedStrategy {
 pub struct ScoreValidator<E: EmbedderTrait, S: ScoringStrategy> {
     embedder: Arc<E>,
     scoring_strategy: Arc<S>,
-    baseline_text: String,
     max_tokens: usize,
-    baseline_features: Option<Array1<f64>>,
 }
 
 impl<E: EmbedderTrait, S: ScoringStrategy> ScoreValidator<E, S> {
     /// Create a new score validator
     pub fn new(embedder: E, scoring_strategy: S) -> Self {
-        let mut validator = Self {
+        Self {
             embedder: Arc::new(embedder),
             scoring_strategy: Arc::new(scoring_strategy),
-            baseline_text: "[UNUSED]".to_string(),
             max_tokens: 77, // CLIP's maximum token limit
-            baseline_features: None,
-        };
-        validator.init_baseline().ok(); // Initialize baseline, ignore errors for now
-        validator
-    }
-    
-    /// Set custom baseline text
-    pub fn with_baseline_text(mut self, baseline_text: String) -> Result<Self> {
-        self.baseline_text = baseline_text;
-        self.init_baseline()?;
-        Ok(self)
-    }
-    
-    /// Initialize baseline features
-    fn init_baseline(&mut self) -> Result<()> {
-        self.baseline_features = Some(self.embedder.get_text_embedding(&self.baseline_text)?);
-        Ok(())
+        }
     }
     
     /// Check if guess meets basic validity criteria
@@ -173,22 +102,7 @@ impl<E: EmbedderTrait, S: ScoringStrategy> ScoreValidator<E, S> {
         true
     }
     
-    /// Calculate adjusted score for a guess
-    pub fn calculate_adjusted_score(&self, image_features: &Array1<f64>, guess: &str) -> Result<f64> {
-        if !self.validate_guess(guess) {
-            return Ok(0.0);
-        }
-        
-        // Encode text
-        let text_features = self.embedder.get_text_embedding(guess)?;
-        
-        // Use the strategy to calculate the score
-        self.scoring_strategy.calculate_score(
-            image_features,
-            &text_features,
-            self.baseline_features.as_ref(),
-        )
-    }
+
     
     /// Get image embedding for a given image path
     /// 
@@ -196,9 +110,68 @@ impl<E: EmbedderTrait, S: ScoringStrategy> ScoreValidator<E, S> {
     pub fn get_image_embedding(&self, image_path: &str) -> Result<Array1<f64>> {
         self.embedder.get_image_embedding(image_path)
     }
+    
+    /// Calculate batch similarities using proper CLIP forward pass
+    /// 
+    /// This is the correct way to rank multiple texts against an image, as it uses
+    /// the model's forward pass with softmax to create competitive rankings.
+    /// 
+    /// # Arguments
+    /// * `image_path` - Path to the image file
+    /// * `guesses` - List of text guesses to rank
+    /// 
+    /// # Returns
+    /// Vector of similarity scores (as percentages) in the same order as input guesses
+    pub fn calculate_batch_similarities(&self, image_path: &str, guesses: &[String]) -> Result<Vec<f64>> {
+        // Filter out invalid guesses and keep track of original indices
+        let mut valid_guesses = Vec::new();
+        let mut valid_indices = Vec::new();
+        
+        for (i, guess) in guesses.iter().enumerate() {
+            if self.validate_guess(guess) {
+                valid_guesses.push(guess.clone());
+                valid_indices.push(i);
+            }
+        }
+        
+        if valid_guesses.is_empty() {
+            // Return zeros for all invalid guesses
+            return Ok(vec![0.0; guesses.len()]);
+        }
+        
+        // Use the embedder's batch similarity calculation
+        let valid_similarities = self.embedder.calculate_batch_similarities(image_path, &valid_guesses)?;
+        
+        // Map back to original positions
+        let mut all_similarities = vec![0.0; guesses.len()];
+        for (valid_idx, &original_idx) in valid_indices.iter().enumerate() {
+            all_similarities[original_idx] = valid_similarities[valid_idx];
+        }
+        
+        Ok(all_similarities)
+    }
+    
+    /// Get raw batch similarities directly from embedder (for testing)
+    /// 
+    /// This bypasses the ScoreValidator's filtering and returns raw embedder results
+    pub fn get_raw_batch_similarities(&self, image_path: &str, texts: &[String]) -> Result<Vec<f64>> {
+        self.embedder.calculate_batch_similarities(image_path, texts)
+    }
+    
+    /// Get image embedding (for testing)
+    pub fn get_image_embedding_test(&self, image_path: &str) -> Result<Array1<f64>> {
+        self.embedder.get_image_embedding(image_path)
+    }
+    
+    /// Get text embedding (for testing)
+    pub fn get_text_embedding_test(&self, text: &str) -> Result<Array1<f64>> {
+        self.embedder.get_text_embedding(text)
+    }
 }
 
 /// Calculate rankings for guesses based on similarity to target image
+/// 
+/// Uses proper CLIP batch processing with softmax for competitive rankings.
 /// 
 /// # Arguments
 /// * `target_image_path` - Path to the target image
@@ -216,20 +189,19 @@ pub fn calculate_rankings<E: EmbedderTrait, S: ScoringStrategy>(
         return Err(ScoringError::EmptyGuesses.into());
     }
     
-    // Get target image embedding
-    let image_embedding = validator.embedder.get_image_embedding(target_image_path)?;
+    // Use the new batch similarity calculation (correct CLIP approach)
+    let similarities = validator.calculate_batch_similarities(target_image_path, guesses)?;
     
-    // Calculate adjusted similarity for each guess
-    let mut similarities = Vec::new();
-    for guess in guesses {
-        let adjusted_score = validator.calculate_adjusted_score(&image_embedding, guess)?;
-        similarities.push((guess.clone(), adjusted_score));
-    }
+    // Pair guesses with their similarities
+    let mut paired_results: Vec<(String, f64)> = guesses.iter()
+        .zip(similarities.iter())
+        .map(|(guess, &sim)| (guess.clone(), sim))
+        .collect();
     
     // Sort by similarity score (highest to lowest)
-    similarities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+    paired_results.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
     
-    Ok(similarities)
+    Ok(paired_results)
 }
 
 /// Calculate payouts based on rankings
@@ -354,38 +326,22 @@ mod tests {
     use crate::embedder::MockEmbedder;
     
     #[test]
-    fn test_raw_similarity_strategy() {
-        let strategy = RawSimilarityStrategy::new();
+    fn test_clip_batch_strategy() {
+        let strategy = ClipBatchStrategy::new();
         let embedder = MockEmbedder::new(128);
         
         let img_features = embedder.get_image_embedding("test.jpg").unwrap();
         let txt_features = embedder.get_text_embedding("test text").unwrap();
         
-        let score = strategy.calculate_score(&img_features, &txt_features, None).unwrap();
-        
-        // Score should be between -1 and 1
-        assert!(score >= -1.0 && score <= 1.0);
-    }
-    
-    #[test]
-    fn test_baseline_adjusted_strategy() {
-        let strategy = BaselineAdjustedStrategy::new();
-        let embedder = MockEmbedder::new(128);
-        
-        let img_features = embedder.get_image_embedding("test.jpg").unwrap();
-        let txt_features = embedder.get_text_embedding("test text").unwrap();
-        let baseline_features = embedder.get_text_embedding("[UNUSED]").unwrap();
-        
-        let score = strategy.calculate_score(&img_features, &txt_features, Some(&baseline_features)).unwrap();
-        
-        // Score should be >= 0 for baseline adjusted
-        assert!(score >= 0.0);
+        // ClipBatchStrategy should return UnsupportedOperation for individual scoring
+        let result = strategy.calculate_score(&img_features, &txt_features);
+        assert!(matches!(result, Err(crate::error::RealMirError::Scoring(ScoringError::UnsupportedOperation))));
     }
     
     #[test]
     fn test_score_validator() {
         let embedder = MockEmbedder::new(128);
-        let strategy = BaselineAdjustedStrategy::new();
+        let strategy = ClipBatchStrategy::new();
         let validator = ScoreValidator::new(embedder, strategy);
         
         // Valid guess
@@ -400,7 +356,7 @@ mod tests {
     #[test]
     fn test_calculate_rankings() {
         let embedder = MockEmbedder::new(128);
-        let strategy = BaselineAdjustedStrategy::new();
+        let strategy = ClipBatchStrategy::new();
         let validator = ScoreValidator::new(embedder, strategy);
         
         let guesses = vec![
@@ -479,7 +435,7 @@ mod tests {
     #[test]
     fn test_empty_guesses() {
         let embedder = MockEmbedder::new(128);
-        let strategy = BaselineAdjustedStrategy::new();
+        let strategy = ClipBatchStrategy::new();
         let validator = ScoreValidator::new(embedder, strategy);
         
         let result = calculate_rankings("test.jpg", &[], &validator);

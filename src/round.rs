@@ -304,14 +304,14 @@ mod tests {
     use tempfile::NamedTempFile;
     use crate::types::Guess;
     use crate::embedder::MockEmbedder;
-    use crate::scoring::BaselineAdjustedStrategy;
+    use crate::scoring::ClipBatchStrategy;
     
-    fn create_test_processor() -> (RoundProcessor<MockEmbedder, BaselineAdjustedStrategy>, String) {
+    fn create_test_processor() -> (RoundProcessor<MockEmbedder, ClipBatchStrategy>, String) {
         let temp_file = NamedTempFile::new().unwrap();
         let file_path = temp_file.path().to_string_lossy().to_string();
         
         let embedder = MockEmbedder::clip_like();
-        let strategy = BaselineAdjustedStrategy::new();
+        let strategy = ClipBatchStrategy::new();
         let processor = RoundProcessor::new(file_path.clone(), embedder, strategy);
         
         (processor, file_path)

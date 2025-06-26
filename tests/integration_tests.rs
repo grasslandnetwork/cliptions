@@ -7,7 +7,7 @@ use tempfile::NamedTempFile;
 
 use realmir_core::commitment::{CommitmentGenerator, CommitmentVerifier};
 use realmir_core::embedder::{MockEmbedder, EmbedderTrait};
-use realmir_core::scoring::{BaselineAdjustedStrategy, RawSimilarityStrategy, ScoreValidator, ScoringStrategy, calculate_rankings, calculate_payouts};
+use realmir_core::scoring::{ClipBatchStrategy, ScoreValidator, ScoringStrategy, calculate_rankings, calculate_payouts};
 use realmir_core::round::RoundProcessor;
 use realmir_core::types::{RoundData, Participant, Guess, RoundConfig, RoundStatus};
 
@@ -19,7 +19,7 @@ fn test_complete_round_lifecycle() {
     
     // Create round processor
     let embedder = MockEmbedder::clip_like();
-    let strategy = BaselineAdjustedStrategy::new();
+    let strategy = ClipBatchStrategy::new();
     let mut processor = RoundProcessor::new(file_path.clone(), embedder, strategy);
     
     // 1. Create a new round
@@ -32,8 +32,7 @@ fn test_complete_round_lifecycle() {
         Some(RoundConfig {
             prize_pool: 1000.0,
             max_guess_length: 300,
-            use_baseline_adjustment: true,
-            baseline_text: Some("[UNUSED]".to_string()),
+            scoring_version: "v0.3".to_string(),
         }),
     ).unwrap();
     
@@ -112,45 +111,12 @@ fn test_commitment_system_integration() {
     }
 }
 
-#[test]
-fn test_scoring_strategies_comparison() {
-    let embedder = MockEmbedder::new(128);
-    let raw_strategy = RawSimilarityStrategy::new();
-    let baseline_strategy = BaselineAdjustedStrategy::new();
-    
-    // Get some test embeddings
-    let image_embedding = embedder.get_image_embedding("test.jpg").unwrap();
-    let text_embedding = embedder.get_text_embedding("test text").unwrap();
-    let baseline_embedding = embedder.get_text_embedding("[UNUSED]").unwrap();
-    
-    // Test raw similarity
-    let raw_score = raw_strategy.calculate_score(
-        &image_embedding,
-        &text_embedding,
-        None,
-    ).unwrap();
-    
-    // Test baseline adjusted similarity
-    let adjusted_score = baseline_strategy.calculate_score(
-        &image_embedding,
-        &text_embedding,
-        Some(&baseline_embedding),
-    ).unwrap();
-    
-    // Scores should be different
-    assert_ne!(raw_score, adjusted_score);
-    
-    // Raw score should be between -1 and 1
-    assert!(raw_score >= -1.0 && raw_score <= 1.0);
-    
-    // Adjusted score should be >= 0
-    assert!(adjusted_score >= 0.0);
-}
+
 
 #[test]
 fn test_score_validator_integration() {
     let embedder = MockEmbedder::new(128);
-    let strategy = BaselineAdjustedStrategy::new();
+    let strategy = ClipBatchStrategy::new();
     let validator = ScoreValidator::new(embedder, strategy);
     
     // Test various guess validations
@@ -168,16 +134,17 @@ fn test_score_validator_integration() {
         assert_eq!(validator.validate_guess(guess), expected_valid);
     }
     
-    // Test score calculation
-    let image_features = validator.get_image_embedding("test.jpg").unwrap();
-    let score = validator.calculate_adjusted_score(&image_features, "valid guess").unwrap();
-    assert!(score >= 0.0); // Should be non-negative for baseline adjusted
+    // Test batch similarity calculation
+    let guesses = vec!["valid guess".to_string()];
+    let similarities = validator.calculate_batch_similarities("test.jpg", &guesses).unwrap();
+    assert_eq!(similarities.len(), 1);
+    assert!(similarities[0] >= 0.0); // Should be non-negative for CLIP batch
 }
 
 #[test]
 fn test_ranking_and_payout_calculation() {
     let embedder = MockEmbedder::new(128);
-    let strategy = BaselineAdjustedStrategy::new();
+    let strategy = ClipBatchStrategy::new();
     let validator = ScoreValidator::new(embedder, strategy);
     
     let guesses = vec![
@@ -327,7 +294,7 @@ fn test_error_handling() {
     
     // 2. Empty guesses
     let embedder = MockEmbedder::new(128);
-    let strategy = BaselineAdjustedStrategy::new();
+    let strategy = ClipBatchStrategy::new();
     let validator = ScoreValidator::new(embedder, strategy);
     assert!(calculate_rankings("test.jpg", &[], &validator).is_err());
     
@@ -339,7 +306,7 @@ fn test_error_handling() {
     let temp_file = NamedTempFile::new().unwrap();
     let file_path = temp_file.path().to_string_lossy().to_string();
     let embedder = MockEmbedder::clip_like();
-    let strategy = BaselineAdjustedStrategy::new();
+    let strategy = ClipBatchStrategy::new();
     let mut processor = RoundProcessor::new(file_path, embedder, strategy);
     
     assert!(processor.get_round("nonexistent").is_err());
@@ -351,7 +318,7 @@ fn test_performance_characteristics() {
     use std::time::Instant;
     
     let embedder = MockEmbedder::new(512); // CLIP-like dimensions
-    let strategy = BaselineAdjustedStrategy::new();
+    let strategy = ClipBatchStrategy::new();
     let validator = ScoreValidator::new(embedder, strategy);
     
     // Test with different numbers of guesses
