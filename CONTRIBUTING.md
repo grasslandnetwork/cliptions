@@ -157,7 +157,7 @@ export TWITTER_NAME="your_twitter_username"
 export TWITTER_PASSWORD="your_twitter_password"
 
 # Run Twitter data extraction with automatic cost tracking
-python browser-use/twitter_data_fetcher.py --round 1 --target-time "20250523_133057EST"
+python browser/twitter_data_fetcher.py --round 1 --target-time "20250523_133057EST"
 
 # Example output:
 # ✅ OpenAI usage tracker initialized
@@ -849,19 +849,19 @@ Instead of a monolithic script, the system will be composed of specialized modul
 *This phase handles the publication of the target frame and the subsequent reveal from the Miners.*
 
 ### **Task 3.1:** Validator: Target Frame Publication
-*   **Module:** `browser-use/validator/publish_target_frame.py`
+*   **Module:** `browser/validator/publish_target_frame.py`
 *   **Implements:** `TwitterPostingInterface`
 *   **Purpose:** Post the target frame image as a reply to the announcement.
 *   **Status:** Not Started
 
 ### **Task 3.2:** Miner: Reveal Submission  
-*   **Module:** `browser-use/miner/submit_reveal.py`
+*   **Module:** `browser/miner/submit_reveal.py`
 *   **Implements:** `TwitterPostingInterface`
 *   **Purpose:** Reply to the target frame with the plaintext prediction and salt.
 *   **Status:** Not Started
 
 ### **Task 3.3:** Validator: Reveal Collection
-*   **Module:** `browser-use/validator/collect_reveals.py`
+*   **Module:** `browser/validator/collect_reveals.py`
 *   **Purpose:** Extract all miner reveals from the target frame tweet replies.
 *   **Implements:** `TwitterExtractionInterface`
 *   **Status:** Not Started
@@ -876,7 +876,7 @@ Instead of a monolithic script, the system will be composed of specialized modul
 *This phase covers the final steps of the game: payment verification, scoring, and announcing the winners.*
 
 ### **Task 4.1 (Advanced):** Validator: Payment Verification
-*   **Module:** `browser-use/validator/verify_payments.py`
+*   **Module:** `browser/validator/verify_payments.py`
 *   **Purpose:** Check the TAO network to verify which miners have paid their entry fees.
 *   **Integration:** TAO network APIs.
 *   **Status:** Not Started
@@ -887,7 +887,7 @@ Instead of a monolithic script, the system will be composed of specialized modul
 *   **Status:** Not Started
 
 ### **Task 4.3:** Validator: Results Publication
-*   **Module:** `browser-use/validator/publish_results.py`
+*   **Module:** `browser/validator/publish_results.py`
 *   **Implements:** `TwitterPostingInterface`
 *   **Purpose:** Post the final results tweet, listing winners and payouts.
 *   **Status:** Not Started
@@ -897,12 +897,12 @@ Instead of a monolithic script, the system will be composed of specialized modul
 *This phase involves creating higher-level orchestrators to automate the full game cycle and tools for monitoring.*
 
 ### **Task 5.1:** Validator Orchestrator
-*   **Module:** `browser-use/validator/orchestrator.py`
+*   **Module:** `browser/validator/orchestrator.py`
 *   **Purpose:** Coordinate the full validator workflow for a complete round.
 *   **Status:** Not Started
 
 ### **Task 5.2:** Miner Orchestrator
-*   **Module:** `browser-use/miner/orchestrator.py` 
+*   **Module:** `browser/miner/orchestrator.py` 
 *   **Purpose:** Coordinate the full miner participation in a round.
 *   **Status:** Not Started
 
