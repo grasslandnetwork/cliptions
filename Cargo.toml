@@ -91,6 +91,10 @@ name = "calculate_scores"
 path = "src/bin/calculate_scores.rs"
 
 [[bin]]
+name = "generate_commitment"
+path = "src/bin/generate_commitment.rs"
+
+[[bin]]
 name = "process_payouts"
 path = "src/bin/process_payouts.rs"
 
