@@ -192,6 +192,60 @@ pub enum RoundStatus {
     Cancelled,
 }
 
+/// Raw Twitter reply data from browser automation
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct TwitterReplyData {
+    /// URL of the original tweet
+    pub original_tweet_url: String,
+    /// Total number of replies found
+    pub total_replies_found: u32,
+    /// List of individual replies
+    pub replies: Vec<TwitterReply>,
+}
+
+/// Individual Twitter reply
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct TwitterReply {
+    /// URL of the reply tweet
+    pub url: String,
+    /// Author of the reply (e.g., "@username")
+    pub author: String,
+    /// Preview text of the reply
+    pub text_preview: String,
+    /// Whether this reply was flagged as spam
+    pub was_spam_flagged: bool,
+}
+
+/// Result of collecting commitments from Twitter
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct CommitmentCollectionResult {
+    /// Whether the collection was successful
+    pub success: bool,
+    /// List of collected commitments
+    pub commitments: Vec<CollectedCommitment>,
+    /// URL of the announcement tweet
+    pub announcement_url: String,
+    /// Total number of commitments found
+    pub total_commitments_found: u32,
+    /// Error message if collection failed
+    pub error_message: Option<String>,
+}
+
+/// A commitment collected from Twitter
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct CollectedCommitment {
+    /// Username of the committer
+    pub username: String,
+    /// The commitment hash
+    pub commitment_hash: String,
+    /// Wallet address provided
+    pub wallet_address: String,
+    /// URL of the commitment tweet
+    pub tweet_url: String,
+    /// Timestamp when commitment was collected
+    pub timestamp: String,
+}
+
 /// Complete data for a prediction round
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RoundData {
@@ -219,6 +273,14 @@ pub struct RoundData {
     /// Optional metadata
     #[serde(default)]
     pub metadata: HashMap<String, String>,
+    
+    /// Raw Twitter reply data from browser automation
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub raw_commitment_replies: Option<TwitterReplyData>,
+    
+    /// Processed commitment collection results
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub collected_commitments: Option<CommitmentCollectionResult>,
 }
 
 impl RoundData {
@@ -242,6 +304,8 @@ impl RoundData {
             created_at: now,
             updated_at: now,
             metadata: HashMap::new(),
+            raw_commitment_replies: None,
+            collected_commitments: None,
         }
     }
     
@@ -278,6 +342,28 @@ impl RoundData {
     pub fn is_complete(&self) -> bool {
         matches!(self.status, RoundStatus::Complete)
     }
+    
+    /// Set Twitter reply data for the round
+    pub fn set_twitter_replies(&mut self, twitter_data: TwitterReplyData) {
+        self.raw_commitment_replies = Some(twitter_data);
+        self.updated_at = Utc::now();
+    }
+    
+    /// Set commitment collection results for the round
+    pub fn set_commitment_collection(&mut self, collection_result: CommitmentCollectionResult) {
+        self.collected_commitments = Some(collection_result);
+        self.updated_at = Utc::now();
+    }
+    
+    /// Check if the round has Twitter data
+    pub fn has_twitter_data(&self) -> bool {
+        self.raw_commitment_replies.is_some()
+    }
+    
+    /// Check if the round has commitment collection results
+    pub fn has_commitment_collection(&self) -> bool {
+        self.collected_commitments.is_some()
+    }
 }
 
 /// Payout result for a participant
@@ -302,5 +388,157 @@ impl PayoutResult {
             rank,
             score,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    #[test]
+    fn test_twitter_reply_data_serialization() {
+        let twitter_data = TwitterReplyData {
+            original_tweet_url: "https://x.com/realmir_testnet/status/1907159517013422578".to_string(),
+            total_replies_found: 2,
+            replies: vec![
+                TwitterReply {
+                    url: "https://x.com/davidynamic/status/1907165981706760445".to_string(),
+                    author: "@davidynamic".to_string(),
+                    text_preview: "Commit: bc64a7b517b4e0a23c61300bb2e0601641fac6b387c76a1a9abb3d425c230235 Wallet: 5Co2unDtZKZDzYNZHT2fUMkEnpVWnassfbuabvZmGTrYKgtD".to_string(),
+                    was_spam_flagged: false,
+                }
+            ],
+        };
+
+        let json = serde_json::to_string(&twitter_data).unwrap();
+        let deserialized: TwitterReplyData = serde_json::from_str(&json).unwrap();
+        assert_eq!(twitter_data, deserialized);
+    }
+
+    #[test]
+    fn test_commitment_collection_result_serialization() {
+        let collection_result = CommitmentCollectionResult {
+            success: true,
+            commitments: vec![
+                CollectedCommitment {
+                    username: "davidynamic".to_string(),
+                    commitment_hash: "bc64a7b517b4e0a23c61300bb2e0601641fac6b387c76a1a9abb3d425c230235".to_string(),
+                    wallet_address: "5Co2unDtZKZDzYNZHT2fUMkEnpVWnassfbuabvZmGTrYKgtD".to_string(),
+                    tweet_url: "https://x.com/davidynamic/status/1907165981706760445".to_string(),
+                    timestamp: "2025-06-14 12:42:07.464279".to_string(),
+                }
+            ],
+            announcement_url: "https://x.com/realmir_testnet/status/1907159517013422578".to_string(),
+            total_commitments_found: 2,
+            error_message: None,
+        };
+
+        let json = serde_json::to_string(&collection_result).unwrap();
+        let deserialized: CommitmentCollectionResult = serde_json::from_str(&json).unwrap();
+        assert_eq!(collection_result, deserialized);
+    }
+
+    #[test]
+    fn test_round_data_with_enhanced_fields() {
+        let mut round_data = RoundData::new(
+            "test_round".to_string(),
+            "Test Round".to_string(),
+            "A test round".to_string(),
+            "test.jpg".to_string(),
+        );
+
+        // Add Twitter data
+        let twitter_data = TwitterReplyData {
+            original_tweet_url: "https://x.com/realmir_testnet/status/1907159517013422578".to_string(),
+            total_replies_found: 1,
+            replies: vec![
+                TwitterReply {
+                    url: "https://x.com/davidynamic/status/1907165981706760445".to_string(),
+                    author: "@davidynamic".to_string(),
+                    text_preview: "Test reply".to_string(),
+                    was_spam_flagged: false,
+                }
+            ],
+        };
+        round_data.set_twitter_replies(twitter_data);
+
+        // Add commitment collection data
+        let collection_result = CommitmentCollectionResult {
+            success: true,
+            commitments: vec![],
+            announcement_url: "https://x.com/realmir_testnet/status/1907159517013422578".to_string(),
+            total_commitments_found: 0,
+            error_message: None,
+        };
+        round_data.set_commitment_collection(collection_result);
+
+        // Test serialization/deserialization
+        let json = serde_json::to_string(&round_data).unwrap();
+        let deserialized: RoundData = serde_json::from_str(&json).unwrap();
+        
+        assert!(deserialized.has_twitter_data());
+        assert!(deserialized.has_commitment_collection());
+        assert_eq!(deserialized.raw_commitment_replies.unwrap().total_replies_found, 1);
+        assert_eq!(deserialized.collected_commitments.unwrap().success, true);
+    }
+
+    #[test]
+    fn test_actual_rounds_data_deserialization() {
+        // Test that we can deserialize the actual data from rounds.json
+        if let Ok(content) = fs::read_to_string("data/rounds.json") {
+            // Parse the actual file structure (HashMap<String, serde_json::Value>)
+            let rounds_data: serde_json::Value = serde_json::from_str(&content).unwrap();
+            
+            // Test that round2 (which has enhanced data) can be parsed
+            if let Some(round2_data) = rounds_data.get("round2") {
+                // Test that the enhanced fields exist and have the expected structure
+                assert!(round2_data.get("raw_commitment_replies").is_some());
+                assert!(round2_data.get("collected_commitments").is_some());
+
+                // Test that we can deserialize the Twitter data specifically
+                let twitter_data_json = round2_data.get("raw_commitment_replies").unwrap();
+                let twitter_data: TwitterReplyData = serde_json::from_value(twitter_data_json.clone()).unwrap();
+                assert_eq!(twitter_data.total_replies_found, 2);
+                assert_eq!(twitter_data.replies.len(), 2);
+
+                // Test that we can deserialize the commitment collection data
+                let collection_data_json = round2_data.get("collected_commitments").unwrap();
+                let collection_data: CommitmentCollectionResult = serde_json::from_value(collection_data_json.clone()).unwrap();
+                assert!(collection_data.success);
+                assert_eq!(collection_data.total_commitments_found, 2);
+                assert_eq!(collection_data.commitments.len(), 2);
+            }
+
+            // Test that round0 and round1 (without enhanced data) can still be parsed
+            if let Some(round0_data) = rounds_data.get("round0") {
+                // These rounds shouldn't have the enhanced fields
+                assert!(round0_data.get("raw_commitment_replies").is_none());
+                assert!(round0_data.get("collected_commitments").is_none());
+            }
+        }
+    }
+
+    #[test]
+    fn test_round_data_optional_fields() {
+        // Test that RoundData can be created without the enhanced fields
+        let round_data = RoundData::new(
+            "test_round".to_string(),
+            "Test Round".to_string(),
+            "A test round".to_string(),
+            "test.jpg".to_string(),
+        );
+
+        assert!(!round_data.has_twitter_data());
+        assert!(!round_data.has_commitment_collection());
+        assert!(round_data.raw_commitment_replies.is_none());
+        assert!(round_data.collected_commitments.is_none());
+
+        // Test JSON serialization without enhanced fields
+        let json = serde_json::to_string(&round_data).unwrap();
+        let deserialized: RoundData = serde_json::from_str(&json).unwrap();
+        
+        assert!(!deserialized.has_twitter_data());
+        assert!(!deserialized.has_commitment_collection());
     }
 }

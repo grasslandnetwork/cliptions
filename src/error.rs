@@ -23,6 +23,9 @@ pub enum RealMirError {
     #[error("Round processing error: {0}")]
     Round(#[from] RoundError),
     
+    #[error("Data access error: {0}")]
+    DataAccess(#[from] DataAccessError),
+    
     #[error("Validation error: {0}")]
     ValidationError(String),
     
@@ -113,6 +116,25 @@ pub enum RoundError {
     
     #[error("Round already processed")]
     AlreadyProcessed,
+}
+
+/// Data access layer errors
+#[derive(Error, Debug)]
+pub enum DataAccessError {
+    #[error("Round not found: {round_id}")]
+    RoundNotFound { round_id: String },
+    
+    #[error("Data file not found: {path}")]
+    DataFileNotFound { path: String },
+    
+    #[error("Data corruption detected: {details}")]
+    DataCorruption { details: String },
+    
+    #[error("Backup operation failed: {reason}")]
+    BackupFailed { reason: String },
+    
+    #[error("Atomic operation failed: {operation}")]
+    AtomicOperationFailed { operation: String },
 }
 
 /// Validation errors

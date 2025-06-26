@@ -21,6 +21,7 @@
 // Core library modules
 pub mod commitment;
 pub mod config;
+pub mod data_access;
 pub mod embedder;
 pub mod error;
 pub mod models;
@@ -42,8 +43,12 @@ pub use round::{RoundProcessor};
 pub use payout::{PayoutCalculator, PayoutConfig, PayoutInfo};
 pub use config::{ConfigManager, CostTracker, RealMirConfig, OpenAIConfig, SpendingStatus};
 pub use social::{SocialWorkflow, AnnouncementFormatter, UrlParser, HashtagManager, AnnouncementData, TweetId};
-pub use types::{Guess, Participant, ScoringResult, RoundData};
-pub use error::{RealMirError, Result};
+pub use data_access::{DataAccessLayer};
+pub use types::{
+    Guess, Participant, ScoringResult, RoundData, RoundConfig, RoundStatus, PayoutResult,
+    TwitterReplyData, TwitterReply, CommitmentCollectionResult, CollectedCommitment
+};
+pub use error::{RealMirError, DataAccessError, Result};
 
 // Re-export Python module when feature is enabled
 #[cfg(feature = "python")]
