@@ -128,7 +128,7 @@ Task: Collect Cliptions game guesses from Twitter replies.
 
 Steps:
 1. Navigate to Twitter.com
-2. Search for @cliptions_testnet
+2. Search for @realmir_testnet
 3. Find the latest tweet with hashtag #round{NUMBER}
 4. Collect all replies containing guesses:
    - Look for patterns like:

@@ -320,12 +320,12 @@ mod tests {
         let parser = UrlParser::new().unwrap();
         
         // Test Twitter URL
-        let twitter_url = "https://twitter.com/cliptions_testnet/status/1234567890";
+        let twitter_url = "https://twitter.com/realmir_testnet/status/1234567890";
         let tweet_id = parser.extract_tweet_id(twitter_url).unwrap();
         assert_eq!(tweet_id, "1234567890");
         
         // Test X URL
-        let x_url = "https://x.com/cliptions_testnet/status/9876543210";
+        let x_url = "https://x.com/realmir_testnet/status/9876543210";
         let tweet_id = parser.extract_tweet_id(x_url).unwrap();
         assert_eq!(tweet_id, "9876543210");
         
