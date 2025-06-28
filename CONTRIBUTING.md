@@ -12,7 +12,7 @@ Thank you for your interest in contributing to RealMir! This document provides d
 - [Rust Development](#rust-development)
 - [Development Guidelines](#development-guidelines)
 - [Test Coverage Comparison](#test-coverage-comparison)
-- [Browser Use Roadmap](#browser-use-roadmap)
+- [Browser Automation Development](#browser-automation-development)
 
 ## Development Setup
 
@@ -754,354 +754,46 @@ The RealMir Rust core now includes **complete implementations** of all major mod
 - **Bridge Layer**: Clean PyO3 bindings in `src/python_bridge.rs`
 - **CLI Tools**: Pure Rust command-line tools for all major operations
 
-## Browser Use Roadmap
-
-# Browser Use - Roadmap: RealMir Modular Twitter Automation
-
-**Goal:** Create a modular Twitter automation system for the RealMir prediction network, supporting both Validator and Miner workflows through separate, reusable components that implement a shared set of interfaces.
-
-## Architecture Overview
-
-Instead of a monolithic script, the system will be composed of specialized modules that conform to a strict **interface-based design**. `get_twitter_replies.py` serves as the first proof-of-concept and will be refactored to implement our formal `TwitterTask` interface. This ensures all modules are interchangeable, testable, and adhere to SOLID principles.
-
-- **Single Responsibility**: Each module performs one job (e.g., collect commitments, post a reveal).
-- **Open/Closed**: Extensible without modification
-- **Dependency Inversion**: Use abstractions, not concrete implementations
-- **Interface Segregation**: Clean, focused interfaces
-- **Liskov Substitution**: Consistent behavior across implementations
-
-## Phase 1: Core Infrastructure (Completed)
-
-*   **Task 1.1:** ✅ **Base Twitter Reply Extraction** (`get_twitter_replies.py`)
-    *   **Status:** Completed - Provides robust foundation for extracting replies from Twitter threads
-    *   **Features:** Handles spam filtering, pagination, structured output via Pydantic models
-
-*   **Task 1.2:** ✅ **Data Structure Alignment** (`rounds/guesses.json` with URLs)
-    *   **Status:** Completed - Ground truth data includes commitment/reveal URLs for testing
-
-*   **Task 1.3:** ✅ **Test Infrastructure** (`tests/test_twitter_data_extraction.py`)
-    *   **Status:** Completed - Structural testing framework ready for modular components
-
-## Phase 1.5: Rust-Driven Data Layer & Python/Rust Bridge (Revised)
-
-*Goal: Establish Rust as the single source of truth for core data models while using Pydantic for interface validation in Python. Ensure consistency between Rust structs and Pydantic models via the Python/Rust bridge and dedicated integration tests.*
-
-### **Task 1.5.1: Define Core Data Models in Rust**
-*   **Action:** Create `src/models.rs` to house all core data structures.
-*   **Action:** Define structs for `Round`, `Commitment`, `Participant`, etc., using `serde`.
-*   **Status:** ✅ Completed - Created `src/models.rs` with `Commitment` and `Round` structs using serde and PyO3 derives
-
-### **Task 1.5.2: Create Mirror Pydantic Models**
-*   **Action:** Create `browser/data_models.py` for the Pydantic model definitions.
-*   **Action:** Define Pydantic models that mirror the structure of the Rust structs.
-*   **Status:** ✅ Completed - Created `browser/data_models.py` with corresponding Pydantic models for `Commitment` and `Round`
-
-### **Task 1.5.3: Implement Schema Consistency Test**
-*   **Action:** Create `tests/test_schema_consistency.py`.
-*   **Action:** Write tests that pass data from each Pydantic model to the Rust core, ensuring they can be successfully deserialized into their corresponding Rust structs. This test will serve as our "consistency lock."
-*   **Status:** ✅ Completed - Created comprehensive schema consistency tests with 3 test cases, all passing
-
-### **Task 1.5.4: Implement Rust Data Access Layer**
-*   **Action:** Create a Rust module (e.g., `src/data_access.rs`) to handle loading from and saving to `data/rounds.json`.
-*   **Action:** Expose these data access functions to Python via `python_bridge.rs`.
-*   **Status:** Not Started
-
-### **Task 1.5.5: Refactor `collect_commitments.py`**
-*   **Action:** Update `collect_commitments.py` to use the new Pydantic models for validation.
-*   **Action:** After validation, the task will call the new Rust data access functions (via the bridge) to persist the collected commitments.
-*   **Status:** Not Started
-
-## Phase 2: Commitment Workflow
-
-*This phase focuses on the initial round setup and the commitment interaction between Validator and Miner.*
-
-### **Task 2.1:** Validator: Round Announcement
-*   **Module:** `browser/validator/announce_round.py`
-*   **Implements:** `TwitterPostingInterface`
-*   **Purpose:** Post the initial round announcement tweet.
-*   **Status:** ✅ Completed
-
-### **Task 2.2:** Miner: Commitment Submission
-*   **Module:** `browser/miner/submit_commitment.py`
-*   **Implements:** `TwitterPostingInterface`
-*   **Purpose:** Reply to an announcement with a commitment hash.
-*   **Status:** ✅ Completed
-
-### **Task 2.3:** Validator: Commitment Collection  
-*   **Module:** `browser/validator/collect_commitments.py`
-*   **Purpose:** Extract all miner commitments from the announcement tweet replies.
-*   **Implements:** `TwitterExtractionInterface`
-*   **Status:** ✅ Completed
-
-### **Task 2.4:** Validator: Entry Fee Assignment
-*   **Module:** `browser/validator/assign_entry_fees.py`  
-*   **Implements:** `TwitterPostingInterface`
-*   **Purpose:** Reply to each commitment with the TAO payment address.
-*   **Status:** Not Started
-
-### **Task 2.5:** Integration Test: Commitment Cycle
-*   **Module:** `tests/test_commitment_workflow.py`
-*   **Purpose:** Verify that a Validator can announce, a Miner can commit, and the Validator can collect the commitment and assign a fee address successfully.
-*   **Status:** Not Started
-
-## Phase 3: Reveal Workflow
-
-*This phase handles the publication of the target frame and the subsequent reveal from the Miners.*
-
-### **Task 3.1:** Validator: Target Frame Publication
-*   **Module:** `browser/validator/publish_target_frame.py`
-*   **Implements:** `TwitterPostingInterface`
-*   **Purpose:** Post the target frame image as a reply to the announcement.
-*   **Status:** Not Started
-
-### **Task 3.2:** Miner: Reveal Submission  
-*   **Module:** `browser/miner/submit_reveal.py`
-*   **Implements:** `TwitterPostingInterface`
-*   **Purpose:** Reply to the target frame with the plaintext prediction and salt.
-*   **Status:** Not Started
-
-### **Task 3.3:** Validator: Reveal Collection
-*   **Module:** `browser/validator/collect_reveals.py`
-*   **Purpose:** Extract all miner reveals from the target frame tweet replies.
-*   **Implements:** `TwitterExtractionInterface`
-*   **Status:** Not Started
-
-### **Task 3.4:** Integration Test: Reveal Cycle
-*   **Module:** `tests/test_reveal_workflow.py`
-*   **Purpose:** Verify that a Validator can post a target, a Miner can reveal, and the Validator can collect the reveal.
-*   **Status:** Not Started
-
-## Phase 4: Scoring, Payouts, and Results
-
-*This phase covers the final steps of the game: payment verification, scoring, and announcing the winners.*
-
-### **Task 4.1 (Advanced):** Validator: Payment Verification
-*   **Module:** `browser/validator/verify_payments.py`
-*   **Purpose:** Check the TAO network to verify which miners have paid their entry fees.
-*   **Integration:** TAO network APIs.
-*   **Status:** Not Started
-
-### **Task 4.2 (Advanced):** Validator: Scoring & Payouts
-*   **Modules:** `score_predictions.py`, `distribute_payouts.py`
-*   **Purpose:** Integrate with the CLIP embedder and TAO network to calculate winners and distribute rewards.
-*   **Status:** Not Started
-
-### **Task 4.3:** Validator: Results Publication
-*   **Module:** `browser/validator/publish_results.py`
-*   **Implements:** `TwitterPostingInterface`
-*   **Purpose:** Post the final results tweet, listing winners and payouts.
-*   **Status:** Not Started
-
-## Phase 5: Orchestration & Monitoring
-
-*This phase involves creating higher-level orchestrators to automate the full game cycle and tools for monitoring.*
-
-### **Task 5.1:** Validator Orchestrator
-*   **Module:** `browser/validator/orchestrator.py`
-*   **Purpose:** Coordinate the full validator workflow for a complete round.
-*   **Status:** Not Started
-
-### **Task 5.2:** Miner Orchestrator
-*   **Module:** `browser/miner/orchestrator.py` 
-*   **Purpose:** Coordinate the full miner participation in a round.
-*   **Status:** Not Started
-
-### **Task 5.3:** Miner: Round Monitoring
-*   **Module:** `browser-use/miner/monitor_rounds.py`
-*   **Purpose:** Watch for new round announcements to enable fully automated participation.
-*   **Status:** Not Started
-
-## Design Principles & Standards
-
-### **Core Interfaces** (e.g., in `browser/core/interfaces.py`)
-- **`TwitterTask` (ABC):** An abstract base class defining the contract for any automated Twitter action.
-  - `async def execute(self, **kwargs) -> BaseModel:`: Standard execution method.
-  - `setup_agent(...)`: Configures the `browser-use` agent.
-  - `validate_output(...)`: Ensures the result conforms to a Pydantic model.
-- **`TwitterExtractionInterface` (Inherits `TwitterTask`):** Specialized for data collection.
-- **`TwitterPostingInterface` (Inherits `TwitterTask`):** Specialized for creating content.
-
-### **Module Implementation**
-Each module will be a concrete implementation of a core interface. This replaces the "Module Template" concept with a formal, enforceable contract. Common functionality (config loading, browser context) will be handled in a base class that implements the `TwitterTask` interface.
-
-### **Shared Infrastructure**
-- **Core Interfaces**: `TwitterTask`, `TwitterExtractionInterface`, `TwitterPostingInterface`.
-- **Abstract Base Classes**: `BaseTwitterTask` to provide shared setup and execution logic.
-- **Shared Pydantic Models**: `CommitmentData`, `RevealData`, `RoundConfig`, `PayoutInfo` for type-safe data transfer.
-- **Configuration Management**: Centralized config loading and validation
-- **Error Handling**: Standardized exception hierarchy
-- **Testing Utilities**: Mock generators, test data factories
-
-## Next Steps
-
-**Immediate Priority:** 
-1. **Implement Phase 1.5:** Complete the Data Layer Refactoring to establish a single source of truth.
-2. **Continue with Phase 2:** Once the DAL is in place, proceed with the Commitment Workflow, starting with `Task 2.4: Validator: Entry Fee Assignment`.
-
-**Recommended Approach:**
-1.  ✅ Create `browser/core/interfaces.py` and define the abstract base classes.
-2.  ✅ Create `browser/core/base_task.py` for shared logic (config, browser setup).
-3.  ✅ Implement the **Commitment Workflow (Phase 2)** Round Announcement module.
-4.  **Implement the Data Layer Refactoring (Phase 1.5)** as outlined above.
-5.  Refactor existing modules like `collect_commitments` to use the new data layer.
-6.  Continue with remaining Phase 2 modules (`assign_entry_fees`).
-7.  Build the `test_commitment_workflow.py` to test the interaction between the Phase 2 modules.
-8.  Proceed to the Reveal Workflow, implementing and testing the modules for that stage.
-9.  Finally, build the orchestrators to tie the full vertical slices together.
-
-This modular approach ensures each component can be developed, tested, and deployed independently while maintaining consistency across the entire system.
-
-## Summary of Changes from Original Plan
-
-**Key Architectural Shifts:**
-- **From Single Script to Modular System**: Instead of one monolithic `twitter_data_fetcher.py`, we now have specialized modules for each game phase
-- **From Data Extraction to Full Game Automation**: Expanded scope from just collecting existing data to facilitating the entire Validator/Miner workflow  
-- **From Ad-Hoc Testing to Systematic Architecture**: Following SOLID principles with proper abstractions and interfaces
-- **From Manual Process to Automated Orchestration**: Full automation of round management, fee collection, and payout distribution
-
-**Immediate Benefits:**
-- **True Modularity**: Modules are truly interchangeable, not just similar in pattern.
-- **Testability**: Easy to mock dependencies and test vertical slices of gameplay.
-- **Maintainability**: Clear contracts make the system easier to understand and debug.
-- **Scalability**: New features can be added by creating new classes that conform to existing interfaces.
-
-## Test Coverage Analysis
-
-### Current Test Status
-- **Rust Tests**: 69 total (all library tests) - **98.5% passing** (68/69 tests passing, 1 environment issue) ✅
-- **Python Tests**: 84 total (69 passing + 15 failing)
-- **Schema Consistency Tests**: 3 (bridging Rust-Python gap) - All passing ✅
-
-### ✅ **MAJOR IMPLEMENTATION MILESTONE ACHIEVED**
-
-All critical gaps identified in the original analysis have been **successfully implemented and tested**:
-
-#### **✅ Successfully Implemented Rust Modules**
-
-**💰 Payout & Economics (12/12 tests implemented)** ✅
-- `src/payout.rs` - Complete implementation with PayoutCalculator, PayoutConfig
-- Prize pool distribution, player rankings, platform fees, multi-player scenarios
-- Methods: `calculate_payouts()`, `process_payouts_with_scores()`, `validate_config()`
-- **Status**: Production ready with comprehensive test coverage
-
-**🔑 Configuration Management (12/12 tests implemented)** ✅  
-- `src/config.rs` - Complete implementation with ConfigManager, CostTracker
-- Config loading, API key validation, spending limits, cost tracking integration
-- Methods: `load_config()`, `save_config()`, `check_spending_limit()`, `set_daily_spending_limit()`
-- **Status**: Production ready with YAML configuration support
-
-**🐦 Social Integration (16/16 tests implemented)** ✅
-- `src/social.rs` - Complete implementation with UrlParser, HashtagManager, AnnouncementFormatter
-- URL parsing, hashtag handling, announcement formatting, Twitter workflow automation
-- Methods: `extract_tweet_id()`, `generate_hashtags()`, `create_standard_announcement()`
-- **Status**: Production ready with comprehensive social media support
-
-#### **⚠️ Remaining Implementation Gaps (Medium Priority)**
-
-**🖼️ CLIP Integration (Partial Implementation)**
-- `src/embedder.rs` - MockEmbedder fully implemented for testing (7/7 tests passing)
-- ClipEmbedder is placeholder only - returns errors, not connected to actual CLIP models
-- **Gap**: Real CLIP model integration missing, batch text embedding, semantic similarity scoring
-
-**🔧 CLI Tools (Basic Implementation)**
-- `src/bin/calculate_scores.rs`, `src/bin/verify_commitments.rs`, `src/bin/process_payouts.rs`
-- Basic argument parsing and core functionality implemented
-- **Gap**: Limited compared to comprehensive CLI described in documentation
-
-**✅ Verification Edge Cases (Some Missing)**
-- Core verification logic implemented (8/8 commitment tests passing)
-- **Gap**: Some advanced edge cases and error recovery scenarios not covered
-
-### Feature Coverage Matrix
-
-| **Feature Category** | **Rust Coverage** | **Python Coverage** | **Status** |
-|---------------------|-------------------|---------------------|------------|
-| **Core Cryptography** | 🟢 Excellent (8/8) | 🟡 Good (4/9) | ✅ **Production Ready** |
-| **Data Models** | 🟢 Excellent (3/3) | 🟢 Excellent (3/3) | ✅ **Production Ready** |
-| **Embeddings/CLIP** | 🟡 Good (7/13) | 🟢 Excellent (13/13) | 🟡 Medium gap - Missing: real CLIP integration, batch text embedding, semantic scoring |
-| **Scoring** | 🟢 Good (8/14) | 🟢 Excellent (14/14) | ✅ **Production Ready** |
-| **Round Management** | 🟢 Good (6/9) | 🟡 Good (5/9) | ✅ **Production Ready** |
-| **Payouts/Economics** | 🟢 **Excellent (12/12)** ✅ | 🟢 Excellent (11/11) | ✅ **Production Ready** |
-| **Configuration** | 🟢 **Excellent (12/12)** ✅ | 🟡 Partial (9/9) | ✅ **Production Ready** |
-| **Social Integration** | 🟢 **Excellent (16/16)** ✅ | 🟡 Partial (9/9) | ✅ **Production Ready** |
-| **Verification** | 🟡 Limited (4/10) | 🟢 Excellent (10/10) | 🟡 Medium gap |
-
-### ✅ **COMPLETED ACHIEVEMENTS**
-
-**Phase 1: Critical Rust Features** ✅ **COMPLETED**
-1. ✅ Implemented payout/economics module with comprehensive tests (12 tests)
-2. ✅ Added configuration management system with validation (12 tests)
-3. ✅ Created social integration framework with URL/hashtag handling (16 tests)
-
-**Total: 40 tests successfully implemented** - **EXCEEDED TARGET**
-
-### 🎯 **Remaining Development Priorities for External Team**
-
-**Phase 2: CLIP Integration (High Priority)**
-1. Replace MockEmbedder placeholder with real CLIP model integration
-2. Add actual image processing and text embedding capabilities
-3. Integrate with Python CLIP models or implement native Rust CLIP
-
-**Phase 3: Advanced CLI Features (Medium Priority)**
-4. Enhance CLI tools with comprehensive subcommands and error handling
-5. Add batch processing and configuration management via CLI
-6. Improve user experience and documentation
-
-**Phase 4: Verification Edge Cases (Low Priority)**
-7. Add advanced verification edge cases and error recovery
-8. Implement missing Python commitment features for full parity
-9. Add comprehensive integration testing scenarios
-
-**Estimated Effort: ~15-20 additional tests needed** for complete coverage
-
-### 🎯 **Action Plan for External Development Team**
-
-**IMMEDIATE PRIORITIES (Week 1-2):**
-1. **Examine Current Implementation**: Review `src/payout.rs`, `src/config.rs`, `src/social.rs` to understand the existing architecture
-2. **Run Tests**: Execute `cargo test --lib --no-default-features` to verify 68/69 tests pass
-3. **Understand Gaps**: Focus on `src/embedder.rs` ClipEmbedder placeholder implementation
-
-**HIGH PRIORITY DEVELOPMENT (Week 3-6):**
-1. **CLIP Integration**: Implement real CLIP model loading in ClipEmbedder
-   - Replace error returns with actual image/text embedding functionality
-   - Integrate with Python CLIP models or implement native Rust CLIP
-   - Ensure compatibility with existing MockEmbedder interface
-
-**MEDIUM PRIORITY ENHANCEMENTS (Week 7-10):**
-2. **CLI Enhancement**: Improve command-line tools
-   - Add comprehensive subcommands and better error handling
-   - Implement batch processing capabilities
-   - Add configuration management via CLI
-
-**LOW PRIORITY CLEANUP (Week 11+):**
-3. **Edge Cases**: Add remaining verification scenarios
-4. **Test Parity**: Implement missing Python commitment features
-5. **Integration**: Add comprehensive end-to-end testing
-
-**SUCCESS METRICS:**
-- ✅ All 69 Rust tests passing (currently 68/69)
-- ✅ Real CLIP model integration working
-- ✅ Enhanced CLI tools with comprehensive functionality
-- ✅ 100% feature parity between Rust and Python implementations
-
-### Architecture Implications
-
-The implementation analysis reveals that **Rust now provides a comprehensive, production-ready core** with excellent coverage of:
-
-✅ **Implemented in Rust:**
-1. **Core Business Logic**: Payout calculations, configuration management, social integration
-2. **Cryptographic Operations**: Commitment generation/verification with 100x performance improvement  
-3. **Data Processing**: Scoring strategies, round management, participant tracking
-4. **Type Safety**: Comprehensive error handling and validation throughout
-
-⚠️ **Remaining Gaps:**
-1. **CLIP Integration**: Real model integration needed (MockEmbedder works for testing)
-2. **Advanced CLI**: Enhanced user experience and comprehensive tooling
-3. **Edge Cases**: Some advanced verification and error recovery scenarios
-
-**Current Architecture Status:**
-- **Rust Core**: 98.5% test success rate (68/69 tests passing) - **Production Ready**
-- **Python Layer**: Handles browser automation and legacy integration
-- **Bridge**: Schema consistency maintained via automated tests
-
 This polyglot architecture successfully leverages Rust for performance-critical core operations while maintaining Python for browser automation and external integrations. 
+
+## Browser Automation Development
+
+This section outlines the standards, best practices, and architecture for developing browser automation tasks for the RealMir network.
+
+### 🔑 **Key Lessons Learned & Best Practices**
+
+Based on extensive testing, the following practices have proven to be the most reliable and efficient for Twitter automation. All new development should adhere to these guidelines.
+
+#### **✅ PROVEN SUCCESSFUL APPROACHES**
+
+1.  **Use BaseTwitterTask Infrastructure**
+    *   **Always inherit from `BaseTwitterTask`**: Provides cookie management, cost tracking, and proper browser context.
+    *   **Don't create `Agent` instances directly**: Use the `setup_agent()` method from `BaseTwitterTask`.
+    *   **Automatic Authentication**: `BaseTwitterTask` handles loading saved cookies.
+    *   **Integrated Cost Tracking**: Automatic OpenAI usage monitoring and spending limits.
+
+2.  **Use `initial_actions` for Navigation**
+    *   **ALWAYS use `initial_actions` for URL navigation**: It is significantly more reliable and efficient than LLM-based navigation.
+    *   **Format**: `[{'go_to_url': {'url': 'https://x.com/...'}}]`
+    *   **Pattern**: Navigate programmatically first, then let the LLM handle the interaction on the page.
+
+3.  **Enhanced Verification Strategy**
+    *   **Multi-step verification**: Check immediately, refresh the page, and verify persistence.
+    *   **Duplicate detection**: Check for existing replies before posting to prevent spam.
+    *   **Screenshot evidence**: Capture before/after states for debugging.
+    *   **URL extraction**: Always capture and validate generated reply URLs.
+
+#### **❌ AVOID THESE APPROACHES**
+
+*   **Don't use the LLM for navigation**: It is slow, unreliable, and wastes tokens.
+*   **Don't assume success**: Always verify that Twitter interactions actually occurred.
+*   **Don't create `Agent` directly**: This bypasses essential cookie management and cost tracking.
+*   **Don't skip duplicate checking**: This prevents accidental spam posting.
+
+### **Active Development Plan**
+
+For the detailed, up-to-date implementation plan, specific tasks, and testing status, please refer to the active development document:
+
+➡️ **[BROWSER_AUTOMATION_DEVELOPMENT.md](BROWSER_AUTOMATION_DEVELOPMENT.md)**
+
+This document serves as the single source of truth for our ongoing browser automation efforts.
