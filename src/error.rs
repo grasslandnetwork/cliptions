@@ -29,6 +29,9 @@ pub enum RealMirError {
     #[error("Configuration error: {0}")]
     ConfigError(String),
     
+    #[error("Browser integration error: {0}")]
+    BrowserIntegrationError(String),
+    
     #[error("I/O error: {0}")]
     Io(#[from] std::io::Error),
     

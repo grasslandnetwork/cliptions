@@ -19,6 +19,7 @@
 //! for easy extension and testing.
 
 // Core library modules
+pub mod browser_integration;
 pub mod commitment;
 pub mod config;
 pub mod embedder;
@@ -35,6 +36,7 @@ pub mod types;
 pub mod python_bridge;
 
 // Re-export commonly used types
+pub use browser_integration::{BrowserIntegration, Commitment, CommitmentCollectionResult};
 pub use commitment::{CommitmentGenerator, CommitmentVerifier};
 pub use scoring::{ScoringStrategy, ClipBatchStrategy, ScoreValidator};
 pub use embedder::{EmbedderTrait, MockEmbedder};

@@ -101,3 +101,7 @@ path = "src/bin/process_payouts.rs"
 [[bin]]
 name = "verify_commitments"
 path = "src/bin/verify_commitments.rs"
+
+[[bin]]
+name = "test_browser_integration"
+path = "src/bin/test_browser_integration.rs"

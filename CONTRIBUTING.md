@@ -785,7 +785,7 @@ Based on extensive testing, the following practices have proven to be the most r
 
 #### **❌ AVOID THESE APPROACHES**
 
-*   **Don't use the LLM for navigation**: It is slow, unreliable, and wastes tokens.
+*   **Try to avoid using the LLM for navigation**: Programmatic navigation via `initial_actions` is much faster and more reliable. Most navigation should be handled by looking up a target URL from our data and passing it directly to the browser.
 *   **Don't assume success**: Always verify that Twitter interactions actually occurred.
 *   **Don't create `Agent` directly**: This bypasses essential cookie management and cost tracking.
 *   **Don't skip duplicate checking**: This prevents accidental spam posting.
