@@ -25,9 +25,11 @@ pub mod embedder;
 pub mod error;
 pub mod models;
 pub mod payout;
+pub mod proof_of_work;
 pub mod round;
 pub mod scoring;
 pub mod social;
+pub mod steganography;
 pub mod types;
 
 // Python bindings module (conditional compilation)
@@ -35,13 +37,15 @@ pub mod types;
 pub mod python_bridge;
 
 // Re-export commonly used types
-pub use commitment::{CommitmentGenerator, CommitmentVerifier};
+pub use commitment::{CommitmentGenerator, CommitmentVerifier, EnhancedCommitmentGenerator, EnhancedCommitmentVerifier, EnhancedCommitment};
 pub use scoring::{ScoringStrategy, ClipBatchStrategy, ScoreValidator};
 pub use embedder::{EmbedderTrait, MockEmbedder};
 pub use round::{RoundProcessor};
 pub use payout::{PayoutCalculator, PayoutConfig, PayoutInfo};
 pub use config::{ConfigManager, CostTracker, RealMirConfig, OpenAIConfig, SpendingStatus};
 pub use social::{SocialWorkflow, AnnouncementFormatter, UrlParser, HashtagManager, AnnouncementData, TweetId};
+pub use steganography::{VectorSteganographer, EmbeddedVectorMeta};
+pub use proof_of_work::{ProofOfWork, ProofOfWorkSystem, ProofOfWorkManager};
 pub use types::{Guess, Participant, ScoringResult, RoundData};
 pub use error::{RealMirError, Result};
 
