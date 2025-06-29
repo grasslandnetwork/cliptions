@@ -23,6 +23,12 @@ pub enum RealMirError {
     #[error("Round processing error: {0}")]
     Round(#[from] RoundError),
     
+    #[error("Steganography error: {0}")]
+    Steganography(#[from] SteganographyError),
+    
+    #[error("Proof of work error: {0}")]
+    ProofOfWork(#[from] ProofOfWorkError),
+    
     #[error("Validation error: {0}")]
     ValidationError(String),
     
@@ -129,4 +135,45 @@ pub enum ValidationError {
     
     #[error("Invalid participant data")]
     InvalidParticipant,
+}
+
+/// Steganography-related errors
+#[derive(Error, Debug)]
+pub enum SteganographyError {
+    #[error("Invalid image format or corrupted image")]
+    InvalidImage,
+    
+    #[error("No embedded data found in image")]
+    NoEmbeddedData,
+    
+    #[error("Embedded data is corrupted or invalid")]
+    CorruptedData,
+    
+    #[error("Image has insufficient capacity for the data")]
+    InsufficientCapacity,
+    
+    #[error("Failed to encode data")]
+    EncodingFailed,
+    
+    #[error("Failed to save image")]
+    SaveFailed,
+    
+    #[error("Invalid steganography configuration")]
+    InvalidConfiguration,
+}
+
+/// Proof of work related errors
+#[derive(Error, Debug)]
+pub enum ProofOfWorkError {
+    #[error("Difficulty level too high (maximum is 20)")]
+    DifficultyTooHigh,
+    
+    #[error("Proof generation timed out")]
+    GenerationTimeout,
+    
+    #[error("Nonce overflow occurred")]
+    NonceOverflow,
+    
+    #[error("Invalid proof of work")]
+    InvalidProof,
 }

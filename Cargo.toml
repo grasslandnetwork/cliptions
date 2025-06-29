@@ -101,3 +101,15 @@ path = "src/bin/process_payouts.rs"
 [[bin]]
 name = "verify_commitments"
 path = "src/bin/verify_commitments.rs"
+
+[[bin]]
+name = "encode_vector"
+path = "src/bin/encode_vector.rs"
+
+[[bin]]
+name = "decode_vector"
+path = "src/bin/decode_vector.rs"
+
+[[bin]]
+name = "generate_enhanced_commitment"
+path = "src/bin/generate_enhanced_commitment.rs"
