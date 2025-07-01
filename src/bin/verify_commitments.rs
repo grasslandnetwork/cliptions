@@ -10,10 +10,10 @@ use std::fs;
 use clap::Parser;
 use colored::Colorize;
 
-use realmir_core::embedder::{MockEmbedder, ClipEmbedder, EmbedderTrait};
-use realmir_core::scoring::ClipBatchStrategy;
-use realmir_core::round::RoundProcessor;
-use realmir_core::config::ConfigManager;
+use cliptions_core::embedder::{MockEmbedder, ClipEmbedder, EmbedderTrait};
+use cliptions_core::scoring::ClipBatchStrategy;
+use cliptions_core::round::RoundProcessor;
+use cliptions_core::config::ConfigManager;
 
 #[derive(Parser)]
 #[command(name = "verify_commitments")]
@@ -329,7 +329,7 @@ fn verify_with_processor<E: EmbedderTrait>(
 
 #[derive(Debug)]
 struct VerificationResults {
-    rounds: Vec<(String, Vec<bool>, Vec<realmir_core::types::Participant>)>,
+    rounds: Vec<(String, Vec<bool>, Vec<cliptions_core::types::Participant>)>,
     total_rounds_processed: usize,
     total_participants: usize,
     total_valid: usize,
@@ -451,7 +451,7 @@ fn process_round_verification<E: EmbedderTrait>(
     processor: &mut RoundProcessor<E, ClipBatchStrategy>,
     round_id: &str,
     args: &Args
-) -> Result<(Vec<bool>, Vec<realmir_core::types::Participant>), Box<dyn std::error::Error>> {
+) -> Result<(Vec<bool>, Vec<cliptions_core::types::Participant>), Box<dyn std::error::Error>> {
     
     // Get round info
     let round = processor.get_round(round_id)?;

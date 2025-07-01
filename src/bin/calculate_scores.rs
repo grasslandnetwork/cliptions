@@ -9,9 +9,9 @@ use std::fs;
 use clap::Parser;
 use colored::Colorize;
 
-use realmir_core::embedder::{MockEmbedder, ClipEmbedder, EmbedderTrait};
-use realmir_core::scoring::{ClipBatchStrategy, ScoreValidator, calculate_rankings, calculate_payouts};
-use realmir_core::config::ConfigManager;
+use cliptions_core::embedder::{MockEmbedder, ClipEmbedder, EmbedderTrait};
+use cliptions_core::scoring::{ClipBatchStrategy, ScoreValidator, calculate_rankings, calculate_payouts};
+use cliptions_core::config::ConfigManager;
 
 #[derive(Parser)]
 #[command(name = "calculate_scores")]

@@ -19,7 +19,7 @@
 //! for easy extension and testing.
 
 // Core library modules
-pub mod browser_integration;
+// pub mod browser_integration;  // TODO: File missing, needs to be created or removed
 pub mod commitment;
 pub mod config;
 pub mod embedder;
@@ -36,7 +36,7 @@ pub mod types;
 pub mod python_bridge;
 
 // Re-export commonly used types
-pub use browser_integration::{BrowserIntegration, Commitment, CommitmentCollectionResult};
+// pub use browser_integration::{BrowserIntegration, Commitment, CommitmentCollectionResult};  // TODO: File missing
 pub use commitment::{CommitmentGenerator, CommitmentVerifier};
 pub use scoring::{ScoringStrategy, ClipBatchStrategy, ScoreValidator};
 pub use embedder::{EmbedderTrait, MockEmbedder};

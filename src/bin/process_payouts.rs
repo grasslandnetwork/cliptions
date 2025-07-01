@@ -10,10 +10,10 @@ use std::fs;
 use clap::Parser;
 use colored::Colorize;
 
-use realmir_core::embedder::{MockEmbedder, ClipEmbedder, EmbedderTrait};
-use realmir_core::scoring::ClipBatchStrategy;
-use realmir_core::round::RoundProcessor;
-use realmir_core::config::ConfigManager;
+use cliptions_core::embedder::{MockEmbedder, ClipEmbedder, EmbedderTrait};
+use cliptions_core::scoring::ClipBatchStrategy;
+use cliptions_core::round::RoundProcessor;
+use cliptions_core::config::ConfigManager;
 
 #[derive(Parser)]
 #[command(name = "process_payouts")]
@@ -315,7 +315,7 @@ fn process_with_processor<E: EmbedderTrait>(
 
 #[derive(Debug)]
 struct ProcessingResults {
-    rounds: Vec<(String, Vec<realmir_core::types::ScoringResult>)>,
+    rounds: Vec<(String, Vec<cliptions_core::types::ScoringResult>)>,
     total_rounds_processed: usize,
     total_participants: usize,
     total_payout: f64,

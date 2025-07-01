@@ -11,8 +11,8 @@ use clap::Parser;
 use colored::Colorize;
 use serde_json::Value;
 
-use realmir_core::commitment::CommitmentGenerator;
-use realmir_core::config::ConfigManager;
+use cliptions_core::commitment::CommitmentGenerator;
+use cliptions_core::config::ConfigManager;
 
 #[derive(Parser)]
 #[command(name = "generate_commitment")]

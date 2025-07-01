@@ -30,10 +30,10 @@ Based on PRD: `prd-rebrand-to-cliptions.md`
 
 - [ ] 1.0 Update Core Configuration Files
   - [x] 1.1 Update `Cargo.toml` package name from "realmir" to "cliptions"
-  - [ ] 1.2 Update binary names in `Cargo.toml` to use "cliptions" naming
-  - [ ] 1.3 Check and update `requirements.txt` for any realmir references
-  - [ ] 1.4 Update any configuration files that reference "realmir" (excluding environment variable names)
-  - [ ] 1.5 Test that the project still builds after configuration changes
+  - [x] 1.2 Update binary names in `Cargo.toml` to use "cliptions" naming
+  - [x] 1.3 Check and update `requirements.txt` for any realmir references
+  - [x] 1.4 Update any configuration files that reference "realmir" (excluding environment variable names)
+  - [x] 1.5 Test that the project still builds after configuration changes
 
 - [ ] 2.0 Update Code Content and References
   - [ ] 2.1 Update all Rust source files (`src/*.rs`) for realmir → cliptions references
