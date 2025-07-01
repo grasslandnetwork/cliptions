@@ -1,5 +1,5 @@
 """
-Base implementation for RealMir Twitter automation tasks.
+Base implementation for Cliptions Twitter automation tasks.
 
 This module provides the concrete base class that implements common functionality
 shared across all Twitter automation modules.
