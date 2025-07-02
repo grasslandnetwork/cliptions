@@ -5,7 +5,7 @@
 - `src/config.rs` - **Modify** to add a `database` section to `CliptionsConfig` for Supabase connection details.
 - `config/llm.yaml.template` - **Modify** to include the new `database` configuration section.
 - `src/round_processor.rs` - Formerly `src/round.rs`. This file will be renamed to better reflect its purpose as a stateless toolkit.
-- `src/round_engine/mod.rs` - The new top-level module for the async state-driven application logic.
+- `src/round_engine/` - The new module directory for the async state-driven application logic.
 - `src/round_engine/state_machine.rs` - To define the async typestate structs and `Round<S>` wrapper with async state transitions.
 - `src/round_engine/db.rs` - To handle all async database interactions using the new config.
 - `src/round_engine/sync_bridge.rs` - To provide sync compatibility wrappers for existing Python bindings.
@@ -25,10 +25,10 @@
   - [ ] 1.1 **Refactor**: Rename `src/round.rs` to `src/round_processor.rs` to better distinguish it from the new async `round_engine`.
   - [ ] 1.2 **Refactor**: Update module declarations in `src/lib.rs` and any `use` statements in other files to reflect the rename from `round` to `round_processor`.
   - [ ] 1.3 Add async dependencies to `Cargo.toml`: `tokio` (with features: `["full"]`), `tokio-postgres` or `sqlx` (for Supabase), `rusqlite`, `clap`, `serde`, `anyhow` for async error handling.
-  - [ ] 1.4 Create the new async module directory `src/round_engine` and the files: `mod.rs`, `state_machine.rs`, `db.rs`, and `sync_bridge.rs`.
-  - [ ] 1.5 In `src/round_engine/mod.rs`, set up the module structure with proper async exports and re-exports for the state machine, database layer, and sync bridge.
+  - [ ] 1.4 Create the new async module directory `src/round_engine` and the files: `state_machine.rs`, `db.rs`, and `sync_bridge.rs`.
+  - [ ] 1.5 In `src/lib.rs`, declare the new `round_engine` module and set up proper async exports and re-exports for the state machine, database layer, and sync bridge.
   - [ ] 1.6 Create the new async binary entry point at `src/bin/cliptions_app.rs` with `#[tokio::main]` async main function.
-  - [ ] 1.7 In `src/lib.rs`, declare the new `round_engine` module and ensure existing sync functions remain available for Python bindings.
+  - [ ] 1.7 Ensure existing sync functions remain available for Python bindings in `src/lib.rs`.
 
 - [ ] 2.0 Setup Database Integration and Configuration
   - [ ] 2.1 In `src/config.rs`, add a `DatabaseConfig` struct with fields for Supabase URL, API key, connection pool settings, and include it in `CliptionsConfig`.
