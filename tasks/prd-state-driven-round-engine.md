@@ -2,7 +2,7 @@
 
 ## 1. Introduction/Overview
 
-This document outlines the requirements for a new state-driven engine to manage the lifecycle of RealMir rounds. The core of this feature is to create a robust and autonomous application that understands the current state of a game round and intelligently determines the next logical action.
+This document outlines the requirements for a new state-driven engine to manage the lifecycle of Cliptions rounds. The core of this feature is to create a robust and autonomous application that understands the current state of a game round and intelligently determines the next logical action.
 
 The system will be driven by the state of the data in a central database (Supabase). It will support two primary roles—Validator and Miner—each with distinct responsibilities. This will move the project from a collection of manually-run scripts to a more cohesive, state-aware application, improving reliability and simplifying operations.
 
@@ -78,7 +78,7 @@ The Rust data structures for a round **must** be based on the fields present in 
 
 ### Critical Architecture Boundary: Async/Sync Integration
 
-**Issue:** The current RealMir Rust core is **entirely synchronous** with pure functional interfaces, but the state-driven engine requires **async database operations** and real-time polling.
+**Issue:** The current Cliptions Rust core is **entirely synchronous** with pure functional interfaces, but the state-driven engine requires **async database operations** and real-time polling.
 
 **Current State:**
 - All existing Rust code is sync: `fn process_round_payouts() -> Result<Vec<ScoringResult>>`

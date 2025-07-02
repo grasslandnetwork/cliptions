@@ -2,14 +2,14 @@
 
 - `Cargo.toml` - To add new async dependencies: `tokio`, `rusqlite`, `config`, `clap`, and Supabase client libraries.
 - `src/lib.rs` - To declare the new `round_engine` module and update the path for the renamed `round_processor` module.
-- `src/config.rs` - **Modify** to add a `database` section to `RealMirConfig` for Supabase connection details.
+- `src/config.rs` - **Modify** to add a `database` section to `CliptionsConfig` for Supabase connection details.
 - `config/llm.yaml.template` - **Modify** to include the new `database` configuration section.
 - `src/round_processor.rs` - Formerly `src/round.rs`. This file will be renamed to better reflect its purpose as a stateless toolkit.
 - `src/round_engine/mod.rs` - The new top-level module for the async state-driven application logic.
 - `src/round_engine/state_machine.rs` - To define the async typestate structs and `Round<S>` wrapper with async state transitions.
 - `src/round_engine/db.rs` - To handle all async database interactions using the new config.
 - `src/round_engine/sync_bridge.rs` - To provide sync compatibility wrappers for existing Python bindings.
-- `src/bin/realmir_app.rs` - The new async main application binary for the validator/miner state machine.
+- `src/bin/cliptions_app.rs` - The new async main application binary for the validator/miner state machine.
 - `tests/round_engine_integration.rs` - Integration tests for the async state machine.
 
 ### Notes
@@ -27,11 +27,11 @@
   - [ ] 1.3 Add async dependencies to `Cargo.toml`: `tokio` (with features: `["full"]`), `tokio-postgres` or `sqlx` (for Supabase), `rusqlite`, `clap`, `serde`, `anyhow` for async error handling.
   - [ ] 1.4 Create the new async module directory `src/round_engine` and the files: `mod.rs`, `state_machine.rs`, `db.rs`, and `sync_bridge.rs`.
   - [ ] 1.5 In `src/round_engine/mod.rs`, set up the module structure with proper async exports and re-exports for the state machine, database layer, and sync bridge.
-  - [ ] 1.6 Create the new async binary entry point at `src/bin/realmir_app.rs` with `#[tokio::main]` async main function.
+  - [ ] 1.6 Create the new async binary entry point at `src/bin/cliptions_app.rs` with `#[tokio::main]` async main function.
   - [ ] 1.7 In `src/lib.rs`, declare the new `round_engine` module and ensure existing sync functions remain available for Python bindings.
 
 - [ ] 2.0 Setup Database Integration and Configuration
-  - [ ] 2.1 In `src/config.rs`, add a `DatabaseConfig` struct with fields for Supabase URL, API key, connection pool settings, and include it in `RealMirConfig`.
+  - [ ] 2.1 In `src/config.rs`, add a `DatabaseConfig` struct with fields for Supabase URL, API key, connection pool settings, and include it in `CliptionsConfig`.
   - [ ] 2.2 Update `config/llm.yaml.template` with placeholder values for the new `database` section including Supabase connection details.
   - [ ] 2.3 Create a new Supabase project and define the database schema in SQL, ensuring tables match the fields in `RoundData`, `Participant`, and other structs from `src/types.rs`.
   - [ ] 2.4 In `src/round_engine/db.rs`, implement an async `DatabaseManager` struct that reads the database config from `ConfigManager` and manages async database connections.
@@ -47,7 +47,7 @@
   - [ ] 3.6 Add error handling and logging throughout the async state machine, ensuring proper async error propagation.
 
 - [ ] 4.0 Implement Role-Based Application Logic
-  - [ ] 4.1 In `src/bin/realmir_app.rs`, use `clap` to parse the `--role` command-line argument (validator/miner), with "miner" as the default.
+  - [ ] 4.1 In `src/bin/cliptions_app.rs`, use `clap` to parse the `--role` command-line argument (validator/miner), with "miner" as the default.
   - [ ] 4.2 Initialize the async `ConfigManager` and `DatabaseManager`, setting up the tokio runtime and async connection pools.
   - [ ] 4.3 Implement the main async application loop that continuously polls the database for the current round's state using async intervals.
   - [ ] 4.4 **Validator Logic**: If role is `validator`, implement async workflow that matches on current state, prompts user for confirmation, and calls Python scripts using `tokio::process::Command` with proper async process handling.
@@ -60,6 +60,6 @@
   - [ ] 5.2 Create the async integration test file `tests/round_engine_integration.rs` using `#[tokio::test]` for all async test functions.
   - [ ] 5.3 In the integration test, mock async database interactions and async calls to Python scripts, ensuring proper async test isolation.
   - [ ] 5.4 Write an async integration test that drives the state machine through a full round lifecycle, asserting the correct state at each async step.
-  - [ ] 5.5 Add async tests for CLI argument parsing in `realmir_app.rs`, testing both validator and miner modes with proper async runtime setup.
+  - [ ] 5.5 Add async tests for CLI argument parsing in `cliptions_app.rs`, testing both validator and miner modes with proper async runtime setup.
   - [ ] 5.6 Create specific tests for the sync bridge functions in `sync_bridge.rs`, ensuring they properly bridge async operations to sync interfaces for Python compatibility.
   - [ ] 5.7 Add async database integration tests that verify proper connection handling, state persistence, and error recovery in async database operations. 

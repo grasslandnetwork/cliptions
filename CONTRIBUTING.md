@@ -284,7 +284,7 @@ The Cliptions system uses a **dual-language data architecture** where Rust serve
 
 **Why We Have Both `src/models.rs` AND `src/types.rs`**
 
-The RealMir architecture implements a sophisticated **Data Transfer Object (DTO) pattern** with two distinct data layers:
+The Cliptions architecture implements a sophisticated **Data Transfer Object (DTO) pattern** with two distinct data layers:
 
 ##### **Transport Layer (`src/models.rs`)**
 - **Purpose**: Data exchange between Python browser automation and Rust core
