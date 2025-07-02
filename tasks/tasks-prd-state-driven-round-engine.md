@@ -24,7 +24,7 @@
 - [ ] 1.0 Setup Async Architecture Foundation
   - [ ] 1.1 **Refactor**: Rename `src/round.rs` to `src/round_processor.rs` to better distinguish it from the new async `round_engine`.
   - [ ] 1.2 **Refactor**: Update module declarations in `src/lib.rs` and any `use` statements in other files to reflect the rename from `round` to `round_processor`.
-  - [ ] 1.3 Add async dependencies to `Cargo.toml`: `tokio` (with features: `["full"]`), `tokio-postgres` or `sqlx` (for Supabase), `rusqlite`, `clap`, `serde`, `anyhow` for async error handling.
+  - [ ] 1.3 Add async dependencies to `Cargo.toml`: `tokio` (with features: `["full"]`), `tokio-postgres` or `sqlx` (for Supabase), `rusqlite`, `clap`, `serde`, `anyhow` for async error handling. Also update `edition = "2021"` to `edition = "2024"`.
   - [ ] 1.4 Create the new async module directory `src/round_engine` and the files: `state_machine.rs`, `db.rs`, and `sync_bridge.rs`.
   - [ ] 1.5 In `src/lib.rs`, declare the new `round_engine` module and set up proper async exports and re-exports for the state machine, database layer, and sync bridge.
   - [ ] 1.6 Create the new async binary entry point at `src/bin/cliptions_app.rs` with `#[tokio::main]` async main function.
