@@ -1,4 +1,4 @@
-//! Verify commitments for RealMir prediction rounds
+//! Verify commitments for Cliptions prediction rounds
 //! 
 //! Enhanced CLI tool with comprehensive error handling, multiple output formats,
 //! configuration support, and improved user experience for verifying cryptographic
@@ -17,10 +17,10 @@ use cliptions_core::config::ConfigManager;
 
 #[derive(Parser)]
 #[command(name = "verify_commitments")]
-#[command(about = "Verify commitments for RealMir prediction rounds")]
+#[command(about = "Verify commitments for Cliptions prediction rounds")]
 #[command(version = "2.0")]
 #[command(long_about = "
-Verify cryptographic commitments for RealMir prediction market rounds with comprehensive
+Verify cryptographic commitments for Cliptions prediction market rounds with comprehensive
 error handling and multiple output formats.
 
 This tool validates that participant commitments match their revealed guesses and salts,
@@ -795,8 +795,8 @@ fn save_results(
 mod tests {
     use super::*;
     use tempfile::NamedTempFile;
-    use realmir_core::types::{RoundData, Participant, Guess};
-    use realmir_core::commitment::CommitmentGenerator;
+    use cliptions_core::types::{RoundData, Participant, Guess};
+use cliptions_core::commitment::CommitmentGenerator;
     use std::collections::HashMap;
 
     #[test]

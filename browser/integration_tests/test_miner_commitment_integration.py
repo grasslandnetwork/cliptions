@@ -21,7 +21,7 @@ async def main():
     
     try:
         # Create test commitment data using the announcement we just posted
-        announcement_url = "https://x.com/realmir_testnet/status/1933572314794226070"  # Latest announcement from our test
+        announcement_url = "https://x.com/cliptions_test/status/1933572314794226070"  # Latest announcement from our test
         
         commitment_data = create_commitment_submission(
             prediction="Cat sanctuary with caretakers feeding cats",
@@ -70,7 +70,7 @@ if __name__ == "__main__":
     print()
     
     print(f"📋 Test Parameters:")
-    print(f"Replying to: https://x.com/realmir_testnet/status/1933572314794226070")
+    print(f"Replying to: https://x.com/cliptions_test/status/1933572314794226070")
     print(f"Wallet: 5Co2unDtZKZDzYNZHT2fUMkEnpVWnassfbuabvZmGTrYKgtD")
     print()
     

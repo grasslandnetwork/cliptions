@@ -1,5 +1,5 @@
 """
-Entry Fee Assignment Module for RealMir Validators (TEST VERSION)
+Entry Fee Assignment Module for Cliptions Validators (TEST VERSION)
 
 🧪 THIS IS A TWITTER AUTOMATION TEST - NOT A GAME SIMULATION
 - Focus: Test if we can reply to existing tweets with text content
@@ -158,7 +158,7 @@ class AssignEntryFeesTask(BaseTwitterTask):
         
         try:
             # Create reply text
-            reply_text = f"💰 Entry fee required: Send 0.1 TAO to {self.fake_tao_address} to participate in this round. #realmir #entry_fee"
+            reply_text = f"💰 Entry fee required: Send 0.1 TAO to {self.fake_tao_address} to participate in this round. #cliptions #entry_fee"
             
             # Create browser-use task (focused on checking for existing replies first, then replying if needed)
             task = f"""
@@ -167,8 +167,8 @@ class AssignEntryFeesTask(BaseTwitterTask):
             Reply text: "{reply_text}"
             
             Steps:
-            1. First, look at the current page and check if there are any existing replies from @realmir_testnet or @realmir_test
-            2. If you see a reply from our account (realmir_testnet or realmir_test), DO NOT post another reply - just report that we already replied
+            1. First, look at the current page and check if there are any existing replies from @cliptions_test or @cliptions_test
+            2. If you see a reply from our account (cliptions_test or cliptions_test), DO NOT post another reply - just report that we already replied
             3. If you don't see any existing reply from our account, then proceed to post the reply:
                a. Look for the reply button or reply text area on the current page
                b. Click the reply button to open the compose interface
@@ -178,7 +178,7 @@ class AssignEntryFeesTask(BaseTwitterTask):
             
             IMPORTANT: 
             - You are already on the correct tweet page, do NOT navigate anywhere
-            - Check for existing replies from @realmir_testnet or @realmir_test BEFORE posting
+            - Check for existing replies from @cliptions_test or @cliptions_test BEFORE posting
             - If we already replied, just say "Already replied" and use the done action
             - If posting a new reply, use the exact reply text provided above
             - Make sure to actually post the reply, don't just draft it

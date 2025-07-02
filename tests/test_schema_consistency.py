@@ -30,10 +30,10 @@ from browser.data_models import Commitment, Round
 
 # Attempt to import the Rust core library. If it fails, skip these tests.
 try:
-    from realmir_core import test_deserialize_commitment, test_deserialize_round
+    from cliptions_core import test_deserialize_commitment, test_deserialize_round
 except ImportError:
     # Set a flag to skip all tests in this file
-    pytest.skip("Could not import realmir_core. Run 'maturin develop' to build the Rust library.", allow_module_level=True)
+    pytest.skip("Could not import cliptions_core. Run 'maturin develop' to build the Rust library.", allow_module_level=True)
 
 
 def test_commitment_schema_consistency():
@@ -45,7 +45,7 @@ def test_commitment_schema_consistency():
         username="@test_miner",
         commitment_hash="0x" + "a" * 64,
         wallet_address="5Co2unDtZKZDzYNZHT2fUMkEnpVWnassfbuabvZmGTrYKgtD",
-        tweet_url="https://x.com/realmir_testnet/status/12345",
+        tweet_url="https://x.com/cliptions_test/status/12345",
         timestamp=datetime.now()
     )
 
@@ -68,13 +68,13 @@ def test_round_schema_consistency():
         username="@test_miner",
         commitment_hash="0x" + "a" * 64,
         wallet_address="5Co2unDtZKZDzYNZHT2fUMkEnpVWnassfbuabvZmGTrYKgtD",
-        tweet_url="https://x.com/realmir_testnet/status/12345",
+        tweet_url="https://x.com/cliptions_test/status/12345",
         timestamp=datetime.now()
     )
     
     pydantic_round = Round(
         round_id="test_round_001",
-        announcement_url="https://x.com/realmir_testnet/status/12344",
+        announcement_url="https://x.com/cliptions_test/status/12344",
         livestream_url="https://youtube.com/live/some_id",
         entry_fee=0.001,
         commitment_deadline=datetime.now(),
@@ -98,7 +98,7 @@ def test_round_with_empty_commitments():
     """
     pydantic_round = Round(
         round_id="test_round_002",
-        announcement_url="https://x.com/realmir_testnet/status/12346",
+        announcement_url="https://x.com/cliptions_test/status/12346",
         livestream_url="https://youtube.com/live/some_id_2",
         entry_fee=0.001,
         commitment_deadline=datetime.now(),

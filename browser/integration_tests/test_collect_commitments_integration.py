@@ -29,7 +29,7 @@ async def test_collect_commitments_integration():
     from davidynamic and track_data_.
     """
     # Round 2 announcement URL with multiple commitment replies
-    announcement_url = "https://x.com/realmir_testnet/status/1907159517013422578"
+    announcement_url = "https://x.com/cliptions_test/status/1907159517013422578"
     
     print(f"\n🧪 Integration Test: Collecting commitments from {announcement_url}")
     
@@ -87,7 +87,7 @@ async def test_collect_commitments_empty_announcement():
     Integration test for handling announcements with no commitment replies.
     """
     # Use a different tweet URL that likely has no commitment replies
-    announcement_url = "https://x.com/realmir_testnet/status/1907171976684187882"  # This is a reveal URL
+    announcement_url = "https://x.com/cliptions_test/status/1907171976684187882"  # This is a reveal URL
     
     print(f"\n🧪 Integration Test: Testing empty announcement handling")
     
@@ -111,7 +111,7 @@ if __name__ == "__main__":
     """
     Run the integration test directly (outside of pytest)
     """
-    print("=== RealMir Commitment Collection Integration Test ===")
+    print("=== Cliptions Commitment Collection Integration Test ===")
     print("This will perform a full end-to-end test using real browser automation.")
     print()
     
