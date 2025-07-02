@@ -242,7 +242,7 @@ async def main():
     """Main function to run the Twitter reply extraction"""
     
     # Target tweet URL
-    tweet_url = "https://x.com/realmir_testnet/status/1907159517013422578"
+    tweet_url = "https://x.com/cliptions_test/status/1907159517013422578"
     
     print(f"=== Twitter Reply URL Extractor ===")
     print(f"Target tweet: {tweet_url}")

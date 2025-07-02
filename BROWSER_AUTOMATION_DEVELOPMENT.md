@@ -143,7 +143,7 @@ Reply posting to specific tweet URLs with text content.
   "replies_posted": [
     {
       "commitment_url": "https://x.com/davidynamic/status/1907165981706760445",
-      "reply_url": "https://x.com/realmir_testnet/status/XXXXXXX",
+      "reply_url": "https://x.com/cliptions_test/status/XXXXXXX",
       "reply_text": "🧪 TESTING: Entry fee simulation - Send 0.001 TAO to 5FakeEntryFeeAddressForTestingOnly12345 #browsertest",
       "verified": true,
       "screenshot": "entry_fee_reply_1.png"

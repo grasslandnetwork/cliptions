@@ -1,4 +1,4 @@
-//! Verify commitments for RealMir prediction rounds
+//! Verify commitments for Cliptions prediction rounds
 //! 
 //! Enhanced CLI tool with comprehensive error handling, multiple output formats,
 //! configuration support, and improved user experience for verifying cryptographic
@@ -10,17 +10,17 @@ use std::fs;
 use clap::Parser;
 use colored::Colorize;
 
-use realmir_core::embedder::{MockEmbedder, ClipEmbedder, EmbedderTrait};
-use realmir_core::scoring::ClipBatchStrategy;
-use realmir_core::round::RoundProcessor;
-use realmir_core::config::ConfigManager;
+use cliptions_core::embedder::{MockEmbedder, ClipEmbedder, EmbedderTrait};
+use cliptions_core::scoring::ClipBatchStrategy;
+use cliptions_core::round::RoundProcessor;
+use cliptions_core::config::ConfigManager;
 
 #[derive(Parser)]
 #[command(name = "verify_commitments")]
-#[command(about = "Verify commitments for RealMir prediction rounds")]
+#[command(about = "Verify commitments for Cliptions prediction rounds")]
 #[command(version = "2.0")]
 #[command(long_about = "
-Verify cryptographic commitments for RealMir prediction market rounds with comprehensive
+Verify cryptographic commitments for Cliptions prediction market rounds with comprehensive
 error handling and multiple output formats.
 
 This tool validates that participant commitments match their revealed guesses and salts,
@@ -329,7 +329,7 @@ fn verify_with_processor<E: EmbedderTrait>(
 
 #[derive(Debug)]
 struct VerificationResults {
-    rounds: Vec<(String, Vec<bool>, Vec<realmir_core::types::Participant>)>,
+    rounds: Vec<(String, Vec<bool>, Vec<cliptions_core::types::Participant>)>,
     total_rounds_processed: usize,
     total_participants: usize,
     total_valid: usize,
@@ -451,7 +451,7 @@ fn process_round_verification<E: EmbedderTrait>(
     processor: &mut RoundProcessor<E, ClipBatchStrategy>,
     round_id: &str,
     args: &Args
-) -> Result<(Vec<bool>, Vec<realmir_core::types::Participant>), Box<dyn std::error::Error>> {
+) -> Result<(Vec<bool>, Vec<cliptions_core::types::Participant>), Box<dyn std::error::Error>> {
     
     // Get round info
     let round = processor.get_round(round_id)?;
@@ -795,8 +795,8 @@ fn save_results(
 mod tests {
     use super::*;
     use tempfile::NamedTempFile;
-    use realmir_core::types::{RoundData, Participant, Guess};
-    use realmir_core::commitment::CommitmentGenerator;
+    use cliptions_core::types::{RoundData, Participant, Guess};
+use cliptions_core::commitment::CommitmentGenerator;
     use std::collections::HashMap;
 
     #[test]
@@ -807,7 +807,7 @@ mod tests {
             rounds_file: PathBuf::from("tests/fixtures/rounds.json"),
             output: "table".to_string(),
             output_file: None,
-            use_clip: false,
+            use_mock: false,
             clip_model: None,
             verbose: false,
             no_color: false,
@@ -832,7 +832,7 @@ mod tests {
             rounds_file: PathBuf::from("rounds.json"),
             output: "table".to_string(),
             output_file: None,
-            use_clip: false,
+            use_mock: false,
             clip_model: None,
             verbose: false,
             no_color: false,
@@ -857,7 +857,7 @@ mod tests {
             rounds_file: PathBuf::from("rounds.json"),
             output: "table".to_string(),
             output_file: None,
-            use_clip: false,
+            use_mock: false,
             clip_model: None,
             verbose: false,
             no_color: false,
@@ -916,7 +916,7 @@ mod tests {
             rounds_file: file_path,
             output: "table".to_string(),
             output_file: None,
-            use_clip: false,
+            use_mock: false,
             clip_model: None,
             verbose: false,
             no_color: false,
@@ -969,7 +969,7 @@ mod tests {
             rounds_file: file_path,
             output: "table".to_string(),
             output_file: None,
-            use_clip: false,
+            use_mock: false,
             clip_model: None,
             verbose: false,
             no_color: false,
