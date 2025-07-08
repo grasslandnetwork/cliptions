@@ -70,8 +70,20 @@ clap = { version = "4.0", features = ["derive"] }
 # Colored terminal output
 colored = "2.0"
 
-# HTTP client for downloading models
-reqwest = { version = "0.12", features = ["blocking"] }
+# HTTP client for downloading models and API requests
+reqwest = { version = "0.12", features = ["blocking", "json"] }
+
+# Async runtime for HTTP requests
+tokio = { version = "1.0", features = ["full"] }
+
+
+
+# URL encoding
+urlencoding = "2.1"
+
+# HMAC for OAuth signatures
+hmac = "0.12"
+sha1 = "0.10"
 
 [dev-dependencies]
 # Testing
@@ -101,4 +113,8 @@ path = "src/bin/process_payouts.rs"
 [[bin]]
 name = "cliptions_verify_commitments"
 path = "src/bin/verify_commitments.rs"
+
+[[bin]]
+name = "cliptions_twitter_post"
+path = "src/bin/twitter_post.rs"
 
