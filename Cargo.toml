@@ -118,3 +118,7 @@ path = "src/bin/verify_commitments.rs"
 name = "cliptions_twitter_post"
 path = "src/bin/twitter_post.rs"
 
+[[bin]]
+name = "cliptions_twitter_search_replies"
+path = "src/bin/twitter_search_replies.rs"
+
