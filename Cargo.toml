@@ -122,3 +122,7 @@ path = "src/bin/twitter_post.rs"
 name = "cliptions_twitter_search_replies"
 path = "src/bin/twitter_search_replies.rs"
 
+[[bin]]
+name = "cliptions_twitter_latest_tweet"
+path = "src/bin/twitter_latest_tweet.rs"
+
