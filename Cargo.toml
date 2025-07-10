@@ -71,7 +71,7 @@ clap = { version = "4.0", features = ["derive"] }
 colored = "2.0"
 
 # HTTP client for downloading models and API requests
-reqwest = { version = "0.12", features = ["blocking", "json"] }
+reqwest = { version = "0.12", features = ["blocking", "json", "multipart"] }
 
 # Async runtime for HTTP requests
 tokio = { version = "1.0", features = ["full"] }
