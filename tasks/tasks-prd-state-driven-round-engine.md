@@ -1,61 +1,70 @@
 ## Relevant Files
 
-- `Cargo.toml` - **Modify** to set up a workspace with the main `realmir` package and the new `twitter-api` crate.
-- `crates/twitter-api/Cargo.toml` - The `Cargo.toml` for the new shared library.
-- `crates/twitter-api/src/lib.rs` - The main library file for the new shared Twitter API crate.
-- `crates/twitter-api/src/client.rs` - Contains the `TwitterClient` and its methods for API interaction.
-- `crates/twitter-api/src/models.rs` - Will contain the data structures for Tweets, Users, etc., returned by the API.
+- `Cargo.toml` - To set up a workspace including `realmir`, `twitter-api`, and the new `base-api` crate.
+- `crates/twitter-api/Cargo.toml` - For the shared Twitter library.
+- `crates/twitter-api/src/lib.rs` - The main library file for Twitter API interactions.
+- `crates/base-api/Cargo.toml` - For the shared BASE API library.
+- `crates/base-api/src/lib.rs` - The main library file for BASE API interactions.
 - `src/lib.rs` - To declare the `round_engine` module.
-- `src/config.rs` - To add a `TwitterConfig` section.
-- `src/round_engine/state_machine.rs` - To define the async typestate structs and state transitions that call the new library.
+- `src/config.rs` - To add `TwitterConfig` and `BaseConfig` sections.
+- `src/round_engine/state_machine.rs` - To define the more granular async typestate machine.
 - `src/bin/cliptions_app.rs` - The main async application binary.
-- `src/bin/twitter_post.rs` - **Refactor** to become a simple client of the `twitter-api` library.
-- `src/bin/twitter_search_replies.rs` - **Refactor** to become a simple client of the `twitter-api` library.
-- `src/bin/twitter_latest_tweet.rs` - **Refactor** to become a simple client of the `twitter-api` library.
 - `tests/round_engine_integration.rs` - Integration tests for the async state machine.
 
 ### Notes
 
-- The project will be structured as a Cargo workspace to manage the main application and the `twitter-api` library.
-- The core Twitter API logic will be centralized in the `twitter-api` crate, promoting code reuse and maintainability.
-- The `round_engine` will interact with the `TwitterClient` from the library, not with external processes.
+- The project will be a Cargo workspace to manage the main application and its component libraries (`twitter-api`, `base-api`).
+- The `round_engine` will orchestrate calls to the `TwitterClient` and `BaseClient` from the libraries.
+- Mocking will be crucial for testing both Twitter and BASE API interactions without making real calls.
 
 ## Tasks
 
-- [ ] 1.0 Create Shared Twitter API Library
-  - [ ] 1.1 **Create**: A new directory `crates/` for our library crates.
-  - [ ] 1.2 **Create**: A new library crate at `crates/twitter-api` using `cargo new --lib`.
-  - [ ] 1.3 **Refactor**: Convert the root `Cargo.toml` into a workspace manifest that includes both the main `realmir` package and the new `crates/twitter-api` crate.
-  - [ ] 1.4 **Move**: The core Twitter API interaction logic (authentication, request building, execution) from the `src/bin/twitter_*.rs` files into a `TwitterClient` in `crates/twitter-api/src/client.rs`.
-  - [ ] 1.5 **Refactor**: The `src/bin/twitter_*.rs` binaries to be simple command-line wrappers around the new `twitter-api` library. They should initialize the `TwitterClient` and call its methods.
+- [ ] 1.0 Research and Plan Fee Management
+  - [ ] 1.1 **Research**: Investigate the simplest method to link a BASE wallet payment to a Twitter user identity.
+  - [ ] 1.2 **Decision**: Document the chosen approach (e.g., web endpoint with wallet connection, signed message, etc.).
+  - [ ] 1.3 **Plan**: Outline the implementation steps for the chosen fee verification mechanism.
 
-- [ ] 2.0 Refactor and Setup Application Foundation
-  - [ ] 2.1 **Refactor**: Rename `src/round.rs` to `src/round_processor.rs` and update all `use` statements.
-  - [ ] 2.2 **Update**: In `Cargo.toml`, ensure the `edition` is `"2024"`. Verify `tokio`, `clap`, `serde`, and `anyhow` dependencies.
-  - [ ] 2.3 **Create**: The async module directory `src/round_engine` and the `state_machine.rs` file.
-  - [ ] 2.4 **Update**: In `src/lib.rs`, declare the `round_engine` module.
-  - [ ] 2.5 **Create**: The async binary entry point at `src/bin/cliptions_app.rs`.
+- [ ] 2.0 Create Core API Libraries
+  - [ ] 2.1 **Create**: A new directory `crates/` for our library crates.
+  - [ ] 2.2 **Create**: A new library crate at `crates/twitter-api` using `cargo new --lib`.
+  - [ ] 2.3 **Create**: A new library crate at `crates/base-api` using `cargo new --lib`.
+  - [ ] 2.4 **Refactor**: Convert the root `Cargo.toml` into a workspace manifest that includes `realmir`, `crates/twitter-api`, and `crates/base-api`.
+  - [ ] 2.5 **Implement `twitter-api`**: Move Twitter logic into a `TwitterClient`. Implement functions for `post_tweet`, `post_tweet_with_image`, `reply_to_tweet`, and `get_latest_tweet`.
+  - [ ] 2.6 **Refactor Binaries**: Refactor the `src/bin/twitter_*.rs` binaries to be simple wrappers around the new `twitter-api` library.
 
-- [ ] 3.0 Implement Twitter Configuration
-  - [ ] 3.1 In `src/config.rs`, add a `TwitterConfig` struct with API credentials and validator username. Include it in `CliptionsConfig`.
-  - [ ] 3.2 Update `config/llm.yaml.template` with placeholders for the new `twitter` section.
+- [ ] 3.0 Refactor and Setup Application Foundation
+  - [ ] 3.1 **Refactor**: Rename `src/round.rs` to `src/round_processor.rs` and update all `use` statements.
+  - [ ] 3.2 **Update**: In `Cargo.toml`, ensure the `edition` is `"2024"`. Verify core dependencies.
+  - [ ] 3.3 **Create**: The async module directory `src/round_engine` and the `state_machine.rs` file.
+  - [ ] 3.4 **Update**: In `src/lib.rs`, declare the `round_engine` module.
+  - [ ] 3.5 **Create**: The async binary entry point at `src/bin/cliptions_app.rs`.
 
-- [ ] 4.0 Implement Async State Machine with API Library
-  - [ ] 4.1 In `src/round_engine/state_machine.rs`, define the state marker structs (`Pending`, `CommitmentsOpen`, etc.).
-  - [ ] 4.2 Implement the generic async `Round<S>` struct.
-  - [ ] 4.3 Implement async state transition methods (e.g., `async fn close_commitments(self, client: &TwitterClient) -> Result<Round<CommitmentsClosed>>`). These methods will call the `TwitterClient` from our `twitter-api` library.
+- [ ] 4.0 Implement Configuration
+  - [ ] 4.1 In `src/config.rs`, add `TwitterConfig` and `BaseConfig` structs to `CliptionsConfig`.
+  - [ ] 4.2 Update `config/llm.yaml.template` with placeholders for the new `twitter` and `base` sections.
 
-- [ ] 5.0 Implement Role-Based Application Logic
-  - [ ] 5.1 In `src/bin/cliptions_app.rs`, use `clap` to parse the `--role` argument.
-  - [ ] 5.2 Initialize the `ConfigManager` and the `TwitterClient`.
-  - [ ] 5.3 Implement the main async application loop that continuously polls for the round's state using the `TwitterClient`.
-  - [ ] 5.4 **Validator Logic**: If the role is `validator`, prompt for confirmation and call the appropriate `TwitterClient` method to post a state-change tweet.
-  - [ ] 5.5 **Miner Logic**: If the role is `miner`, continuously poll and display the latest round status from the validator's tweets.
-  - [ ] 5.6 Add signal handling for graceful shutdown.
+- [ ] 5.0 Implement Fee Management
+  - [ ] 5.1 **Implement `base-api`**: Based on the research from Task 1, implement a `BaseClient` in the `base-api` crate. It should handle wallet interactions and payment verification.
+  - [ ] 5.2 **Integrate**: Connect the `BaseClient` into the main `cliptions_app`.
 
-- [ ] 6.0 Integration Testing and Validation
-  - [ ] 6.1 In `src/round_engine/state_machine.rs`, add `#[tokio::test]` unit tests for the typestate transitions.
-  - [ ] 6.2 Create the async integration test file `tests/round_engine_integration.rs`.
-  - [ ] 6.3 In the integration tests, mock the `TwitterClient`. This can be done by defining a `MockTwitterClient` that implements a shared `TwitterApi` trait, allowing you to return canned responses without making real API calls.
-  - [ ] 6.4 Write an integration test that drives the state machine through a full round lifecycle using the mocked client.
-  - [ ] 6.5 Add async tests for CLI argument parsing in `cliptions_app.rs`. 
+- [ ] 6.0 Implement Async State Machine with API Libraries
+  - [ ] 6.1 In `src/round_engine/state_machine.rs`, define the more granular state markers: `Pending`, `CommitmentsOpen`, `FeeCollectionOpen`, `FeeCollectionClosed`, `RevealsOpen`, etc.
+  - [ ] 6.2 Implement the generic async `Round<S>` struct.
+  - [ ] 6.3 Implement async state transition methods that call the `TwitterClient` and `BaseClient` as needed for each step of the round.
+
+- [ ] 7.0 Implement Role-Based Application Logic
+  - [ ] 7.1 In `src/bin/cliptions_app.rs`, parse the `--role` argument.
+  - [ ] 7.2 Initialize the `ConfigManager`, `TwitterClient`, and `BaseClient`.
+  - [ ] 7.3 Implement the main async application loop that polls for state and drives the round forward based on validator prompts.
+  - [ ] 7.4 **Validator Logic**: Ensure the validator flow correctly posts tweets, checks for fees, and triggers payouts.
+  - [ ] 7.5 **Miner Logic**: Ensure the miner flow correctly displays the round status and fee payment instructions.
+
+- [ ] 8.0 Integration Testing and Validation
+  - [ ] 8.1 Create `#[tokio::test]` unit tests for the state machine transitions.
+  - [ ] 8.2 In `tests/round_engine_integration.rs`, mock both the `TwitterClient` and `BaseClient` (e.g., using traits and mock objects).
+  - [ ] 8.3 Write an integration test that drives the state machine through a full round lifecycle using the mocked clients, asserting correct API calls at each step.
+
+- [ ] 9.0 User-Facing Distribution and Documentation
+  - [ ] 9.1 **Create Release Workflow**: Set up a GitHub Action to compile and package the `cliptions_app` binary for macOS, Windows, and Linux on new git tags.
+  - [ ] 9.2 **Update README**: Revise the `README.md` to be user-focused, with a clear "Installation" section pointing to GitHub Releases.
+  - [ ] 9.3 **Update CLI Examples**: Change the examples in the `README.md` to show usage for a downloaded binary (e.g., `./cliptions_app`) instead of `cargo run`. 

@@ -8,15 +8,16 @@ The system will be driven by the state of the data communicated via the **Twitte
 
 ## 2. Goals
 
-- **Goal 1: Semi-Autonomous Operation:** Create an application that can orchestrate the steps of a round, prompting the validator for action and informing the miner of the current status.
-- **Goal 2: Improve Reliability:** Centralize state management in a robust Rust application, reducing the potential for manual error.
-- **Goal 3: Establish a Clear State Machine:** Implement a well-defined round lifecycle using the Rust typestate pattern to ensure correctness at compile time.
-- **Goal 4: Future-Proof Architecture:** Lay the groundwork for a fully autonomous system by establishing a clear client-server architecture with a dedicated persistence layer.
+-   **Goal 1: Semi-Autonomous Operation:** Create an application that can orchestrate the steps of a round, prompting the validator for action and informing the miner of the current status.
+-   **Goal 2: Improve Reliability:** Centralize state management in a robust Rust application, reducing the potential for manual error.
+-   **Goal 3: Establish a Clear State Machine:** Implement a well-defined round lifecycle using the Rust typestate pattern to ensure correctness at compile time.
+-   **Goal 4: Future-Proof Architecture:** Lay the groundwork for a fully autonomous system by establishing a clear client-server architecture with a dedicated persistence layer.
+-   **Goal 5: Create an Easy-to-Use Distribution:** Package the application so that non-technical users (miners) can easily download and run it without needing to compile from source.
 
 ## 3. User Stories
 
-- **As a Validator,** I want the application to read the current round state from the database and prompt me to execute the next step, so that I can manage the game lifecycle efficiently and without errors.
-- **As a Miner,** I want the application to connect to Twitter, show me the live status of the active round based on the Validator's tweets, and help me craft my submission, so that I can participate in the game easily.
+-   **As a Validator,** I want the application to read the current round state from the database and prompt me to execute the next step, so that I can manage the game lifecycle efficiently and without errors.
+-   **As a Miner,** I want the application to connect to Twitter, show me the live status of the active round based on the Validator's tweets, and help me craft my submission, so that I can participate in the game easily.
 
 ## 4. Functional Requirements
 
@@ -41,19 +42,26 @@ The application **must** be launchable with a specific role:
 
 ### FR4: Data Persistence and Synchronization
 -   The application **must** use the **Twitter/X API** as its primary data store and communication channel.
+-   The application **must** also integrate with the **BASE API** for payment processing.
 -   The state of the round will be determined by parsing the content of tweets from the validator's account.
 -   Miners will fetch state by reading these public tweets. No local or remote database will be required for this MVP.
 
-### FR5: Validator Workflow
--   When started as a `validator`, the application will use the `cliptions_twitter_latest_tweet` binary to fetch the latest tweet from its own account to determine the current round state.
--   It will identify the next logical action in the lifecycle (e.g., "Close Commitments", "Open Reveals").
--   It **must** prompt the validator for confirmation before executing the action.
--   Upon confirmation, it will orchestrate the task by calling the relevant `cliptions_twitter_*` binary (e.g., `cliptions_twitter_post` to announce the next state).
+### FR5: Payment and Fee Management
+The application **must** support a fee-based system for round participation.
+**Validator:** The application will be responsible for providing payment instructions and verifying payments.
+**Miner:** Miners must submit a fee to a designated address to have their submissions scored. The application should facilitate this process.
+A research task will determine the simplest implementation (e.g., wallet connection on a web page, direct deposit with memo) to link payments to Twitter users.
 
-### FR6: Miner Workflow
--   When started as a `miner`, the application will use the `cliptions_twitter_latest_tweet` binary to fetch the validator's latest tweet and display the current round status.
--   It will continuously poll for new tweets from the validator to detect state changes.
--   It **must** provide a user interface or tool to help the miner craft and prepare their commitment/reveal submissions.
+### FR6: Validator Workflow
+-   When started as a `validator`, the application will use the `cliptions-twitter-api` library to determine the current round state.
+-   It will prompt for confirmation before executing actions like closing commitments, opening reveals, and initiating payouts.
+-   It **must** post a "Target Frame" image when transitioning to the `RevealsOpen` state.
+-   It **must** execute payouts to winning miners using the BASE API.
+
+### FR7: Miner Workflow
+-   When started as a `miner`, it will poll for validator tweets to understand the current round status.
+-   It **must** guide the miner through paying their entry fee to be eligible for scoring.
+-   It will provide tools to help the miner craft their commitment and reveal submissions.
 
 ### FR7: Data Schema
 The round state and data **must** be encoded in the text of the validator's tweets. A clear, machine-parsable format for these tweets (e.g., using hashtags or key-value pairs like `STATE:CommitmentsOpen`) must be established to represent the round state, deadlines, and other relevant data.
@@ -73,6 +81,7 @@ The round state and data **must** be encoded in the text of the validator's twee
 -   **Primary Dependency:** The Twitter/X API v2.
 -   **Orchestration:** The Rust application will call functions from a dedicated `cliptions-twitter-api` shared library crate for all Twitter interactions.
 -   **Configuration:** The application will need a configuration file to manage API credentials, the validator's Twitter username, and other settings.
+-   **Payment Integration:** The application will need to integrate with the **BASE API**. This may require adding dependencies for a web3 library (e.g., `ethers-rs`) and potentially a simple web server framework (e.g., `axum`) for handling wallet connections.
 
 ### Critical Architecture Boundary: Async/Sync Integration
 
@@ -101,12 +110,12 @@ impl TwitterClient {
 // In our `cliptions_app` state machine
 impl Round<CommitmentsOpen> {
     pub async fn close_commitments(self, client: &TwitterClient) -> Result<Round<CommitmentsClosed>> {
-        // 1. Construct the tweet content.
-        let tweet_text = "Commitments are now closed!";
+        // 1. Construct the tweet content using the `social.rs` formatter.
+        let tweet_text = "Commitments are now closed! Fee payment window is now open.";
         // 2. Call the library function directly.
         client.post_tweet(tweet_text).await?;
         // 3. Return the new state.
-        Ok(self.into_closed_state())
+        Ok(self.into_fee_collection_state())
     }
 }
 ```
