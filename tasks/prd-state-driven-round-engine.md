@@ -48,9 +48,10 @@ The application **must** be launchable with a specific role:
 
 ### FR5: Payment and Fee Management
 The application **must** support a fee-based system for round participation.
-**Validator:** The application will be responsible for providing payment instructions and verifying payments.
-**Miner:** Miners must submit a fee to a designated address to have their submissions scored. The application should facilitate this process.
-A research task will determine the simplest implementation (e.g., wallet connection on a web page, direct deposit with memo) to link payments to Twitter users.
+- **Implementation Strategy**: A hybrid web-based approach will be used.
+  - **Frontend**: A minimal, single-page web application will provide a "Connect Wallet" button. It will use a standard JavaScript library (e.g., Web3Modal) to handle wallet connection and prompt the user to sign a message containing their Twitter handle.
+  - **Backend**: The main `cliptions_app` will host a simple web server endpoint (e.g., `/verify-payment`).
+- **Verification Flow**: The web frontend will send the signed message to the Rust backend endpoint, which will verify the signature and record the user's Twitter handle as "paid."
 
 ### FR6: Validator Workflow
 -   When started as a `validator`, the application will use the `cliptions-twitter-api` library to determine the current round state.
@@ -60,7 +61,7 @@ A research task will determine the simplest implementation (e.g., wallet connect
 
 ### FR7: Miner Workflow
 -   When started as a `miner`, it will poll for validator tweets to understand the current round status.
--   It **must** guide the miner through paying their entry fee to be eligible for scoring.
+-   It **must** guide the miner to a local URL (served by the app) to pay their entry fee.
 -   It will provide tools to help the miner craft their commitment and reveal submissions.
 
 ### FR7: Data Schema
@@ -81,7 +82,10 @@ The round state and data **must** be encoded in the text of the validator's twee
 -   **Primary Dependency:** The Twitter/X API v2.
 -   **Orchestration:** The Rust application will call functions from a dedicated `cliptions-twitter-api` shared library crate for all Twitter interactions.
 -   **Configuration:** The application will need a configuration file to manage API credentials, the validator's Twitter username, and other settings.
--   **Payment Integration:** The application will need to integrate with the **BASE API**. This may require adding dependencies for a web3 library (e.g., `ethers-rs`) and potentially a simple web server framework (e.g., `axum`) for handling wallet connections.
+-   **Payment Integration:**
+  - A `base-api` Rust crate will use a library like `ethers-rs` for signature verification.
+  - A Rust web server framework (e.g., `axum`) will be used to host the verification endpoint.
+  - A minimal web frontend (`HTML/JS`) with a library like `web3modal` will handle user wallet interactions.
 
 ### Critical Architecture Boundary: Async/Sync Integration
 
