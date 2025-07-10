@@ -71,12 +71,12 @@ The round state and data **must** be encoded in the text of the validator's twee
 ## 7. Technical Considerations
 
 -   **Primary Dependency:** The Twitter/X API v2.
--   **Orchestration:** The Rust application will execute the `cliptions_twitter_*` binaries as child processes (`tokio::process::Command`) to perform all external actions.
+-   **Orchestration:** The Rust application will call functions from a dedicated `cliptions-twitter-api` shared library crate for all Twitter interactions.
 -   **Configuration:** The application will need a configuration file to manage API credentials, the validator's Twitter username, and other settings.
 
 ### Critical Architecture Boundary: Async/Sync Integration
 
-**Issue:** The current Cliptions Rust core is **entirely synchronous**, but the state-driven engine requires **async operations** for polling and executing child processes.
+**Issue:** The current Cliptions Rust core is **entirely synchronous**, but the state-driven engine requires **async operations** for polling and API calls.
 
 **Current State:**
 - All existing Rust code is sync: `fn process_round_payouts() -> Result<Vec<ScoringResult>>`
@@ -85,17 +85,28 @@ The round state and data **must** be encoded in the text of the validator's twee
 
 **Required Changes:**
 - **Async Runtime:** Add `tokio` runtime for the main application loop.
-- **Async State Transitions:** State machine methods must be async: `async fn close_commitments(self) -> Result<Round<CommitmentsClosed>>`. These methods will orchestrate calls to the external twitter binaries.
-- **Async Process Execution:** Use `tokio::process::Command` to call the twitter binaries asynchronously.
+- **Async State Transitions:** State machine methods must be async: `async fn close_commitments(self) -> Result<Round<CommitmentsClosed>>`. These methods will call the Twitter API library.
+- **Direct Library Calls:** The state machine will call async functions from the shared `cliptions-twitter-api` library directly, instead of executing external processes.
 
 **Design Pattern:**
 ```rust
-// New async state machine
+// In our new `cliptions-twitter-api` library
+pub struct TwitterClient { /* ... */ }
+impl TwitterClient {
+    pub async fn post_tweet(&self, text: &str) -> Result<Tweet> {
+        // ... logic to call Twitter API ...
+    }
+}
+
+// In our `cliptions_app` state machine
 impl Round<CommitmentsOpen> {
-    pub async fn close_commitments(self) -> Result<Round<CommitmentsClosed>> {
-        // 1. Construct args for 'cliptions_twitter_post' binary.
-        // 2. Execute binary with tokio::process::Command.
-        // 3. Parse result and return new state.
+    pub async fn close_commitments(self, client: &TwitterClient) -> Result<Round<CommitmentsClosed>> {
+        // 1. Construct the tweet content.
+        let tweet_text = "Commitments are now closed!";
+        // 2. Call the library function directly.
+        client.post_tweet(tweet_text).await?;
+        // 3. Return the new state.
+        Ok(self.into_closed_state())
     }
 }
 ```
