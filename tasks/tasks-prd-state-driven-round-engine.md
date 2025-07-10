@@ -19,18 +19,18 @@
   - [x] 1.2 **Decision**: A hybrid approach using a simple JS frontend for wallet signing and a Rust backend for verification is the simplest path.
   - [x] 1.3 **Plan**: The fee management system will be a web service hosted by the main application.
 
-- [ ] 2.0 Implement Fee Management Web Service
-  - [ ] 2.1 **Create Frontend Directory**: Create a new top-level directory named `fee_frontend`.
-  - [ ] 2.2 **Implement Frontend**: Inside `fee_frontend`, create an `index.html` and a `main.js`. Implement the wallet connection and message signing flow using `web3modal` or a similar library. The page should prompt the user for their Twitter handle.
-  - [ ] 2.3 **Add Backend Dependencies**: Add `axum`, `tokio`, and `ethers-rs` to the dependencies of the `realmir` crate in `Cargo.toml`.
-  - [ ] 2.4 **Implement Backend Endpoint**: In `cliptions_app.rs`, create a simple `axum` web server with a `/verify-payment` endpoint. This endpoint will receive the signed message and use `ethers-rs` to verify it.
-  - [ ] 2.5 **Integrate Web Server**: Modify the `main` function in `cliptions_app.rs` to launch the `axum` server in a separate async task, so it runs alongside the main application logic. The server should also be configured to serve the static files from the `fee_frontend` directory.
+- [x] 2.0 Implement Fee Management Web Service
+  - [x] 2.1 **Create Frontend Directory**: Create a new top-level directory named `fee_frontend`.
+  - [x] 2.2 **Implement Frontend**: Inside `fee_frontend`, create an `index.html` and a `main.js`. Implement the wallet connection and message signing flow using `web3modal` or a similar library. The page should prompt the user for their Twitter handle.
+  - [x] 2.3 **Add Backend Dependencies**: Add `axum`, `tokio`, and `ethers-rs` to the dependencies of the `cliptions-core` crate in `Cargo.toml`.
+  - [x] 2.4 **Implement Backend Endpoint**: In `cliptions_app.rs`, create a simple `axum` web server with a `/verify-payment` endpoint. This endpoint will receive the signed message and use `ethers-rs` to verify it.
+  - [x] 2.5 **Integrate Web Server**: Modify the `main` function in `cliptions_app.rs` to launch the `axum` server in a separate async task, so it runs alongside the main application logic. The server should also be configured to serve the static files from the `fee_frontend` directory.
 
 - [ ] 3.0 Create Core API Libraries
   - [ ] 3.1 **Create**: A new directory `crates/` for our library crates.
   - [ ] 3.2 **Create**: A new library crate at `crates/twitter-api` using `cargo new --lib`.
   - [ ] 3.3 **Create**: A new library crate at `crates/base-api` using `cargo new --lib` (this will be used for payout logic later).
-  - [ ] 3.4 **Refactor**: Convert the root `Cargo.toml` into a workspace manifest that includes `realmir`, `crates/twitter-api`, and `crates/base-api`.
+  - [ ] 3.4 **Refactor**: Convert the root `Cargo.toml` into a workspace manifest that includes `cliptions-core`, `crates/twitter-api`, and `crates/base-api`.
   - [ ] 3.5 **Implement `twitter-api`**: Move Twitter logic into a `TwitterClient`. Implement functions for `post_tweet`, `post_tweet_with_image`, `reply_to_tweet`, and `get_latest_tweet`.
   - [ ] 3.6 **Refactor Binaries**: Refactor the `src/bin/twitter_*.rs` binaries to be simple wrappers around the new `twitter-api` library.
 
