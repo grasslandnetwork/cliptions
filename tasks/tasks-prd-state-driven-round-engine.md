@@ -30,8 +30,8 @@
   - [x] 3.1 **Create**: A new directory `crates/` for our library crates.
   - [x] 3.2 **Create**: A new library crate at `crates/twitter-api` using `cargo new --lib`.
   - [x] 3.3 **Create**: A new library crate at `crates/base-api` using `cargo new --lib` (this will be used for payout logic later).
-  - [ ] 3.4 **Refactor**: Convert the root `Cargo.toml` into a workspace manifest that includes `cliptions-core`, `crates/twitter-api`, and `crates/base-api`.
-  - [ ] 3.5 **Implement `twitter-api`**: Move Twitter logic into a `TwitterClient`. Implement functions for `post_tweet`, `post_tweet_with_image`, `reply_to_tweet`, and `get_latest_tweet`.
+  - [x] 3.4 **Refactor**: Convert the root `Cargo.toml` into a workspace manifest that includes `cliptions-core`, `crates/twitter-api`, and `crates/base-api`.
+  - [x] 3.5 **Implement `twitter-api`**: Move Twitter logic into a `TwitterClient`. Implement functions for `post_tweet`, `post_tweet_with_image`, `reply_to_tweet`, and `get_latest_tweet`.
   - [ ] 3.6 **Refactor Binaries**: Refactor the `src/bin/twitter_*.rs` binaries to be simple wrappers around the new `twitter-api` library.
 
 - [ ] 4.0 Refactor and Setup Application Foundation

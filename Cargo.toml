@@ -98,6 +98,9 @@ urlencoding = "2.1"
 hmac = "0.12"
 sha1 = "0.10"
 
+# Internal dependencies
+twitter-api = { path = "crates/twitter-api" }
+
 [dev-dependencies]
 # Testing
 rstest = "0.21"
