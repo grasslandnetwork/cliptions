@@ -1,13 +1,6 @@
-// Configuration - you'll need to get a project ID from WalletConnect Cloud
-const PROJECT_ID = 'YOUR_PROJECT_ID_HERE'; // TODO: Replace with actual project ID
-
-// Web3Modal configuration
-const { Web3Modal } = window.Web3Modal;
-
-const web3Modal = new Web3Modal({
-    projectId: PROJECT_ID,
-    standaloneChains: ['eip155:1', 'eip155:8453'] // Ethereum mainnet and Base
-});
+// For MVP testing - simplified wallet simulation
+console.log('🚀 main.js loaded successfully!');
+const DEMO_MODE = true;
 
 // State management
 let provider = null;
@@ -82,46 +75,39 @@ async function handleConnectWallet() {
 
 async function connectWallet() {
     try {
-        // Open wallet selection modal
-        const { uri, approval } = await web3Modal.openModal();
-        
-        if (uri) {
-            // Wait for wallet connection
-            const session = await approval();
+        if (DEMO_MODE) {
+            // Simulate wallet connection for MVP testing
+            showStatus('🔄 Simulating wallet connection...', 'info');
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate delay
             
-            if (session && session.namespaces && session.namespaces.eip155) {
-                const accounts = session.namespaces.eip155.accounts;
-                if (accounts && accounts.length > 0) {
-                    // Extract address from the account string (format: "eip155:1:0x...")
-                    userAddress = accounts[0].split(':')[2];
-                    web3Modal.closeModal();
-                    return;
-                }
-            }
+            // Generate a mock wallet address
+            userAddress = '0x' + Math.random().toString(16).substring(2, 42).padStart(40, '0');
+            showStatus('✅ Demo wallet connected!', 'info');
+            return;
         }
         
-        throw new Error('Failed to connect wallet');
+        // Real wallet connection would go here when Web3Modal is properly configured
+        throw new Error('Real wallet connection not configured yet');
         
     } catch (error) {
-        web3Modal.closeModal();
         throw error;
     }
 }
 
 async function signMessage(message) {
     try {
-        // For this simplified version, we'll use a mock signature
-        // In a real implementation, you'd use the wallet's signing capability
-        // through the WalletConnect session
+        if (DEMO_MODE) {
+            // Simulate message signing for MVP testing
+            showStatus('🔄 Simulating message signing...', 'info');
+            await new Promise(resolve => setTimeout(resolve, 800)); // Simulate delay
+            
+            // Generate a mock signature (valid hex format)
+            const mockSignature = `0x${'a'.repeat(130)}`;
+            return mockSignature;
+        }
         
-        // This is a placeholder - in practice you'd use the actual wallet connection
-        // to sign the message. For now, we'll simulate it.
-        const mockSignature = `0x${'a'.repeat(130)}`; // Mock signature
-        
-        // In a real implementation, this would be something like:
-        // const signature = await signer.signMessage(message);
-        
-        return mockSignature;
+        // Real message signing would go here when wallet is properly connected
+        throw new Error('Real message signing not configured yet');
         
     } catch (error) {
         throw new Error(`Failed to sign message: ${error.message}`);
@@ -158,10 +144,8 @@ async function submitToBackend(twitterHandle, walletAddress, message, signature)
 
 // Initialize the app
 document.addEventListener('DOMContentLoaded', function() {
-    // Check if we have a valid project ID
-    if (PROJECT_ID === 'YOUR_PROJECT_ID_HERE') {
-        showStatus('⚠️ Demo mode: WalletConnect project ID not configured. Wallet connection will be simulated.', 'info');
+    if (DEMO_MODE) {
+        showStatus('🧪 Demo mode: Wallet connection will be simulated for testing', 'info');
+        setTimeout(() => hideStatus(), 3000); // Hide after 3 seconds
     }
-    
-    hideStatus();
 }); 
