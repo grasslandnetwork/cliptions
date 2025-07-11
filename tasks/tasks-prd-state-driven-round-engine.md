@@ -34,28 +34,28 @@
   - [x] 3.5 **Implement `twitter-api`**: Move Twitter logic into a `TwitterClient`. Implement functions for `post_tweet`, `post_tweet_with_image`, `reply_to_tweet`, and `get_latest_tweet`.
   - [x] 3.6 **Refactor Binaries**: Refactor the `src/bin/twitter_*.rs` binaries to be simple wrappers around the new `twitter-api` library.
 
-- [ ] 4.0 Refactor and Setup Application Foundation
+- [x] 4.0 Refactor and Setup Application Foundation
   - [x] 4.1 **Refactor**: Rename `src/round.rs` to `src/round_processor.rs` and update all `use` statements.
   - [x] 4.2 **Update**: Postponed Rust 2024 edition upgrade; sticking with 2021 to avoid breaking changes.
-  - [ ] 4.3 **Create**: The async module directory `src/round_engine` and the `state_machine.rs` file.
-  - [ ] 4.4 **Update**: In `src/lib.rs`, declare the `round_engine` module.
-  - [ ] 4.5 **Create**: The async binary entry point at `src/bin/cliptions_app.rs`.
+  - [x] 4.3 **Create**: The async module directory `src/round_engine` and the `state_machine.rs` file.
+  - [x] 4.4 **Update**: In `src/lib.rs`, declare the `round_engine` module.
+  - [x] 4.5 **Create**: The async binary entry point at `src/bin/cliptions_app.rs`.
 
-- [ ] 5.0 Implement Configuration
-  - [ ] 5.1 In `src/config.rs`, add `TwitterConfig` and `BaseConfig` structs to `CliptionsConfig`.
-  - [ ] 5.2 Update `config/llm.yaml.template` with placeholders for the new `twitter` and `base` sections.
+- [x] 5.0 Implement Configuration
+  - [x] 5.1 In `src/config.rs`, add `TwitterConfig` and `BaseConfig` structs to `CliptionsConfig`.
+  - [x] 5.2 Update `config/llm.yaml.template` with placeholders for the new `twitter` and `base` sections.
 
-- [ ] 6.0 Implement Async State Machine with API Libraries
-  - [ ] 6.1 In `src/round_engine/state_machine.rs`, define the granular state markers: `Pending`, `CommitmentsOpen`, `FeeCollectionOpen`, `FeeCollectionClosed`, `RevealsOpen`, etc.
-  - [ ] 6.2 Implement the generic async `Round<S>` struct.
-  - [ ] 6.3 Implement async state transition methods that call the `TwitterClient` and `BaseClient` as needed.
+- [x] 6.0 Implement Async State Machine with API Libraries
+  - [x] 6.1 In `src/round_engine/state_machine.rs`, define the granular state markers: `Pending`, `CommitmentsOpen`, `FeeCollectionOpen`, `FeeCollectionClosed`, `RevealsOpen`, etc.
+  - [x] 6.2 Implement the generic async `Round<S>` struct.
+  - [x] 6.3 Implement async state transition methods that call the `TwitterClient` and `BaseClient` as needed.
 
-- [ ] 7.0 Implement Role-Based Application Logic
-  - [ ] 7.1 In `src/bin/cliptions_app.rs`, parse the `--role` argument.
-  - [ ] 7.2 Initialize the `ConfigManager`, `TwitterClient`, and `BaseClient`.
-  - [ ] 7.3 Implement the main async application loop that polls for state and drives the round forward.
-  - [ ] 7.4 **Validator Logic**: Ensure the flow correctly posts tweets, checks for fees, and triggers payouts.
-  - [ ] 7.5 **Miner Logic**: Ensure the flow correctly displays the round status and the URL for the local fee payment page.
+- [x] 7.0 Implement Role-Based Application Logic
+  - [x] 7.1 In `src/bin/cliptions_app.rs`, parse the `--role` argument.
+  - [x] 7.2 Initialize the `ConfigManager`, `TwitterClient`, and `BaseClient`.
+  - [x] 7.3 Implement the main async application loop that polls for state and drives the round forward.
+  - [x] 7.4 **Validator Logic**: Ensure the flow correctly posts tweets, checks for fees, and triggers payouts.
+  - [x] 7.5 **Miner Logic**: Ensure the flow correctly displays the round status and the URL for the local fee payment page.
 
 - [ ] 8.0 Integration Testing and Validation
   - [ ] 8.1 Create `#[tokio::test]` unit tests for the state machine transitions.

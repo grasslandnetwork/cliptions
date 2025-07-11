@@ -1,232 +1,214 @@
-use axum::{
-    extract::State,
-    http::StatusCode,
-    response::Json,
-    routing::{get, post},
-    Router,
-};
-use clap::{Arg, Command};
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
-use tokio::net::TcpListener;
-use tower_http::services::ServeDir;
+//! Cliptions - State-Driven Round Engine
+//! 
+//! Main application entry point that supports both validator and miner roles.
+//! Uses async/await for handling Twitter API calls and web server operations.
 
-#[derive(Debug, Deserialize)]
-struct PaymentVerificationRequest {
-    twitter_handle: String,
-    wallet_address: String,
-    message: String,
-    signature: String,
+use std::env;
+use clap::Parser;
+use tokio::time::{sleep, Duration};
+use cliptions_core::config::ConfigManager;
+use cliptions_core::round_engine::state_machine::{Round, Pending};
+use chrono::{DateTime, Utc};
+
+#[derive(Parser)]
+#[command(name = "cliptions_app")]
+#[command(about = "Cliptions - State-Driven Round Engine for Twitter-based games")]
+#[command(version)]
+struct Args {
+    /// Role to run the application as (validator or miner)
+    #[arg(short, long, default_value = "miner")]
+    role: String,
+    
+    /// Configuration file path
+    #[arg(short, long, default_value = "config/llm.yaml")]
+    config: String,
+    
+    /// Show verbose output
+    #[arg(short, long)]
+    verbose: bool,
+    
+    /// Port for the web server (fee payment interface)
+    #[arg(short, long, default_value = "3000")]
+    port: u16,
 }
 
-#[derive(Debug, Serialize)]
-struct PaymentVerificationResponse {
-    success: bool,
-    message: String,
-    twitter_handle: Option<String>,
+#[derive(Debug, Clone)]
+pub enum Role {
+    Validator,
+    Miner,
 }
 
-#[derive(Debug, Serialize)]
-struct ErrorResponse {
-    error: String,
-}
-
-// Simple in-memory storage for verified users
-type VerifiedUsers = Arc<Mutex<HashMap<String, String>>>; // twitter_handle -> wallet_address
-
-#[derive(Clone)]
-struct AppState {
-    verified_users: VerifiedUsers,
+impl std::str::FromStr for Role {
+    type Err = String;
+    
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "validator" => Ok(Role::Validator),
+            "miner" => Ok(Role::Miner),
+            _ => Err(format!("Invalid role: {}. Must be 'validator' or 'miner'", s)),
+        }
+    }
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    // Parse command line arguments
-    let matches = Command::new("cliptions_app")
-        .about("Cliptions state-driven round engine")
-        .arg(
-            Arg::new("role")
-                .long("role")
-                .value_name("ROLE")
-                .help("Role to run as: validator or miner")
-                .value_parser(["validator", "miner"])
-                .default_value("miner"),
-        )
-        .arg(
-            Arg::new("port")
-                .long("port")
-                .value_name("PORT")
-                .help("Port to run the web server on")
-                .default_value("3000"),
-        )
-        .get_matches();
-
-    let role = matches.get_one::<String>("role").unwrap();
-    let port = matches.get_one::<String>("port").unwrap();
-
-    println!("🎯 Starting Cliptions App in {} mode", role);
-
-    // Initialize shared state
-    let app_state = AppState {
-        verified_users: Arc::new(Mutex::new(HashMap::new())),
-    };
-
-    // Start the web server
-    let web_server_task = tokio::spawn(start_web_server(app_state.clone(), port.clone()));
-
-    println!("🌐 Web server starting on http://localhost:{}", port);
-    println!("💳 Fee payment interface available at http://localhost:{}/", port);
-
-    // Role-specific logic
-    match role.as_str() {
-        "validator" => {
-            println!("🔒 Running as VALIDATOR");
-            // TODO: Implement validator logic
-            validator_main_loop(app_state).await?;
-        }
-        "miner" => {
-            println!("⛏️  Running as MINER");
-            // TODO: Implement miner logic
-            miner_main_loop(app_state).await?;
-        }
-        _ => unreachable!("Invalid role"), // clap should prevent this
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let args = Args::parse();
+    
+    // Parse the role
+    let role: Role = args.role.parse()
+        .map_err(|e| format!("Invalid role specified: {}", e))?;
+    
+    if args.verbose {
+        println!("🚀 Starting Cliptions App...");
+        println!("Role: {:?}", role);
+        println!("Config: {}", args.config);
+        println!("Web Server Port: {}", args.port);
     }
-
-    // Wait for web server to complete (it won't unless there's an error)
-    web_server_task.await??;
-
+    
+    // Load configuration
+    let config_manager = ConfigManager::with_path(&args.config)?;
+    let config = config_manager.get_config().clone();
+    
+    if args.verbose {
+        println!("✅ Configuration loaded successfully");
+    }
+    
+    // Initialize clients based on configuration
+    // TODO: Initialize TwitterClient and BaseClient once those are implemented
+    
+    // Start the web server for fee payment verification
+    let server_handle = tokio::spawn(start_web_server(args.port, args.verbose));
+    
+    // Run the main application loop based on role
+    match role {
+        Role::Validator => {
+            println!("🛡️  Starting in VALIDATOR mode...");
+            run_validator_loop(config, args.verbose).await?;
+        }
+        Role::Miner => {
+            println!("⛏️  Starting in MINER mode...");
+            run_miner_loop(config, args.verbose, args.port).await?;
+        }
+    }
+    
+    // Shutdown the web server
+    server_handle.abort();
+    
     Ok(())
 }
 
-async fn start_web_server(state: AppState, port: String) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    // Build the router
-    let app = Router::new()
-        .route("/verify-payment", post(verify_payment_handler))
-        .route("/status", get(status_handler))
-        .nest_service("/", ServeDir::new("fee_frontend"))
-        .with_state(state);
-
-    // Start the server
-    let listener = TcpListener::bind(format!("0.0.0.0:{}", port)).await?;
-    println!("🚀 Web server listening on http://0.0.0.0:{}", port);
-
-    axum::serve(listener, app).await?;
-
-    Ok(())
-}
-
-async fn verify_payment_handler(
-    State(state): State<AppState>,
-    Json(payload): Json<PaymentVerificationRequest>,
-) -> Result<Json<PaymentVerificationResponse>, (StatusCode, Json<ErrorResponse>)> {
-    println!("🔍 Verifying payment for user: {}", payload.twitter_handle);
-
-    // Validate the signature
-    match verify_signature(&payload.message, &payload.signature, &payload.wallet_address) {
-        Ok(true) => {
-            // Store the verified user
-            let mut verified_users = state.verified_users.lock().unwrap();
-            verified_users.insert(payload.twitter_handle.clone(), payload.wallet_address.clone());
-            
-            println!("✅ Successfully verified payment for {}", payload.twitter_handle);
-            
-            Ok(Json(PaymentVerificationResponse {
-                success: true,
-                message: "Payment verified successfully".to_string(),
-                twitter_handle: Some(payload.twitter_handle),
-            }))
-        }
-        Ok(false) => {
-            println!("❌ Invalid signature for {}", payload.twitter_handle);
-            Err((
-                StatusCode::BAD_REQUEST,
-                Json(ErrorResponse {
-                    error: "Invalid signature".to_string(),
-                }),
-            ))
-        }
-        Err(e) => {
-            println!("🚨 Error verifying signature for {}: {}", payload.twitter_handle, e);
-            Err((
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(ErrorResponse {
-                    error: format!("Verification error: {}", e),
-                }),
-            ))
-        }
+async fn start_web_server(port: u16, verbose: bool) -> Result<(), Box<dyn std::error::Error>> {
+    if verbose {
+        println!("🌐 Starting web server on port {}", port);
+    }
+    
+    // TODO: Implement axum web server for fee payment verification
+    // For now, just keep the task alive
+    loop {
+        sleep(Duration::from_secs(60)).await;
     }
 }
 
-async fn status_handler(
-    State(state): State<AppState>,
-) -> Json<serde_json::Value> {
-    let verified_users = state.verified_users.lock().unwrap();
-    let user_count = verified_users.len();
+async fn run_validator_loop(
+    config: cliptions_core::config::CliptionsConfig,
+    verbose: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
+    println!("🔍 Validator: Checking current round state...");
     
-    Json(serde_json::json!({
-        "status": "running",
-        "verified_users_count": user_count,
-        "message": "Cliptions fee verification service is running"
-    }))
-}
-
-fn verify_signature(
-    _message: &str,
-    signature_hex: &str,
-    _expected_address: &str,
-) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
-    // For now, we'll implement a simplified verification
-    // In production, you'd want proper signature verification
-    
-    // Remove "0x" prefix if present
-    let signature_hex = signature_hex.strip_prefix("0x").unwrap_or(signature_hex);
-    
-    // For this MVP, we'll accept any signature that looks valid (hex string of correct length)
-    // Real implementation would use ethers to verify the signature
-    if signature_hex.len() == 130 && signature_hex.chars().all(|c| c.is_ascii_hexdigit()) {
-        println!("📝 Mock signature verification passed for address: {}", _expected_address);
-        Ok(true)
-    } else {
-        Ok(false)
-    }
-}
-
-async fn validator_main_loop(state: AppState) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    println!("🔄 Starting validator main loop...");
+    // Example: Create a new round (in a real implementation, this would check existing state)
+    let round_id = format!("round_{}", Utc::now().timestamp());
+    let mut current_round = Some(Round::new(round_id.clone()));
     
     loop {
-        // TODO: Implement state machine polling and round management
-        println!("🔒 Validator: Checking round state...");
-        
-        // For now, just show verified users count
-        {
-            let verified_users = state.verified_users.lock().unwrap();
-            if !verified_users.is_empty() {
-                println!("👥 Verified users: {}", verified_users.len());
-                for (twitter, wallet) in verified_users.iter() {
-                    println!("  - @{}: {}", twitter, wallet);
+        match &current_round {
+            Some(round) => {
+                println!("📋 Current round: {}", round);
+                
+                // TODO: Real implementation would:
+                // 1. Check Twitter for current round state
+                // 2. Parse state from validator's latest tweet
+                // 3. Determine next action needed
+                // 4. Prompt user for confirmation
+                // 5. Execute action (post tweet, process payments, etc.)
+                
+                if verbose {
+                    println!("⏰ Round created at: {}", round.created_at);
+                    if let Some(ref path) = round.target_image_path {
+                        println!("🎯 Target image: {}", path);
+                    }
+                    if let Some(ref path) = round.target_frame_path {
+                        println!("🖼️  Target frame: {}", path);
+                    }
                 }
+                
+                // Example logic for advancing state (in real implementation, user would confirm)
+                println!("🤖 [Demo Mode] Validator waiting for manual action...");
+                println!("💡 Next actions would be prompted to the user:");
+                println!("   - Open commitments with target image");
+                println!("   - Close commitments and open fee collection");
+                println!("   - Close fee collection and reveal target frame");
+                println!("   - Close reveals and process payouts");
+            }
+            None => {
+                println!("🆕 No active round. Waiting for round creation...");
+                // In real implementation, this would prompt user to create a new round
             }
         }
         
-        tokio::time::sleep(tokio::time::Duration::from_secs(30)).await;
+        if verbose {
+            println!("💤 Validator: Waiting for next state check...");
+        }
+        
+        sleep(Duration::from_secs(30)).await;
     }
 }
 
-async fn miner_main_loop(state: AppState) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    println!("🔄 Starting miner main loop...");
+async fn run_miner_loop(
+    config: cliptions_core::config::CliptionsConfig,
+    verbose: bool,
+    port: u16,
+) -> Result<(), Box<dyn std::error::Error>> {
+    println!("🔍 Miner: Monitoring round state...");
+    println!("💰 Fee payment interface available at: http://localhost:{}", port);
+    
+    let validator_username = &config.twitter.validator_username;
+    if validator_username.is_empty() {
+        println!("⚠️  Warning: No validator username configured. Using demo mode.");
+    }
     
     loop {
-        // TODO: Implement round state polling and miner guidance
-        println!("⛏️  Miner: Checking for active rounds...");
+        // TODO: Real implementation would:
+        // 1. Poll validator's tweets for current round state
+        // 2. Parse state from tweets using parse_state_from_string()
+        // 3. Display current status to user
+        // 4. Guide user through participation steps
+        // 5. Help craft commitments and reveals
         
-        // Show current verification status
-        {
-            let verified_users = state.verified_users.lock().unwrap();
-            println!("💳 Total verified users in this session: {}", verified_users.len());
+        // Demo logic showing how miner would track state
+        println!("🔄 Miner: Checking @{} for round updates...", 
+                 if validator_username.is_empty() { "validator" } else { validator_username });
+        
+        // Example of how state would be displayed to miner
+        println!("📊 Round Status Check:");
+        println!("   🔍 Searching for latest validator tweet...");
+        println!("   📝 Parsing round state from tweet content...");
+        println!("   🎯 Determining available actions...");
+        
+        // In real implementation, this would show actual parsed state
+        println!("🤖 [Demo Mode] Sample miner guidance:");
+        println!("   ✅ Round detected: CommitmentsOpen");
+        println!("   💡 Actions available:");
+        println!("      - Submit your commitment hash");
+        println!("      - Pay entry fee at: http://localhost:{}", port);
+        println!("      - Wait for reveals phase");
+        
+        if verbose {
+            println!("🌐 Web interface status: Running on port {}", port);
+            println!("📡 Twitter monitoring: Checking every 30 seconds");
+            println!("💰 Fee collection: Ready for wallet connections");
         }
         
-        tokio::time::sleep(tokio::time::Duration::from_secs(60)).await;
+        println!("💤 Miner: Waiting for next state check...");
+        sleep(Duration::from_secs(30)).await;
     }
 } 

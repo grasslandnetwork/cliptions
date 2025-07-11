@@ -65,12 +65,56 @@ impl Default for CostTrackingConfig {
     }
 }
 
+/// Twitter API configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TwitterConfig {
+    pub api_key: String,
+    pub api_secret: String,
+    pub access_token: String,
+    pub access_token_secret: String,
+    pub validator_username: String,
+}
+
+impl Default for TwitterConfig {
+    fn default() -> Self {
+        Self {
+            api_key: String::new(),
+            api_secret: String::new(),
+            access_token: String::new(),
+            access_token_secret: String::new(),
+            validator_username: String::new(),
+        }
+    }
+}
+
+/// Base blockchain configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BaseConfig {
+    pub rpc_url: String,
+    pub chain_id: u64,
+    pub gas_limit: u64,
+    pub gas_price_gwei: f64,
+}
+
+impl Default for BaseConfig {
+    fn default() -> Self {
+        Self {
+            rpc_url: "https://mainnet.base.org".to_string(),
+            chain_id: 8453, // Base mainnet
+            gas_limit: 21000,
+            gas_price_gwei: 1.0,
+        }
+    }
+}
+
 /// Main configuration structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CliptionsConfig {
     pub openai: OpenAIConfig,
     pub browser_use: BrowserUseConfig,
     pub cost_tracking: CostTrackingConfig,
+    pub twitter: TwitterConfig,
+    pub base: BaseConfig,
 }
 
 impl Default for CliptionsConfig {
@@ -79,6 +123,8 @@ impl Default for CliptionsConfig {
             openai: OpenAIConfig::default(),
             browser_use: BrowserUseConfig::default(),
             cost_tracking: CostTrackingConfig::default(),
+            twitter: TwitterConfig::default(),
+            base: BaseConfig::default(),
         }
     }
 }
@@ -167,6 +213,7 @@ impl ConfigManager {
 
     /// Apply environment variable overrides
     fn apply_env_overrides(config: &mut CliptionsConfig) {
+        // OpenAI overrides
         if let Ok(api_key) = env::var("OPENAI_API_KEY") {
             config.openai.api_key = api_key;
         }
@@ -180,10 +227,43 @@ impl ConfigManager {
                 config.openai.daily_spending_limit_usd = limit_value;
             }
         }
+
+        // Twitter overrides
+        if let Ok(api_key) = env::var("TWITTER_API_KEY") {
+            config.twitter.api_key = api_key;
+        }
+
+        if let Ok(api_secret) = env::var("TWITTER_API_SECRET") {
+            config.twitter.api_secret = api_secret;
+        }
+
+        if let Ok(access_token) = env::var("TWITTER_ACCESS_TOKEN") {
+            config.twitter.access_token = access_token;
+        }
+
+        if let Ok(access_token_secret) = env::var("TWITTER_ACCESS_TOKEN_SECRET") {
+            config.twitter.access_token_secret = access_token_secret;
+        }
+
+        if let Ok(validator_username) = env::var("TWITTER_VALIDATOR_USERNAME") {
+            config.twitter.validator_username = validator_username;
+        }
+
+        // Base overrides
+        if let Ok(rpc_url) = env::var("BASE_RPC_URL") {
+            config.base.rpc_url = rpc_url;
+        }
+
+        if let Ok(chain_id) = env::var("BASE_CHAIN_ID") {
+            if let Ok(chain_id_value) = chain_id.parse::<u64>() {
+                config.base.chain_id = chain_id_value;
+            }
+        }
     }
 
     /// Validate configuration
     fn validate_config(config: &CliptionsConfig) -> Result<()> {
+        // OpenAI validation
         if config.openai.api_key.is_empty() {
             return Err(CliptionsError::ConfigError(
                 "OpenAI API key is required".to_string()
@@ -214,6 +294,50 @@ impl ConfigManager {
             ));
         }
 
+        // Twitter validation
+        if config.twitter.api_key.is_empty() {
+            return Err(CliptionsError::ConfigError(
+                "Twitter API key is required".to_string()
+            ));
+        }
+
+        if config.twitter.api_secret.is_empty() {
+            return Err(CliptionsError::ConfigError(
+                "Twitter API secret is required".to_string()
+            ));
+        }
+
+        if config.twitter.access_token.is_empty() {
+            return Err(CliptionsError::ConfigError(
+                "Twitter access token is required".to_string()
+            ));
+        }
+
+        if config.twitter.access_token_secret.is_empty() {
+            return Err(CliptionsError::ConfigError(
+                "Twitter access token secret is required".to_string()
+            ));
+        }
+
+        if config.twitter.validator_username.is_empty() {
+            return Err(CliptionsError::ConfigError(
+                "Twitter validator username is required".to_string()
+            ));
+        }
+
+        // Base validation
+        if config.base.rpc_url.is_empty() {
+            return Err(CliptionsError::ConfigError(
+                "Base RPC URL is required".to_string()
+            ));
+        }
+
+        if config.base.chain_id == 0 {
+            return Err(CliptionsError::ConfigError(
+                "Base chain ID must be greater than 0".to_string()
+            ));
+        }
+
         Ok(())
     }
 
@@ -235,6 +359,16 @@ impl ConfigManager {
     /// Get cost tracking configuration
     pub fn get_cost_tracking_config(&self) -> &CostTrackingConfig {
         &self.config.cost_tracking
+    }
+
+    /// Get Twitter configuration
+    pub fn get_twitter_config(&self) -> &TwitterConfig {
+        &self.config.twitter
+    }
+
+    /// Get Base configuration
+    pub fn get_base_config(&self) -> &BaseConfig {
+        &self.config.base
     }
 
     /// Update daily spending limit

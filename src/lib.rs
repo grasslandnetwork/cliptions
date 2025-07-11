@@ -31,6 +31,9 @@ pub mod scoring;
 pub mod social;
 pub mod types;
 
+// New async round engine
+pub mod round_engine;
+
 // Python bindings module (conditional compilation)
 #[cfg(feature = "python")]
 pub mod python_bridge;

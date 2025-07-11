@@ -16,4 +16,19 @@ browser_use:
 cost_tracking:
   enabled: true
   sync_frequency_hours: 1
-  alert_threshold_percent: 80  # Alert when 80% of daily limit is reached 
+  alert_threshold_percent: 80  # Alert when 80% of daily limit is reached
+
+# Twitter API configuration
+twitter:
+  api_key: "YOUR_TWITTER_API_KEY_HERE"  # Replace with your Twitter API key
+  api_secret: "YOUR_TWITTER_API_SECRET_HERE"  # Replace with your Twitter API secret
+  access_token: "YOUR_TWITTER_ACCESS_TOKEN_HERE"  # Replace with your Twitter access token
+  access_token_secret: "YOUR_TWITTER_ACCESS_TOKEN_SECRET_HERE"  # Replace with your Twitter access token secret
+  validator_username: "YOUR_TWITTER_USERNAME_HERE"  # Replace with the validator's Twitter username (without @)
+
+# Base blockchain configuration
+base:
+  rpc_url: "https://mainnet.base.org"  # Base mainnet RPC URL
+  chain_id: 8453  # Base mainnet chain ID
+  gas_limit: 21000  # Default gas limit for transactions
+  gas_price_gwei: 1.0  # Default gas price in Gwei 
