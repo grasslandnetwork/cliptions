@@ -36,7 +36,7 @@
 
 - [ ] 4.0 Refactor and Setup Application Foundation
   - [ ] 4.1 **Refactor**: Rename `src/round.rs` to `src/round_processor.rs` and update all `use` statements.
-  - [ ] 4.2 **Update**: In `Cargo.toml`, ensure the `edition` is `"2024"`.
+  - [x] 4.2 **Update**: Postponed Rust 2024 edition upgrade; sticking with 2021 to avoid breaking changes.
   - [ ] 4.3 **Create**: The async module directory `src/round_engine` and the `state_machine.rs` file.
   - [ ] 4.4 **Update**: In `src/lib.rs`, declare the `round_engine` module.
   - [ ] 4.5 **Create**: The async binary entry point at `src/bin/cliptions_app.rs`.
