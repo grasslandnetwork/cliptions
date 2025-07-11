@@ -1,3 +1,11 @@
+[workspace]
+members = [
+    ".",
+    "crates/twitter-api",
+    "crates/base-api",
+]
+resolver = "2"
+
 [package]
 name = "cliptions-core"
 version = "0.1.0"
