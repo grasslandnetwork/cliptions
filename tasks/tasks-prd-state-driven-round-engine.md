@@ -35,7 +35,7 @@
   - [x] 3.6 **Refactor Binaries**: Refactor the `src/bin/twitter_*.rs` binaries to be simple wrappers around the new `twitter-api` library.
 
 - [ ] 4.0 Refactor and Setup Application Foundation
-  - [ ] 4.1 **Refactor**: Rename `src/round.rs` to `src/round_processor.rs` and update all `use` statements.
+  - [x] 4.1 **Refactor**: Rename `src/round.rs` to `src/round_processor.rs` and update all `use` statements.
   - [x] 4.2 **Update**: Postponed Rust 2024 edition upgrade; sticking with 2021 to avoid breaking changes.
   - [ ] 4.3 **Create**: The async module directory `src/round_engine` and the `state_machine.rs` file.
   - [ ] 4.4 **Update**: In `src/lib.rs`, declare the `round_engine` module.
