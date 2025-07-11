@@ -12,7 +12,7 @@ use serde_json;
 use crate::commitment::{CommitmentGenerator, CommitmentVerifier};
 use crate::scoring::{ScoringStrategy, ClipBatchStrategy, ScoreValidator, calculate_rankings, calculate_payouts};
 use crate::embedder::{MockEmbedder, ClipEmbedder, cosine_similarity};
-use crate::round::{RoundProcessor};
+use crate::round_processor::{RoundProcessor};
 use crate::error::{CliptionsError};
 
 /// Convert CliptionsError to PyErr for Python integration
