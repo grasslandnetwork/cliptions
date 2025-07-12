@@ -83,6 +83,7 @@ reqwest = { version = "0.12", features = ["blocking", "json", "multipart"] }
 
 # Async runtime for HTTP requests
 tokio = { version = "1.0", features = ["full"] }
+async-trait = "0.1"
 
 # Web server framework
 axum = "0.7"

@@ -23,6 +23,9 @@ pub enum CliptionsError {
     #[error("Round processing error: {0}")]
     Round(#[from] RoundError),
     
+    #[error("API error: {0}")]
+    ApiError(String),
+
     #[error("Validation error: {0}")]
     ValidationError(String),
     

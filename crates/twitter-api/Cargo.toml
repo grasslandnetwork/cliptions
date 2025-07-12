@@ -32,5 +32,11 @@ rand = "0.8"
 # Date/time handling
 chrono = { version = "0.4", features = ["serde"] }
 
+# Async traits
+async-trait = "0.1"
+
 # Path handling for image uploads  
 # (using std::path from standard library)
+
+[dev-dependencies]
+mockall = "0.12"

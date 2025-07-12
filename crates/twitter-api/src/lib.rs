@@ -16,6 +16,7 @@ use serde::{Deserialize, Serialize};
 use sha1::Sha1;
 use thiserror::Error;
 use urlencoding;
+use async_trait::async_trait;
 
 type HmacSha1 = Hmac<Sha1>;
 
@@ -121,6 +122,24 @@ pub struct MediaUploadResult {
     pub media_type: String,
 }
 
+/// Trait for a Twitter API client, enabling mocking for tests.
+#[async_trait]
+pub trait TwitterApi {
+    async fn post_tweet(&self, text: &str) -> Result<PostTweetResult>;
+    async fn post_tweet_with_image<P: AsRef<Path> + Send + 'static>(
+        &self,
+        text: &str,
+        image_path: P,
+    ) -> Result<PostTweetResult>;
+    async fn reply_to_tweet(&self, text: &str, reply_to_tweet_id: &str) -> Result<PostTweetResult>;
+    async fn get_latest_tweet(
+        &self,
+        username: &str,
+        exclude_retweets_replies: bool,
+    ) -> Result<Option<Tweet>>;
+    async fn search_replies(&self, tweet_id: &str, max_results: u32) -> Result<Vec<Tweet>>;
+}
+
 /// High-level Twitter API client
 #[derive(Debug, Clone)]
 pub struct TwitterClient {
@@ -128,23 +147,9 @@ pub struct TwitterClient {
     client: reqwest::Client,
 }
 
-impl TwitterClient {
-    /// Create a new Twitter client with the given configuration
-    pub fn new(config: TwitterConfig) -> Self {
-        Self {
-            config,
-            client: reqwest::Client::new(),
-        }
-    }
-
-    /// Create a new Twitter client from environment variables
-    pub fn from_env() -> Result<Self> {
-        let config = TwitterConfig::from_env()?;
-        Ok(Self::new(config))
-    }
-
-    /// Post a simple text tweet
-    pub async fn post_tweet(&self, text: &str) -> Result<PostTweetResult> {
+#[async_trait]
+impl TwitterApi for TwitterClient {
+    async fn post_tweet(&self, text: &str) -> Result<PostTweetResult> {
         let tweet_data = serde_json::json!({
             "text": text
         });
@@ -152,8 +157,7 @@ impl TwitterClient {
         self.post_tweet_internal(tweet_data).await
     }
 
-    /// Post a tweet with an attached image
-    pub async fn post_tweet_with_image<P: AsRef<Path>>(
+    async fn post_tweet_with_image<P: AsRef<Path> + Send + 'static>(
         &self,
         text: &str,
         image_path: P,
@@ -172,8 +176,7 @@ impl TwitterClient {
         self.post_tweet_internal(tweet_data).await
     }
 
-    /// Reply to a specific tweet
-    pub async fn reply_to_tweet(&self, text: &str, reply_to_tweet_id: &str) -> Result<PostTweetResult> {
+    async fn reply_to_tweet(&self, text: &str, reply_to_tweet_id: &str) -> Result<PostTweetResult> {
         let tweet_data = serde_json::json!({
             "text": text,
             "reply": {
@@ -184,8 +187,7 @@ impl TwitterClient {
         self.post_tweet_internal(tweet_data).await
     }
 
-    /// Get the latest tweet from a specific username
-    pub async fn get_latest_tweet(&self, username: &str, exclude_retweets_replies: bool) -> Result<Option<Tweet>> {
+    async fn get_latest_tweet(&self, username: &str, exclude_retweets_replies: bool) -> Result<Option<Tweet>> {
         // Step 1: Get user ID from username
         let user_id = self.get_user_id(username).await?;
 
@@ -213,8 +215,7 @@ impl TwitterClient {
         Ok(None)
     }
 
-    /// Search for replies to a specific tweet
-    pub async fn search_replies(&self, tweet_id: &str, max_results: u32) -> Result<Vec<Tweet>> {
+    async fn search_replies(&self, tweet_id: &str, max_results: u32) -> Result<Vec<Tweet>> {
         let query = format!("conversation_id:{} is:reply", tweet_id);
         let url = format!(
             "https://api.twitter.com/2/tweets/search/recent?query={}&max_results={}&tweet.fields=created_at,author_id,conversation_id,in_reply_to_user_id,referenced_tweets&user.fields=username,name&expansions=author_id",
@@ -250,15 +251,31 @@ impl TwitterClient {
                     break; // No more pages
                 }
             } else {
-                break; // No meta object
+                break;
             }
         }
 
         Ok(all_replies)
     }
+}
 
+impl TwitterClient {
+    /// Create a new Twitter client with the given configuration
+    pub fn new(config: TwitterConfig) -> Self {
+        Self {
+            config,
+            client: reqwest::Client::new(),
+        }
+    }
+
+    /// Create a new Twitter client from environment variables
+    pub fn from_env() -> Result<Self> {
+        let config = TwitterConfig::from_env()?;
+        Ok(Self::new(config))
+    }
+    
     /// Upload media file to Twitter and return media ID
-    pub async fn upload_media<P: AsRef<Path>>(&self, image_path: P) -> Result<MediaUploadResult> {
+    async fn upload_media<P: AsRef<Path>>(&self, image_path: P) -> Result<MediaUploadResult> {
         let path = image_path.as_ref();
         
         // Read the image file
@@ -332,7 +349,7 @@ impl TwitterClient {
         }
     }
 
-    /// Internal method to post tweet data
+    /// Internal method to handle all tweet posting logic
     async fn post_tweet_internal(&self, tweet_data: serde_json::Value) -> Result<PostTweetResult> {
         let url = "https://api.twitter.com/2/tweets";
         
@@ -586,5 +603,66 @@ impl TwitterClient {
             .collect();
 
         Ok(format!("OAuth {}", auth_params.join(", ")))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use mockall::mock;
+
+    mock! {
+        pub TwitterApiClient {
+            // This mirrors the TwitterApi trait
+        }
+
+        #[async_trait]
+        impl TwitterApi for TwitterApiClient {
+            async fn post_tweet(&self, text: &str) -> Result<PostTweetResult>;
+            async fn post_tweet_with_image<P: AsRef<Path> + Send + 'static>(
+                &self,
+                text: &str,
+                image_path: P,
+            ) -> Result<PostTweetResult>;
+            async fn reply_to_tweet(&self, text: &str, reply_to_tweet_id: &str) -> Result<PostTweetResult>;
+            async fn get_latest_tweet(
+                &self,
+                username: &str,
+                exclude_retweets_replies: bool,
+            ) -> Result<Option<Tweet>>;
+            async fn search_replies(&self, tweet_id: &str, max_results: u32) -> Result<Vec<Tweet>>;
+        }
+    }
+
+    #[tokio::test]
+    async fn test_mock_post_tweet() {
+        let mut mock_client = MockTwitterApiClient::new();
+
+        let tweet_text = "Hello from Cliptions!";
+        let expected_tweet = Tweet {
+            id: "12345".to_string(),
+            text: tweet_text.to_string(),
+            author_id: "test_user".to_string(),
+            created_at: Some(Utc::now()),
+            conversation_id: None,
+            public_metrics: None,
+            url: "https://twitter.com/i/status/12345".to_string(),
+        };
+
+        let expected_result = PostTweetResult {
+            tweet: expected_tweet.clone(),
+            success: true,
+        };
+
+        mock_client
+            .expect_post_tweet()
+            .withf(move |text| text == tweet_text)
+            .times(1)
+            .returning(move |_| Ok(expected_result.clone()));
+
+        let result = mock_client.post_tweet(tweet_text).await.unwrap();
+
+        assert!(result.success);
+        assert_eq!(result.tweet.id, "12345");
     }
 }
