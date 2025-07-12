@@ -24,7 +24,7 @@ twitter:
   api_secret: "YOUR_TWITTER_API_SECRET_HERE"  # Replace with your Twitter API secret
   access_token: "YOUR_TWITTER_ACCESS_TOKEN_HERE"  # Replace with your Twitter access token
   access_token_secret: "YOUR_TWITTER_ACCESS_TOKEN_SECRET_HERE"  # Replace with your Twitter access token secret
-  validator_username: "YOUR_TWITTER_USERNAME_HERE"  # Replace with the validator's Twitter username (without @)
+  validator_username: "THE_VALIDATORS_TWITTER_USERNAME_WITHOUT_@_HERE"  # Either "cliptions" for mainnet or "cliptions_test" for testnet
 
 # Base blockchain configuration
 base:
