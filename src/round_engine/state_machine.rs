@@ -93,9 +93,7 @@ pub struct Round<S> {
     pub id: String,
     /// Round creation timestamp
     pub created_at: DateTime<Utc>,
-    /// Target image path
-    pub target_image_path: Option<String>,
-    /// Target frame image path (revealed during reveals phase)
+    /// Target frame path (only available during reveals phase and after)
     pub target_frame_path: Option<String>,
     /// Commitment deadline
     pub commitment_deadline: Option<DateTime<Utc>>,
@@ -139,7 +137,6 @@ impl Round<Pending> {
         Self {
             id,
             created_at: Utc::now(),
-            target_image_path: None,
             target_frame_path: None,
             commitment_deadline: None,
             fee_deadline: None,
@@ -151,19 +148,16 @@ impl Round<Pending> {
     /// Start the round by opening commitments
     pub async fn open_commitments(
         mut self,
-        target_image_path: String,
         commitment_deadline: DateTime<Utc>,
     ) -> Result<Round<CommitmentsOpen>> {
-        // TODO: Post announcement tweet with target image
+        // TODO: Post announcement tweet
         // This will be implemented when TwitterClient is available
         
-        self.target_image_path = Some(target_image_path);
         self.commitment_deadline = Some(commitment_deadline);
         
         Ok(Round {
             id: self.id,
             created_at: self.created_at,
-            target_image_path: self.target_image_path,
             target_frame_path: self.target_frame_path,
             commitment_deadline: self.commitment_deadline,
             fee_deadline: self.fee_deadline,
@@ -188,7 +182,6 @@ impl Round<CommitmentsOpen> {
         Ok(Round {
             id: self.id,
             created_at: self.created_at,
-            target_image_path: self.target_image_path,
             target_frame_path: self.target_frame_path,
             commitment_deadline: self.commitment_deadline,
             fee_deadline: self.fee_deadline,
@@ -215,7 +208,6 @@ impl Round<FeeCollectionOpen> {
         Ok(Round {
             id: self.id,
             created_at: self.created_at,
-            target_image_path: self.target_image_path,
             target_frame_path: self.target_frame_path,
             commitment_deadline: self.commitment_deadline,
             fee_deadline: self.fee_deadline,
@@ -235,7 +227,6 @@ impl Round<RevealsOpen> {
         Ok(Round {
             id: self.id,
             created_at: self.created_at,
-            target_image_path: self.target_image_path,
             target_frame_path: self.target_frame_path,
             commitment_deadline: self.commitment_deadline,
             fee_deadline: self.fee_deadline,
@@ -255,7 +246,6 @@ impl Round<Payouts> {
         Ok(Round {
             id: self.id,
             created_at: self.created_at,
-            target_image_path: self.target_image_path,
             target_frame_path: self.target_frame_path,
             commitment_deadline: self.commitment_deadline,
             fee_deadline: self.fee_deadline,
@@ -280,7 +270,6 @@ impl<S> Round<S> {
         Round {
             id: self.id,
             created_at: self.created_at,
-            target_image_path: self.target_image_path,
             target_frame_path: self.target_frame_path,
             commitment_deadline: self.commitment_deadline,
             fee_deadline: self.fee_deadline,
@@ -321,13 +310,9 @@ mod tests {
         
         // Test state transitions
         let commitment_deadline = Utc::now() + Duration::hours(24);
-        let round = round.open_commitments(
-            "target_image.jpg".to_string(),
-            commitment_deadline,
-        ).await.unwrap();
+        let round = round.open_commitments(commitment_deadline).await.unwrap();
         
         assert_eq!(round.state_name(), "CommitmentsOpen");
-        assert!(round.target_image_path.is_some());
         
         let fee_deadline = Utc::now() + Duration::hours(48);
         let round = round.close_commitments(fee_deadline).await.unwrap();
