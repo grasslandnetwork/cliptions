@@ -57,10 +57,10 @@
   - [x] 7.4 **Validator Logic**: Ensure the flow correctly posts tweets, checks for fees, and triggers payouts.
   - [x] 7.5 **Miner Logic**: Ensure the flow correctly displays the round status and the URL for the local fee payment page.
 
-- [ ] 8.0 Integration Testing and Validation
+- [x] 8.0 Integration Testing and Validation
   - [x] 8.1 Create `#[tokio::test]` unit tests for the state machine transitions.
   - [x] 8.2 In `tests/round_engine_integration.rs`, mock the `TwitterClient`, `BaseClient`, and the web endpoint.
-  - [ ] 8.3 Write an integration test that drives the state machine through a full round lifecycle.
+  - [x] 8.3 Write an integration test that drives the state machine through a full round lifecycle.
 
 - [ ] 9.0 User-Facing Distribution and Documentation
   - [ ] 9.1 **Create Release Workflow**: Set up a GitHub Action to compile and package the `cliptions_app` binary.
