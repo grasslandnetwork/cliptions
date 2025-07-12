@@ -10,7 +10,8 @@ pub type TweetId = String;
 /// Represents announcement data for social media
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnnouncementData {
-    pub round_id: String,
+    pub round_id: u64,
+    pub state_name: String,
     pub target_time: String,
     pub hashtags: Vec<String>,
     pub message: String,
@@ -98,8 +99,8 @@ impl HashtagManager {
     pub fn new() -> Self {
         Self {
             standard_hashtags: vec![
-                "#Cliptions".to_string(),
-                "#PredictionMarket".to_string(),
+                "#cliptions".to_string(),
+                "#ai".to_string(),
                 "#CLIP".to_string(),
             ],
         }
@@ -112,12 +113,31 @@ impl HashtagManager {
         }
     }
 
-    /// Generate hashtags for a round
+    /// Generate hashtags for a round with state information
     pub fn generate_hashtags(&self, round_id: &str, custom_hashtags: Option<Vec<String>>) -> Vec<String> {
         let mut hashtags = self.standard_hashtags.clone();
         
         // Add round-specific hashtag
-        hashtags.push(format!("#{}", round_id));
+        hashtags.push(format!("#round{}", round_id));
+        
+        // Add custom hashtags if provided
+        if let Some(custom) = custom_hashtags {
+            hashtags.extend(custom);
+        }
+        
+        hashtags
+    }
+
+    /// Generate hashtags for a round with state information
+    pub fn generate_hashtags_with_state(&self, round_id: u64, state_name: &str, custom_hashtags: Option<Vec<String>>) -> Vec<String> {
+        let mut hashtags = self.standard_hashtags.clone();
+        
+        // Add round-specific hashtag
+        hashtags.push(format!("#round{}", round_id));
+        
+        // Add state-specific hashtag (lowercase with underscore)
+        let state_hashtag = format!("#state_{}", state_name.to_lowercase());
+        hashtags.push(state_hashtag);
         
         // Add custom hashtags if provided
         if let Some(custom) = custom_hashtags {
@@ -176,7 +196,11 @@ impl AnnouncementFormatter {
 
     /// Create a standard round announcement
     pub fn create_standard_announcement(&self, data: &AnnouncementData) -> String {
-        let hashtags = self.hashtag_manager.generate_hashtags(&data.round_id, None);
+        let hashtags = self.hashtag_manager.generate_hashtags_with_state(
+            data.round_id, 
+            &data.state_name, 
+            None
+        );
         let hashtag_string = self.hashtag_manager.format_hashtags(&hashtags);
         
         let prize_info = if let Some(prize) = data.prize_pool {
@@ -186,7 +210,7 @@ impl AnnouncementFormatter {
         };
         
         format!(
-            "🎯 {} is now live! Target will be revealed at {}.{} Submit your predictions below! {}",
+            "🎯 Round {} is now live! Target will be revealed at {}.{} Submit your predictions below! {}",
             data.round_id,
             data.target_time,
             prize_info,
@@ -196,7 +220,11 @@ impl AnnouncementFormatter {
 
     /// Create a custom announcement with provided message
     pub fn create_custom_announcement(&self, data: &AnnouncementData) -> String {
-        let hashtags = self.hashtag_manager.generate_hashtags(&data.round_id, Some(data.hashtags.clone()));
+        let hashtags = self.hashtag_manager.generate_hashtags_with_state(
+            data.round_id, 
+            &data.state_name, 
+            Some(data.hashtags.clone())
+        );
         let hashtag_string = self.hashtag_manager.format_hashtags(&hashtags);
         
         format!("{} {}", data.message, hashtag_string)
@@ -358,23 +386,83 @@ mod tests {
     fn test_generate_hashtags() {
         let hashtag_manager = HashtagManager::new();
         
-        let hashtags = hashtag_manager.generate_hashtags("round1", None);
-        assert!(hashtags.contains(&"#Cliptions".to_string()));
+        let hashtags = hashtag_manager.generate_hashtags("1", None);
+        assert!(hashtags.contains(&"#cliptions".to_string()));
         assert!(hashtags.contains(&"#round1".to_string()));
         
         let custom_hashtags = vec!["#custom".to_string()];
-        let hashtags = hashtag_manager.generate_hashtags("round2", Some(custom_hashtags));
+        let hashtags = hashtag_manager.generate_hashtags("2", Some(custom_hashtags));
         assert!(hashtags.contains(&"#custom".to_string()));
     }
 
     #[test]
     fn test_custom_hashtags() {
-        let custom_defaults = vec!["#CustomTag".to_string()];
+        let custom_defaults = vec!["#customtag".to_string()];
         let hashtag_manager = HashtagManager::with_defaults(custom_defaults);
         
-        let hashtags = hashtag_manager.generate_hashtags("round1", None);
-        assert!(hashtags.contains(&"#CustomTag".to_string()));
+        let hashtags = hashtag_manager.generate_hashtags("1", None);
+        assert!(hashtags.contains(&"#customtag".to_string()));
         assert!(hashtags.contains(&"#round1".to_string()));
+    }
+
+    #[test]
+    fn test_generate_hashtags_with_state() {
+        let hashtag_manager = HashtagManager::new();
+        
+        let hashtags = hashtag_manager.generate_hashtags_with_state(5, "CommitmentsOpen", None);
+        assert!(hashtags.contains(&"#cliptions".to_string()));
+        assert!(hashtags.contains(&"#round5".to_string()));
+        assert!(hashtags.contains(&"#state_commitmentsopen".to_string()));
+        assert!(hashtags.contains(&"#CLIP".to_string()));
+        
+        let custom_hashtags = vec!["#custom".to_string()];
+        let hashtags = hashtag_manager.generate_hashtags_with_state(3, "RevealsOpen", Some(custom_hashtags));
+        assert!(hashtags.contains(&"#custom".to_string()));
+        assert!(hashtags.contains(&"#round3".to_string()));
+        assert!(hashtags.contains(&"#state_revealsopen".to_string()));
+    }
+
+    #[test]
+    fn test_machine_readable_tweet_format() {
+        let formatter = AnnouncementFormatter::new();
+        
+        // Test CommitmentsOpen state
+        let data = AnnouncementData {
+            round_id: 42,
+            state_name: "CommitmentsOpen".to_string(),
+            target_time: "2024-01-01 12:00:00".to_string(),
+            hashtags: vec![],
+            message: "Commitments are now open!".to_string(),
+            prize_pool: None,
+        };
+        
+        let tweet = formatter.format_announcement(&data, true);
+        
+        // Verify machine-readable components
+        assert!(tweet.contains("#cliptions"), "Tweet should contain lowercase #cliptions");
+        assert!(tweet.contains("#round42"), "Tweet should contain round-specific hashtag");
+        assert!(tweet.contains("#state_commitmentsopen"), "Tweet should contain state hashtag");
+        assert!(tweet.contains("#CLIP"), "Tweet should contain uppercase #CLIP for model reference");
+        assert!(tweet.contains("#ai"), "Tweet should contain #ai hashtag");
+        assert!(!tweet.contains("#predictionmarket"), "Tweet should not contain removed hashtag");
+        
+        // Test RevealsOpen state with different round
+        let data2 = AnnouncementData {
+            round_id: 7,
+            state_name: "RevealsOpen".to_string(),
+            target_time: "2024-01-01 18:00:00".to_string(),
+            hashtags: vec![],
+            message: "Time to reveal!".to_string(),
+            prize_pool: Some(100.0),
+        };
+        
+        let tweet2 = formatter.format_announcement(&data2, true);
+        assert!(tweet2.contains("#round7"), "Tweet should contain correct round number");
+        assert!(tweet2.contains("#state_revealsopen"), "Tweet should contain correct state");
+        
+        // Verify hashtag format consistency
+        assert!(!tweet2.contains("#RevealsOpen"), "State hashtag should be lowercase");
+        assert!(!tweet2.contains("#Round7"), "Round hashtag should be lowercase");
     }
 
     #[test]
@@ -409,7 +497,8 @@ mod tests {
     fn test_create_standard_round_announcement() {
         let formatter = AnnouncementFormatter::new();
         let data = AnnouncementData {
-            round_id: "round1".to_string(),
+            round_id: 1,
+            state_name: "CommitmentsOpen".to_string(),
             target_time: "2024-01-01 12:00:00".to_string(),
             hashtags: vec![],
             message: "".to_string(),
@@ -417,18 +506,20 @@ mod tests {
         };
         
         let announcement = formatter.create_standard_announcement(&data);
-        assert!(announcement.contains("round1 is now live"));
+        assert!(announcement.contains("Round 1 is now live"));
         assert!(announcement.contains("2024-01-01 12:00:00"));
         assert!(announcement.contains("Prize pool: 100 TAO"));
-        assert!(announcement.contains("#Cliptions"));
+        assert!(announcement.contains("#cliptions"));
         assert!(announcement.contains("#round1"));
+        assert!(announcement.contains("#state_commitmentsopen"));
     }
 
     #[test]
     fn test_create_custom_round_announcement() {
         let formatter = AnnouncementFormatter::new();
         let data = AnnouncementData {
-            round_id: "round2".to_string(),
+            round_id: 2,
+            state_name: "RevealsOpen".to_string(),
             target_time: "2024-01-01 12:00:00".to_string(),
             hashtags: vec!["#custom".to_string()],
             message: "Custom announcement message".to_string(),
@@ -439,13 +530,15 @@ mod tests {
         assert!(announcement.contains("Custom announcement message"));
         assert!(announcement.contains("#custom"));
         assert!(announcement.contains("#round2"));
+        assert!(announcement.contains("#state_revealsopen"));
     }
 
     #[test]
     fn test_full_announcement_flow() {
         let formatter = AnnouncementFormatter::new();
         let data = AnnouncementData {
-            round_id: "round3".to_string(),
+            round_id: 3,
+            state_name: "Payouts".to_string(),
             target_time: "2024-01-01 12:00:00".to_string(),
             hashtags: vec![],
             message: "".to_string(),
@@ -454,11 +547,11 @@ mod tests {
         
         // Test standard announcement
         let standard = formatter.format_announcement(&data, false);
-        assert!(standard.contains("round3 is now live"));
+        assert!(standard.contains("Round 3 is now live"));
         
         // Test custom announcement (should fallback to standard when message is empty)
         let custom = formatter.format_announcement(&data, true);
-        assert!(custom.contains("round3 is now live"));
+        assert!(custom.contains("Round 3 is now live"));
     }
 
     #[test]
@@ -536,14 +629,15 @@ mod tests {
     #[test]
     fn test_announcement_data_validation() {
         let data = AnnouncementData {
-            round_id: "round1".to_string(),
+            round_id: 1,
+            state_name: "Finished".to_string(),
             target_time: "2024-01-01 12:00:00".to_string(),
             hashtags: vec!["#test".to_string()],
             message: "Test message".to_string(),
             prize_pool: Some(100.0),
         };
         
-        assert_eq!(data.round_id, "round1");
+        assert_eq!(data.round_id, 1);
         assert_eq!(data.target_time, "2024-01-01 12:00:00");
         assert_eq!(data.hashtags, vec!["#test"]);
         assert_eq!(data.message, "Test message");

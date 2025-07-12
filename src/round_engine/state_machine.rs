@@ -154,8 +154,10 @@ impl Round<Pending> {
         client: &T,
     ) -> Result<Round<CommitmentsOpen>> {
         let formatter = AnnouncementFormatter::new();
+        let round_id = self.id.parse::<u64>().unwrap_or(0); // Parse string ID to u64
         let announcement_data = AnnouncementData {
-            round_id: self.id.clone(),
+            round_id,
+            state_name: "CommitmentsOpen".to_string(),
             target_time: commitment_deadline.to_rfc3339(),
             hashtags: vec![],
             message: format!(
@@ -194,8 +196,10 @@ impl Round<CommitmentsOpen> {
         client: &T,
     ) -> Result<Round<FeeCollectionOpen>> {
         let formatter = AnnouncementFormatter::new();
+        let round_id = self.id.parse::<u64>().unwrap_or(0); // Parse string ID to u64
         let announcement_data = AnnouncementData {
-            round_id: self.id.clone(),
+            round_id,
+            state_name: "FeeCollectionOpen".to_string(),
             target_time: fee_deadline.to_rfc3339(),
             hashtags: vec![],
             message: format!(
@@ -235,8 +239,10 @@ impl Round<FeeCollectionOpen> {
         client: &T,
     ) -> Result<Round<RevealsOpen>> {
         let formatter = AnnouncementFormatter::new();
+        let round_id = self.id.parse::<u64>().unwrap_or(0); // Parse string ID to u64
         let announcement_data = AnnouncementData {
-            round_id: self.id.clone(),
+            round_id,
+            state_name: "RevealsOpen".to_string(),
             target_time: reveals_deadline.to_rfc3339(),
             hashtags: vec![],
             message: format!(
@@ -272,8 +278,10 @@ impl Round<RevealsOpen> {
     /// Close reveals and start payout processing
     pub async fn close_reveals<T: TwitterApi>(self, client: &T) -> Result<Round<Payouts>> {
         let formatter = AnnouncementFormatter::new();
+        let round_id = self.id.parse::<u64>().unwrap_or(0); // Parse string ID to u64
         let announcement_data = AnnouncementData {
-            round_id: self.id.clone(),
+            round_id,
+            state_name: "Payouts".to_string(),
             target_time: "".to_string(),
             hashtags: vec![],
             message: "Reveals are now closed. Calculating scores...".to_string(),
@@ -303,8 +311,10 @@ impl Round<Payouts> {
     /// Process payouts and finish the round
     pub async fn process_payouts<T: TwitterApi>(self, client: &T) -> Result<Round<Finished>> {
         let formatter = AnnouncementFormatter::new();
+        let round_id = self.id.parse::<u64>().unwrap_or(0); // Parse string ID to u64
         let announcement_data = AnnouncementData {
-            round_id: self.id.clone(),
+            round_id,
+            state_name: "Finished".to_string(),
             target_time: "".to_string(),
             hashtags: vec![],
             message: "Round finished! Payouts have been processed.".to_string(),
