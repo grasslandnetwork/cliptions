@@ -107,6 +107,7 @@ twitter-api = { path = "crates/twitter-api" }
 rstest = "0.21"
 proptest = "1.0"
 tempfile = "3.0"
+mockall = "0.13"
 
 # Benchmarking
 criterion = "0.5"
