@@ -45,6 +45,7 @@ regex = "1.10"
 
 # Date/time handling
 chrono = { version = "0.4", features = ["serde"] }
+chrono-tz = "0.8"
 
 # Error handling
 thiserror = "1.0"

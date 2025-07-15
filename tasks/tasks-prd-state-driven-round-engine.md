@@ -45,22 +45,38 @@
   - [x] 5.1 In `src/config.rs`, add `TwitterConfig` and `BaseConfig` structs to `CliptionsConfig`.
   - [x] 5.2 Update `config/llm.yaml.template` with placeholders for the new `twitter` and `base` sections.
 
-- [x] 6.0 Implement Async State Machine with API Libraries
-  - [x] 6.1 In `src/round_engine/state_machine.rs`, define the granular state markers: `Pending`, `CommitmentsOpen`, `FeeCollectionOpen`, `FeeCollectionClosed`, `RevealsOpen`, etc.
-  - [x] 6.2 Implement the generic async `Round<S>` struct.
-  - [x] 6.3 Implement async state transition methods that call the `TwitterClient` and `BaseClient` as needed.
+- [ ] 6.0 Implement Async State Machine with API Libraries
+  - [x] 6.1 In `src/round_engine/state_machine.rs`, define the granular state markers.
+  - [x] 6.2 Implement the generic async `Round<S>` struct. This struct MUST store the `round_description`, `livestream_url`, and `target_timestamp`. It will store the `target_frame_path` once it has been captured.
+  - [ ] 6.3 Implement async state transition methods that call the `TwitterClient`.
+    - [ ] 6.3.1 Implement `Round<Pending>::open_commitments(self, client: &TwitterClient) -> Result<Round<CommitmentsOpen>>`. This method will post a text-only tweet announcing the round, including the description, livestream URL, and target timestamp.
+    - [ ] 6.3.2 Implement `Round<CommitmentsOpen>::close_commitments(self, client: &TwitterClient) -> Result<Round<CommitmentsClosed>>`. This method posts a tweet announcing commitments are closed.
+    - [ ] 6.3.3 Implement `Round<CommitmentsClosed>::capture_frame(self, target_frame_path: PathBuf) -> Result<Round<FrameCaptured>>`. This is an internal state transition that does not tweet, it simply updates the state to include the path to the now-known frame.
+    - [ ] 6.3.4 Implement `Round<FrameCaptured>::open_reveals(self, client: &TwitterClient) -> Result<Round<RevealsOpen>>`. This method MUST post a tweet containing the `target_frame` image.
 
-- [x] 7.0 Implement Role-Based Application Logic
+- [ ] 7.0 Implement Role-Based Application Logic
   - [x] 7.1 In `src/bin/cliptions_app.rs`, parse the `--role` argument.
-  - [x] 7.2 Initialize the `ConfigManager`, `TwitterClient`, and `BaseClient`.
-  - [x] 7.3 Implement the main async application loop that polls for state and drives the round forward.
-  - [x] 7.4 **Validator Logic**: Ensure the flow correctly posts tweets, checks for fees, and triggers payouts.
-  - [x] 7.5 **Miner Logic**: Ensure the flow correctly displays the round status and the URL for the local fee payment page.
+  - [ ] 7.2 Initialize `ConfigManager` and create `TwitterClient`.
+  - [ ] 7.3 Implement main async application loop for both roles.
+  - [ ] 7.4 **Validator Logic**: Implement the `run_validator_loop`.
+    - [ ] 7.4.1 Check for the latest tweet from the validator to see if a round is in progress.
+    - [ ] 7.4.2 If no round is active, prompt the user to start a new round by providing: 1) a text description/theme, 2) the `livestream_url`, and 3) the `target_timestamp`.
+    - [ ] 7.4.3 On confirmation, call `Round<Pending>::open_commitments` to announce the new round.
+    - [ ] 7.4.4 When the round is in `CommitmentsClosed` state and the `target_timestamp` has been reached, the application MUST prompt the validator: "The target time has arrived. Please capture the frame and provide the local file path."
+    - [ ] 7.4.5 Once the validator provides the path, the app will call `capture_frame` to update its internal state. It will then immediately prompt the user to confirm opening the reveal phase.
+    - [ ] 7.4.6 On confirmation, the app calls `open_reveals` to publish the `target_frame` on Twitter.
+  - [ ] 7.5 **Miner Logic**: Implement the `run_miner_loop`.
+    - [ ] 7.5.1 Poll the validator's Twitter account.
+    - [ ] 7.5.2 Parse the tweets to determine the round state. The announcement tweet will contain the `livestream_url` and `target_timestamp`.
+    - [ ] 7.5.3 When the miner sees the `RevealsOpen` state tweet, it will display the `target_frame` image that was posted.
 
-- [x] 8.0 Integration Testing and Validation
-  - [x] 8.1 Create `#[tokio::test]` unit tests for the state machine transitions.
-  - [x] 8.2 In `tests/round_engine_integration.rs`, mock the `TwitterClient`, `BaseClient`, and the web endpoint.
-  - [x] 8.3 Write an integration test that drives the state machine through a full round lifecycle.
+- [ ] 8.0 Integration Testing and Validation
+  - [ ] 8.1 Create `#[tokio::test]` unit tests for the new state transitions (`capture_frame`, etc.).
+  - [ ] 8.2 In `tests/round_engine_integration.rs`, write a full end-to-end test.
+    - [ ] 8.2.1 The test simulates a validator starting a round by posting a mock tweet with a `livestream_url` and `target_timestamp`.
+    - [ ] 8.2.2 The test simulates the time passing and the validator being prompted for a frame path.
+    - [ ] 8.2.3 The test must verify that when the validator provides the path, the `open_reveals` method is called on the mock `TwitterClient` with the correct image path.
+    - [ ] 8.2.4 The test simulates a miner seeing the `RevealsOpen` tweet and correctly parsing the state.
 
 - [ ] 9.0 User-Facing Distribution and Documentation
   - [ ] 9.1 **Create Release Workflow**: Set up a GitHub Action to compile and package the `cliptions_app` binary.

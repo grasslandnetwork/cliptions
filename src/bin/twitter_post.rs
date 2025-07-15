@@ -1,20 +1,40 @@
-//! Simple Twitter API posting test script
+//! Simple Twitter posting tool for Cliptions [[memory:2899338]]
 //! 
-//! Tests posting tweets using Twitter API v2 with OAuth 1.0a authentication
+//! This tool allows posting tweets with text, replies, and image attachments.
+//! It supports both direct posting and announcement formatting.
 //! Supports text tweets, replies, and image attachments
 
+use clap::Parser;
 use std::env;
 use std::path::PathBuf;
-use clap::Parser;
-use twitter_api::{TwitterClient, TwitterError};
+use twitter_api::{TwitterApi, TwitterClient, TwitterConfig, TwitterError};
+use chrono::{Utc, Duration as ChronoDuration};
+use chrono_tz;
+use cliptions_core::social::AnnouncementFormatter;
 
 #[derive(Parser)]
 #[command(name = "twitter_post")]
 #[command(about = "Post a tweet using Twitter API with optional image attachment")]
 struct Args {
-    /// Tweet text to post
+    /// Tweet text to post (optional - will be generated if state parameters provided)
     #[arg(short, long)]
-    text: String,
+    text: Option<String>,
+    
+    /// State name (e.g., commitmentsopen)
+    #[arg(long)]
+    state: Option<String>,
+    
+    /// Round number
+    #[arg(long)]
+    round: Option<u64>,
+    
+    /// Livestream URL
+    #[arg(long)]
+    livestream: Option<String>,
+    
+    /// Target time in hours from now
+    #[arg(long)]
+    target_time: Option<u64>,
     
     /// Reply to tweet ID (optional)
     #[arg(long)]
@@ -33,6 +53,42 @@ struct Args {
 async fn main() {
     let args = Args::parse();
     
+         // Get tweet text either from direct input or generate it from state parameters
+     let tweet_text = if let (Some(state), Some(round), Some(livestream), Some(hours)) = 
+         (&args.state, args.round, &args.livestream, args.target_time) {
+         // Calculate target time (hours from now)
+         let target_time = Utc::now() + ChronoDuration::hours(hours as i64);
+         
+         // Format target time as "2025-04-01 | 16:30:57 | EST"
+         let eastern = chrono_tz::US::Eastern;
+         let target_time_eastern = target_time.with_timezone(&eastern);
+         let formatted_target_time = format!(
+             "{} | {} | EST",
+             target_time_eastern.format("%Y-%m-%d"),
+             target_time_eastern.format("%H:%M:%S")
+         );
+         
+         // Create announcement data
+         let announcement_data = cliptions_core::social::AnnouncementData {
+             round_id: round,
+             state_name: state.to_string(),
+             target_time: formatted_target_time,
+             hashtags: vec![], // The formatter will add standard hashtags
+             message: String::new(), // Not used for commitment announcements
+             prize_pool: None,
+             livestream_url: Some(livestream.to_string()),
+         };
+         
+         // Format the announcement
+         let formatter = AnnouncementFormatter::new();
+         formatter.create_commitment_announcement(&announcement_data)
+     } else {
+         args.text.ok_or_else(|| {
+             eprintln!("Either --text or all of --state, --round, --livestream, and --target-time must be provided");
+             std::process::exit(1);
+         }).unwrap()
+     };
+
     if args.verbose {
         println!("Starting Twitter API posting test...");
     }
@@ -49,14 +105,14 @@ async fn main() {
     
     if args.verbose {
         println!("Credentials loaded from environment");
-        println!("Tweet text: {}", args.text);
+        println!("Tweet text: {}", tweet_text);
         if let Some(ref image_path) = args.image {
             println!("Image to upload: {}", image_path.display());
         }
     }
     
     // Create TwitterClient
-    let config = twitter_api::TwitterConfig {
+    let config = TwitterConfig {
         api_key,
         api_secret,
         access_token,
@@ -64,8 +120,11 @@ async fn main() {
     };
     let client = TwitterClient::new(config);
     
-    // Post the tweet
-    let result = if let Some(image_path) = &args.image {
+    // Clone image path for use in async context
+    let image_path = args.image.clone();
+    
+    // Post the tweet using the existing logic
+    let result = if let Some(image_path) = image_path {
         if args.verbose {
             println!("🖼️ Posting tweet with image...");
         }
@@ -73,21 +132,21 @@ async fn main() {
                 if let Some(_reply_id) = &args.reply_to {
             // Reply with image - TwitterClient doesn't support reply with image yet
             // For now, we'll post with image (without reply functionality)
-            let reply_text = format!("{}", args.text);
-            client.post_tweet_with_image(&reply_text, image_path).await
+            let reply_text = format!("{}", tweet_text);
+            client.post_tweet_with_image(&reply_text, image_path.clone()).await
         } else {
-            client.post_tweet_with_image(&args.text, image_path).await
+            client.post_tweet_with_image(&tweet_text, image_path).await
         }
     } else if let Some(reply_id) = &args.reply_to {
         if args.verbose {
             println!("💬 Posting reply tweet...");
         }
-        client.reply_to_tweet(&args.text, reply_id).await
+        client.reply_to_tweet(&tweet_text, reply_id).await
     } else {
         if args.verbose {
             println!("📝 Posting text tweet...");
         }
-        client.post_tweet(&args.text).await
+        client.post_tweet(&tweet_text).await
     };
     
     match result {

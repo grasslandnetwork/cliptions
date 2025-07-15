@@ -4,7 +4,7 @@
 
 use std::env;
 use clap::Parser;
-use twitter_api::{TwitterClient, TwitterError};
+use twitter_api::{TwitterApi, TwitterClient, TwitterError};
 
 #[derive(Parser)]
 #[command(name = "twitter_search_replies")]

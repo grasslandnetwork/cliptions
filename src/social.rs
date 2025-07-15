@@ -16,6 +16,7 @@ pub struct AnnouncementData {
     pub hashtags: Vec<String>,
     pub message: String,
     pub prize_pool: Option<f64>,
+    pub livestream_url: Option<String>, // Add this field
 }
 
 /// Represents a social media task execution context
@@ -238,6 +239,37 @@ impl AnnouncementFormatter {
             self.create_standard_announcement(data)
         }
     }
+
+    /// Create a commitment phase announcement
+    pub fn create_commitment_announcement(&self, data: &AnnouncementData) -> String {
+        // Generate hashtags with commitment-specific format
+        let mut hashtags = vec![
+            "#cliptions".to_string(),
+            "#ai".to_string(),
+            "#CLIP".to_string(),
+            format!("#round{}", data.round_id),
+            format!("#{}", data.state_name.to_lowercase()),
+        ];
+        
+        // Add any custom hashtags
+        hashtags.extend(data.hashtags.clone());
+        
+        let hashtag_string = self.hashtag_manager.format_hashtags(&hashtags);
+
+        let instructions = format!(
+            "ROUND {} - Commitment Phase\n\
+            livestream: {}\n\n\
+            How To Play:\n\
+            1. Generate commitment hash\n\
+            2. Reply BEFORE: {}\n\n\
+            Reply: Commit: [hash] Wallet: [address]",
+            data.round_id,
+            data.livestream_url.as_deref().unwrap_or(""),
+            data.target_time
+        );
+
+        format!("{}\n\n{}", hashtag_string, instructions)
+    }
 }
 
 impl Default for AnnouncementFormatter {
@@ -434,6 +466,7 @@ mod tests {
             hashtags: vec![],
             message: "Commitments are now open!".to_string(),
             prize_pool: None,
+            livestream_url: Some("https://example.com/livestream".to_string()),
         };
         
         let tweet = formatter.format_announcement(&data, true);
@@ -454,6 +487,7 @@ mod tests {
             hashtags: vec![],
             message: "Time to reveal!".to_string(),
             prize_pool: Some(100.0),
+            livestream_url: Some("https://example.com/livestream2".to_string()),
         };
         
         let tweet2 = formatter.format_announcement(&data2, true);
@@ -503,6 +537,7 @@ mod tests {
             hashtags: vec![],
             message: "".to_string(),
             prize_pool: Some(100.0),
+            livestream_url: None,
         };
         
         let announcement = formatter.create_standard_announcement(&data);
@@ -524,6 +559,7 @@ mod tests {
             hashtags: vec!["#custom".to_string()],
             message: "Custom announcement message".to_string(),
             prize_pool: None,
+            livestream_url: None,
         };
         
         let announcement = formatter.create_custom_announcement(&data);
@@ -543,6 +579,7 @@ mod tests {
             hashtags: vec![],
             message: "".to_string(),
             prize_pool: Some(50.0),
+            livestream_url: None,
         };
         
         // Test standard announcement
@@ -635,6 +672,7 @@ mod tests {
             hashtags: vec!["#test".to_string()],
             message: "Test message".to_string(),
             prize_pool: Some(100.0),
+            livestream_url: None,
         };
         
         assert_eq!(data.round_id, 1);
