@@ -136,8 +136,8 @@ impl HashtagManager {
         // Add round-specific hashtag
         hashtags.push(format!("#round{}", round_id));
         
-        // Add state-specific hashtag (lowercase with underscore)
-        let state_hashtag = format!("#state_{}", state_name.to_lowercase());
+        // Add state-specific hashtag (lowercase, no prefix)
+        let state_hashtag = format!("#{}", state_name.to_lowercase());
         hashtags.push(state_hashtag);
         
         // Add custom hashtags if provided
@@ -444,14 +444,14 @@ mod tests {
         let hashtags = hashtag_manager.generate_hashtags_with_state(5, "CommitmentsOpen", None);
         assert!(hashtags.contains(&"#cliptions".to_string()));
         assert!(hashtags.contains(&"#round5".to_string()));
-        assert!(hashtags.contains(&"#state_commitmentsopen".to_string()));
+        assert!(hashtags.contains(&"#commitmentsopen".to_string()));
         assert!(hashtags.contains(&"#CLIP".to_string()));
         
         let custom_hashtags = vec!["#custom".to_string()];
         let hashtags = hashtag_manager.generate_hashtags_with_state(3, "RevealsOpen", Some(custom_hashtags));
         assert!(hashtags.contains(&"#custom".to_string()));
         assert!(hashtags.contains(&"#round3".to_string()));
-        assert!(hashtags.contains(&"#state_revealsopen".to_string()));
+        assert!(hashtags.contains(&"#revealsopen".to_string()));
     }
 
     #[test]
@@ -474,7 +474,7 @@ mod tests {
         // Verify machine-readable components
         assert!(tweet.contains("#cliptions"), "Tweet should contain lowercase #cliptions");
         assert!(tweet.contains("#round42"), "Tweet should contain round-specific hashtag");
-        assert!(tweet.contains("#state_commitmentsopen"), "Tweet should contain state hashtag");
+        assert!(tweet.contains("#commitmentsopen"), "Tweet should contain state hashtag");
         assert!(tweet.contains("#CLIP"), "Tweet should contain uppercase #CLIP for model reference");
         assert!(tweet.contains("#ai"), "Tweet should contain #ai hashtag");
         assert!(!tweet.contains("#predictionmarket"), "Tweet should not contain removed hashtag");
@@ -492,7 +492,7 @@ mod tests {
         
         let tweet2 = formatter.format_announcement(&data2, true);
         assert!(tweet2.contains("#round7"), "Tweet should contain correct round number");
-        assert!(tweet2.contains("#state_revealsopen"), "Tweet should contain correct state");
+        assert!(tweet2.contains("#revealsopen"), "Tweet should contain correct state");
         
         // Verify hashtag format consistency
         assert!(!tweet2.contains("#RevealsOpen"), "State hashtag should be lowercase");
@@ -546,7 +546,7 @@ mod tests {
         assert!(announcement.contains("Prize pool: 100 TAO"));
         assert!(announcement.contains("#cliptions"));
         assert!(announcement.contains("#round1"));
-        assert!(announcement.contains("#state_commitmentsopen"));
+        assert!(announcement.contains("#commitmentsopen"));
     }
 
     #[test]
@@ -566,7 +566,7 @@ mod tests {
         assert!(announcement.contains("Custom announcement message"));
         assert!(announcement.contains("#custom"));
         assert!(announcement.contains("#round2"));
-        assert!(announcement.contains("#state_revealsopen"));
+        assert!(announcement.contains("#revealsopen"));
     }
 
     #[test]

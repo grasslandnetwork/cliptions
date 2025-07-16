@@ -40,7 +40,7 @@ async fn main() {
         .expect("Failed to load config file");
     let config = config_manager.get_config().clone();
     let twitter = &config.twitter;
-    println!("\u2705 Loaded config from: {}", &args.config);
+    println!("\u{2705} Loaded config from: {}", &args.config);
     // Create TwitterClient
     let config = twitter_api::TwitterConfig {
         api_key: twitter.api_key.clone(),

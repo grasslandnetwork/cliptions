@@ -99,12 +99,37 @@ pub struct Tweet {
     pub url: String,
 }
 
+impl Default for Tweet {
+    fn default() -> Self {
+        Self {
+            id: String::new(),
+            text: String::new(),
+            author_id: String::new(),
+            created_at: None,
+            conversation_id: None,
+            public_metrics: None,
+            url: String::new(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PublicMetrics {
     pub retweet_count: u32,
     pub reply_count: u32,
     pub like_count: u32,
     pub quote_count: u32,
+}
+
+impl Default for PublicMetrics {
+    fn default() -> Self {
+        Self {
+            retweet_count: 0,
+            reply_count: 0,
+            like_count: 0,
+            quote_count: 0,
+        }
+    }
 }
 
 /// Result from posting a tweet

@@ -11,6 +11,7 @@ use chrono::{DateTime, Utc};
 use crate::error::{CliptionsError, Result};
 use crate::social::{AnnouncementFormatter, AnnouncementData};
 use twitter_api::TwitterApi;
+use std::path::Path;
 
 // --- State Markers ---
 
@@ -351,6 +352,8 @@ mod tests {
     use twitter_api::{PostTweetResult, Tweet, TwitterError};
     use async_trait::async_trait;
     use std::sync::{Arc, Mutex};
+    use chrono::Utc;
+    use std::path::PathBuf;
 
     /// A mock Twitter client that records calls for verification.
     #[derive(Clone)]
@@ -428,7 +431,7 @@ mod tests {
         let frame_path = PathBuf::from("/tmp/test_frame.jpg");
         let round = round.capture_frame(frame_path.clone()).unwrap();
         assert_eq!(round.state_name(), "FrameCaptured");
-        assert_eq!(round.target_frame_path.unwrap(), frame_path);
+        assert_eq!(round.target_frame_path.clone().unwrap(), frame_path);
         
         // 4. FrameCaptured -> RevealsOpen
         let round = round.open_reveals(reveals_deadline, &client).await.unwrap();

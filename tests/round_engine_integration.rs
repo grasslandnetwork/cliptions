@@ -104,12 +104,17 @@ async fn test_full_round_lifecycle_with_mocks() {
     // Create timestamps for the test
     let now = Utc::now();
     let commitment_deadline = now + Duration::hours(24);
-    let fee_deadline = now + Duration::hours(48);
     let reveals_deadline = now + Duration::hours(72);
-    let target_frame_path = "test_images/target_frame.jpg".to_string();
+    let target_frame_path: std::path::PathBuf = "test_images/target_frame.jpg".into();
 
     // Start with a pending round
-    let pending_round = Round::<Pending>::new("integration-test-round".to_string());
+    let now = Utc::now();
+    let pending_round = Round::<Pending>::new(
+        "integration-test-round".to_string(),
+        "Integration Test Round".to_string(),
+        "http://example.com/livestream".to_string(),
+        now + Duration::hours(1)
+    );
     assert_eq!(pending_round.state_name(), "Pending");
 
     // 1. Pending -> CommitmentsOpen
@@ -123,23 +128,22 @@ async fn test_full_round_lifecycle_with_mocks() {
     assert!(commitments_open_round.target_frame_path.is_none());
 
     // 2. CommitmentsOpen -> FeeCollectionOpen
-    let fee_collection_open_round = commitments_open_round
-        .close_commitments(fee_deadline, &mock_twitter_client)
+    let commitments_closed_round = commitments_open_round
+        .close_commitments(&mock_twitter_client)
         .await
-        .expect("Failed to transition to FeeCollectionOpen");
-    
-    assert_eq!(fee_collection_open_round.state_name(), "FeeCollectionOpen");
-    assert_eq!(fee_collection_open_round.fee_deadline, Some(fee_deadline));
+        .expect("Failed to transition to CommitmentsClosed");
 
-    // 3. FeeCollectionOpen -> RevealsOpen
-    let reveals_open_round = fee_collection_open_round
-        .close_fee_collection(target_frame_path.clone(), reveals_deadline, &mock_twitter_client)
-        .await
-        .expect("Failed to transition to RevealsOpen");
-    
+    // 3. CommitmentsClosed -> FrameCaptured -> RevealsOpen
+    // Simulate time passing for the check inside capture_frame
+    let mut commitments_closed_round = commitments_closed_round;
+    commitments_closed_round.target_timestamp = Utc::now() - Duration::seconds(1);
+    let frame_captured_round = commitments_closed_round.capture_frame(target_frame_path.clone()).unwrap();
+    assert_eq!(frame_captured_round.state_name(), "FrameCaptured");
+    assert_eq!(frame_captured_round.target_frame_path.clone().unwrap(), target_frame_path.clone());
+    let reveals_open_round = frame_captured_round.open_reveals(reveals_deadline, &mock_twitter_client).await.unwrap();
     assert_eq!(reveals_open_round.state_name(), "RevealsOpen");
     assert_eq!(reveals_open_round.reveals_deadline, Some(reveals_deadline));
-    assert_eq!(reveals_open_round.target_frame_path, Some(target_frame_path));
+    assert_eq!(reveals_open_round.target_frame_path, Some(target_frame_path.clone()));
 
     // 4. RevealsOpen -> Payouts
     let payouts_round = reveals_open_round
@@ -172,7 +176,7 @@ async fn test_round_lifecycle_with_machine_readable_tweets() {
         .withf(|text| {
             text.contains("#cliptions") &&
             text.contains("#round") &&
-            text.contains("#state_commitmentsopen") &&
+            text.contains("#commitmentsopen") &&
             text.contains("#CLIP") &&
             !text.contains("#predictionmarket")
         })
@@ -185,7 +189,7 @@ async fn test_round_lifecycle_with_machine_readable_tweets() {
     mock_twitter_client
         .expect_post_tweet()
         .withf(|text| {
-            text.contains("#state_feecollectionopen")
+            text.contains("#feecollectionopen")
         })
         .times(1)
         .returning(|text| {
@@ -196,7 +200,7 @@ async fn test_round_lifecycle_with_machine_readable_tweets() {
     mock_twitter_client
         .expect_post_tweet_with_image()
         .withf(|text, _| {
-            text.contains("#state_revealsopen")
+            text.contains("#revealsopen")
         })
         .times(1)
         .returning(|text, _: std::path::PathBuf| {
@@ -207,7 +211,7 @@ async fn test_round_lifecycle_with_machine_readable_tweets() {
     mock_twitter_client
         .expect_post_tweet()
         .withf(|text| {
-            text.contains("#state_payouts")
+            text.contains("#payouts")
         })
         .times(1)
         .returning(|text| {
@@ -218,7 +222,7 @@ async fn test_round_lifecycle_with_machine_readable_tweets() {
     mock_twitter_client
         .expect_post_tweet()
         .withf(|text| {
-            text.contains("#state_finished")
+            text.contains("#finished")
         })
         .times(1)
         .returning(|text| {
@@ -228,22 +232,29 @@ async fn test_round_lifecycle_with_machine_readable_tweets() {
 
     // Run through the lifecycle focusing on tweet content verification
     let now = Utc::now();
-    let pending_round = Round::<Pending>::new("42".to_string()); // Use numeric string for round ID
+    let pending_round = Round::<Pending>::new(
+        "42".to_string(),
+        "Test Round 42".to_string(),
+        "http://example.com/livestream".to_string(),
+        now + Duration::hours(1)
+    ); // Use numeric string for round ID
 
     let commitments_round = pending_round
         .open_commitments(now + Duration::hours(24), &mock_twitter_client)
         .await
         .expect("Failed to open commitments");
 
-    let fee_round = commitments_round
-        .close_commitments(now + Duration::hours(48), &mock_twitter_client)
+    let commitments_closed_round = commitments_round
+        .close_commitments(&mock_twitter_client)
         .await
         .expect("Failed to close commitments");
 
-    let reveals_round = fee_round
-        .close_fee_collection("test_frame.jpg".to_string(), now + Duration::hours(72), &mock_twitter_client)
-        .await
-        .expect("Failed to close fee collection");
+    // 3. CommitmentsClosed -> FrameCaptured -> RevealsOpen
+    let mut commitments_closed_round = commitments_closed_round;
+    commitments_closed_round.target_timestamp = now - Duration::seconds(1);
+    let test_frame_path: std::path::PathBuf = "test_frame.jpg".into();
+    let frame_captured_round = commitments_closed_round.capture_frame(test_frame_path.clone()).unwrap();
+    let reveals_round = frame_captured_round.open_reveals(now + Duration::hours(72), &mock_twitter_client).await.unwrap();
 
     let payouts_round = reveals_round
         .close_reveals(&mock_twitter_client)
