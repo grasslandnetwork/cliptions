@@ -11,7 +11,7 @@ use chrono::{Utc, Duration as ChronoDuration};
 use chrono_tz;
 use cliptions_core::social::AnnouncementFormatter;
 use cliptions_core::config::ConfigManager;
-use cliptions_core::twitter_utils::post_tweet_or_reply;
+use cliptions_core::twitter_utils::post_tweet_flexible;
 
 #[derive(Parser)]
 #[command(name = "twitter_post")]
@@ -72,9 +72,9 @@ async fn main() {
         println!("  access_token: {}...", &twitter.access_token.chars().take(4).collect::<String>());
         println!("  access_token_secret: {}...", &twitter.access_token_secret.chars().take(4).collect::<String>());
         println!("}}\n");
-        println!("[DEBUG] Calling post_tweet_or_reply from twitter_post.rs");
-        println!("  tweet_text: {}", tweet_text);
+        println!("[DEBUG] Calling post_tweet_flexible from twitter_post.rs");
         println!("  reply_to: {:?}", args.reply_to);
+        println!("  image: {:?}", args.image);
     }
     
     // Get tweet text either from direct input or generate it from state parameters
@@ -133,10 +133,11 @@ async fn main() {
     let image_path = args.image.clone();
     
     // Post the tweet using the shared utility function
-    let result = post_tweet_or_reply(
+    let result = post_tweet_flexible(
         &client,
         &tweet_text,
         args.reply_to.as_deref(),
+        args.image.clone(), // Pass owned PathBuf instead of &Path
     ).await;
     
     match result {

@@ -157,6 +157,12 @@ pub trait TwitterApi {
         image_path: P,
     ) -> Result<PostTweetResult>;
     async fn reply_to_tweet(&self, text: &str, reply_to_tweet_id: &str) -> Result<PostTweetResult>;
+    async fn reply_to_tweet_with_image<P: AsRef<Path> + Send + 'static>(
+        &self,
+        text: &str,
+        reply_to_tweet_id: &str,
+        image_path: P,
+    ) -> Result<PostTweetResult>;
     async fn get_latest_tweet(
         &self,
         username: &str,
@@ -209,6 +215,25 @@ impl TwitterApi for TwitterClient {
             }
         });
 
+        self.post_tweet_internal(tweet_data).await
+    }
+
+    async fn reply_to_tweet_with_image<P: AsRef<Path> + Send + 'static>(
+        &self,
+        text: &str,
+        reply_to_tweet_id: &str,
+        image_path: P,
+    ) -> Result<PostTweetResult> {
+        let media_result = self.upload_media(image_path).await?;
+        let tweet_data = serde_json::json!({
+            "text": text,
+            "reply": {
+                "in_reply_to_tweet_id": reply_to_tweet_id
+            },
+            "media": {
+                "media_ids": [media_result.media_id]
+            }
+        });
         self.post_tweet_internal(tweet_data).await
     }
 
@@ -663,6 +688,12 @@ mod tests {
                 image_path: P,
             ) -> Result<PostTweetResult>;
             async fn reply_to_tweet(&self, text: &str, reply_to_tweet_id: &str) -> Result<PostTweetResult>;
+            async fn reply_to_tweet_with_image<P: AsRef<Path> + Send + 'static>(
+                &self,
+                text: &str,
+                reply_to_tweet_id: &str,
+                image_path: P,
+            ) -> Result<PostTweetResult>;
             async fn get_latest_tweet(
                 &self,
                 username: &str,

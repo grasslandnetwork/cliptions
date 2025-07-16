@@ -230,6 +230,7 @@ impl Round<FrameCaptured> {
         mut self,
         reveals_deadline: DateTime<Utc>,
         client: &T,
+        parent_tweet_id: &str,
     ) -> Result<Round<RevealsOpen>> {
         let formatter = AnnouncementFormatter::new();
         let announcement_data = AnnouncementData {
@@ -249,7 +250,7 @@ impl Round<FrameCaptured> {
         let frame_path = self.target_frame_path.clone().ok_or_else(|| CliptionsError::ValidationError("Target frame path not set".to_string()))?;
 
         client
-            .post_tweet_with_image(&tweet_text, frame_path)
+            .reply_to_tweet_with_image(&tweet_text, parent_tweet_id, frame_path) // Pass owned PathBuf
             .await
             .map_err(|e| CliptionsError::ApiError(e.to_string()))?;
         
@@ -387,7 +388,19 @@ mod tests {
             *self.last_image_path.lock().unwrap() = Some(image_path.as_ref().to_path_buf());
             Ok(PostTweetResult { tweet: Tweet::default(), success: true })
         }
-        async fn reply_to_tweet(&self, _text: &str, _reply_to_tweet_id: &str) -> twitter_api::Result<PostTweetResult> { unimplemented!() }
+        async fn reply_to_tweet(&self, _text: &str, _reply_to_tweet_id: &str) -> twitter_api::Result<PostTweetResult> { 
+            Ok(PostTweetResult { tweet: Tweet::default(), success: true })
+        }
+        async fn reply_to_tweet_with_image<P: AsRef<Path> + Send + 'static>(
+            &self,
+            text: &str,
+            reply_to_tweet_id: &str,
+            image_path: P,
+        ) -> twitter_api::Result<PostTweetResult> {
+            *self.last_tweet_text.lock().unwrap() = Some(text.to_string());
+            *self.last_image_path.lock().unwrap() = Some(image_path.as_ref().to_path_buf());
+            Ok(PostTweetResult { tweet: Tweet::default(), success: true })
+        }
         async fn get_latest_tweet(&self, _username: &str, _exclude_retweets_replies: bool) -> twitter_api::Result<Option<Tweet>> { unimplemented!() }
         async fn search_replies(&self, _tweet_id: &str, _max_results: u32) -> twitter_api::Result<Vec<Tweet>> { unimplemented!() }
     }
@@ -434,7 +447,7 @@ mod tests {
         assert_eq!(round.target_frame_path.clone().unwrap(), frame_path);
         
         // 4. FrameCaptured -> RevealsOpen
-        let round = round.open_reveals(reveals_deadline, &client).await.unwrap();
+        let round = round.open_reveals(reveals_deadline, &client, &tweet1).await.unwrap();
         assert_eq!(round.state_name(), "RevealsOpen");
         assert_eq!(round.reveals_deadline, Some(reveals_deadline));
         let tweet3 = client.last_tweet_text.lock().unwrap().clone().unwrap();
