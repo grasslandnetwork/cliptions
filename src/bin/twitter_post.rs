@@ -5,12 +5,12 @@
 //! Supports text tweets, replies, and image attachments
 
 use clap::Parser;
-use std::env;
 use std::path::PathBuf;
 use twitter_api::{TwitterApi, TwitterClient, TwitterConfig, TwitterError};
 use chrono::{Utc, Duration as ChronoDuration};
 use chrono_tz;
 use cliptions_core::social::AnnouncementFormatter;
+use cliptions_core::config::ConfigManager;
 
 #[derive(Parser)]
 #[command(name = "twitter_post")]
@@ -47,76 +47,75 @@ struct Args {
     /// Show verbose output
     #[arg(short, long)]
     verbose: bool,
+    
+    /// Config file path (default: config/llm.yaml)
+    #[arg(long, default_value = "config/llm.yaml")]
+    config: String,
 }
 
 #[tokio::main]
 async fn main() {
     let args = Args::parse();
-    
-         // Get tweet text either from direct input or generate it from state parameters
-     let tweet_text = if let (Some(state), Some(round), Some(livestream), Some(hours)) = 
-         (&args.state, args.round, &args.livestream, args.target_time) {
-         // Calculate target time (hours from now)
-         let target_time = Utc::now() + ChronoDuration::hours(hours as i64);
-         
-         // Format target time as "2025-04-01 | 16:30:57 | EST"
-         let eastern = chrono_tz::US::Eastern;
-         let target_time_eastern = target_time.with_timezone(&eastern);
-         let formatted_target_time = format!(
-             "{} | {} | EST",
-             target_time_eastern.format("%Y-%m-%d"),
-             target_time_eastern.format("%H:%M:%S")
-         );
-         
-         // Create announcement data
-         let announcement_data = cliptions_core::social::AnnouncementData {
-             round_id: round,
-             state_name: state.to_string(),
-             target_time: formatted_target_time,
-             hashtags: vec![], // The formatter will add standard hashtags
-             message: String::new(), // Not used for commitment announcements
-             prize_pool: None,
-             livestream_url: Some(livestream.to_string()),
-         };
-         
-         // Format the announcement
-         let formatter = AnnouncementFormatter::new();
-         formatter.create_commitment_announcement(&announcement_data)
-     } else {
-         args.text.ok_or_else(|| {
-             eprintln!("Either --text or all of --state, --round, --livestream, and --target-time must be provided");
-             std::process::exit(1);
-         }).unwrap()
-     };
+
+    // Load config
+    let config_manager = ConfigManager::with_path(&args.config)
+        .expect("Failed to load config file");
+    let config = config_manager.get_config().clone();
+    let twitter = &config.twitter;
 
     if args.verbose {
-        println!("Starting Twitter API posting test...");
+        println!("✅ Loaded config from: {}", &args.config);
     }
     
-    // Get Twitter API credentials from environment
-    let api_key = env::var("TWITTER_API_KEY")
-        .expect("TWITTER_API_KEY environment variable not set");
-    let api_secret = env::var("TWITTER_API_SECRET")
-        .expect("TWITTER_API_SECRET environment variable not set");
-    let access_token = env::var("TWITTER_ACCESS_TOKEN")
-        .expect("TWITTER_ACCESS_TOKEN environment variable not set");
-    let access_token_secret = env::var("TWITTER_ACCESS_TOKEN_SECRET")
-        .expect("TWITTER_ACCESS_TOKEN_SECRET environment variable not set");
-    
+    // Get tweet text either from direct input or generate it from state parameters
+    let tweet_text = if let (Some(state), Some(round), Some(livestream), Some(hours)) = 
+        (&args.state, args.round, &args.livestream, args.target_time) {
+        // Calculate target time (hours from now)
+        let target_time = Utc::now() + ChronoDuration::hours(hours as i64);
+        
+        // Format target time as "2025-04-01 | 16:30:57 | EST"
+        let eastern = chrono_tz::US::Eastern;
+        let target_time_eastern = target_time.with_timezone(&eastern);
+        let formatted_target_time = format!(
+            "{} | {} | EST",
+            target_time_eastern.format("%Y-%m-%d"),
+            target_time_eastern.format("%H:%M:%S")
+        );
+        
+        // Create announcement data
+        let announcement_data = cliptions_core::social::AnnouncementData {
+            round_id: round,
+            state_name: state.to_string(),
+            target_time: formatted_target_time,
+            hashtags: vec![], // The formatter will add standard hashtags
+            message: String::new(), // Not used for commitment announcements
+            prize_pool: None,
+            livestream_url: Some(livestream.to_string()),
+        };
+        
+        // Format the announcement
+        let formatter = AnnouncementFormatter::new();
+        formatter.create_commitment_announcement(&announcement_data)
+    } else {
+        args.text.ok_or_else(|| {
+            eprintln!("Either --text or all of --state, --round, --livestream, and --target-time must be provided");
+            std::process::exit(1);
+        }).unwrap()
+    };
+
     if args.verbose {
-        println!("Credentials loaded from environment");
         println!("Tweet text: {}", tweet_text);
         if let Some(ref image_path) = args.image {
             println!("Image to upload: {}", image_path.display());
         }
     }
     
-    // Create TwitterClient
+    // Create TwitterClient from config
     let config = TwitterConfig {
-        api_key,
-        api_secret,
-        access_token,
-        access_token_secret,
+        api_key: twitter.api_key.clone(),
+        api_secret: twitter.api_secret.clone(),
+        access_token: twitter.access_token.clone(),
+        access_token_secret: twitter.access_token_secret.clone(),
     };
     let client = TwitterClient::new(config);
     
@@ -129,7 +128,7 @@ async fn main() {
             println!("🖼️ Posting tweet with image...");
         }
         
-                if let Some(_reply_id) = &args.reply_to {
+        if let Some(_reply_id) = &args.reply_to {
             // Reply with image - TwitterClient doesn't support reply with image yet
             // For now, we'll post with image (without reply functionality)
             let reply_text = format!("{}", tweet_text);

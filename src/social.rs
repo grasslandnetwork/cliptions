@@ -262,7 +262,7 @@ impl AnnouncementFormatter {
             How To Play:\n\
             1. Generate commitment hash\n\
             2. Reply BEFORE: {}\n\n\
-            Reply: Commit: [hash] Wallet: [address]",
+            Reply format ->\nCommit: [hash]\nWallet: [address]",
             data.round_id,
             data.livestream_url.as_deref().unwrap_or(""),
             data.target_time

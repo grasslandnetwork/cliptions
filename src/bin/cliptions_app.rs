@@ -176,6 +176,7 @@ async fn run_miner_loop(
     client: TwitterClient,
     port: u16,
 ) -> Result<()> {
+    use std::process::Command;
     println!("🔍 Miner: Monitoring round state...");
     println!("💰 Fee payment interface would be available at: http://localhost:{}", port);
     
@@ -190,12 +191,70 @@ async fn run_miner_loop(
 
         match client.get_latest_tweet(validator_username, true).await {
             Ok(Some(latest_tweet)) => {
-                println!("- Found latest tweet: \"{}\"", latest_tweet.text.lines().next().unwrap_or(""));
-                // Here, we would parse the state from the tweet text
-                // For now, we just print it.
-                // let state = state_machine::parse_state_from_string(&latest_tweet.text);
-                println!("   (Full state parsing not yet implemented)");
+                let tweet_text = latest_tweet.text.clone();
+                println!("- Found latest tweet: \n{}\n", tweet_text);
 
+                // Simple prototype: look for CommitmentsOpen
+                if tweet_text.to_lowercase().contains("#commitmentsopen") {
+                    println!("🟢 This round is OPEN for commitments!");
+                    // Try to extract round number (look for #roundX)
+                    let round = tweet_text.split_whitespace().find(|w| w.to_lowercase().starts_with("#round"));
+                    let round_str = round.unwrap_or_else(|| panic!("No #roundX hashtag found in the tweet!"));
+                    println!("Round detected: {}", round_str);
+                    println!("\nInstructions:");
+                    // Print lines containing 'How To Play' and after
+                    let mut print_lines = false;
+                    for line in tweet_text.lines() {
+                        if line.to_lowercase().contains("how to play") {
+                            print_lines = true;
+                        }
+                        if print_lines {
+                            println!("{}", line);
+                        }
+                    }
+                    println!("\nWould you like to reply to this tweet with your commitment? (y/n)");
+                    let reply = prompt_user("");
+                    if reply.to_lowercase() == "y" {
+                        let guess = prompt_user("Enter your plain text guess: ");
+                        let salt = prompt_user("Enter your salt: ");
+                        // Call the commitment generator binary
+                        let output = Command::new("./target/debug/cliptions_generate_commitment")
+                            .arg(&guess)
+                            .arg("--salt").arg(&salt)
+                            .arg("--quiet")
+                            .output()
+                            .expect("Failed to run cliptions_generate_commitment");
+                        let hash = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                        if hash.is_empty() {
+                            eprintln!("❌ Error: No hash was generated. Output: {}", String::from_utf8_lossy(&output.stderr));
+                            panic!("Failed to generate commitment hash");
+                        }
+                        println!("\nGenerated commitment hash: {}", hash);
+                        let wallet = prompt_user("Enter your wallet address: ");
+                        let reply_text = format!("Commit: {}\nWallet: {}", hash, wallet);
+                        println!("\nCopy and paste this as your reply to the tweet:");
+                        println!("{}", reply_text);
+                        println!("\nWould you like to post this reply via the CLI? (y/n)");
+                        let post = prompt_user("");
+                        if post.to_lowercase() == "y" {
+                            // Call the twitter_post binary
+                            let tweet_id = latest_tweet.id.clone();
+                            let output = Command::new("./target/debug/cliptions_twitter_post")
+                                .arg("--reply-to").arg(&tweet_id)
+                                .arg("--text").arg(&reply_text)
+                                .output()
+                                .expect("Failed to run cliptions_twitter_post");
+                            println!("\nCLI post output:\n{}", String::from_utf8_lossy(&output.stdout));
+                        } else {
+                            println!("OK, not posting via CLI.");
+                        }
+                        println!("\n(You must reply to the tweet before the deadline!)");
+                    } else {
+                        println!("OK, not replying this time.");
+                    }
+                } else {
+                    println!("No open commitment round detected in the latest tweet.");
+                }
             },
             Ok(None) => {
                 println!("- No tweets found for validator @{}.", validator_username);

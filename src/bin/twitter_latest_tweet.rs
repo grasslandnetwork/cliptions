@@ -5,6 +5,7 @@
 use std::env;
 use clap::Parser;
 use twitter_api::{TwitterApi, TwitterClient, TwitterError};
+use cliptions_core::config::ConfigManager;
 
 #[derive(Parser)]
 #[command(name = "twitter_latest_tweet")]
@@ -21,6 +22,10 @@ struct Args {
     /// Show verbose output
     #[arg(short, long)]
     verbose: bool,
+    
+    /// Config file path (default: config/llm.yaml)
+    #[arg(long, default_value = "config/llm.yaml")]
+    config: String,
 }
 
 #[tokio::main]
@@ -32,22 +37,19 @@ async fn main() {
         println!("Fetching latest tweet from: @{}", args.username);
     }
     
-    // Get Twitter API credentials from environment
-    let api_key = env::var("TWITTER_API_KEY")
-        .expect("TWITTER_API_KEY environment variable not set");
-    let api_secret = env::var("TWITTER_API_SECRET")
-        .expect("TWITTER_API_SECRET environment variable not set");
-    let access_token = env::var("TWITTER_ACCESS_TOKEN")
-        .expect("TWITTER_ACCESS_TOKEN environment variable not set");
-    let access_token_secret = env::var("TWITTER_ACCESS_TOKEN_SECRET")
-        .expect("TWITTER_ACCESS_TOKEN_SECRET environment variable not set");
+    // Load config
+    let config_manager = ConfigManager::with_path(&args.config)
+        .expect("Failed to load config file");
+    let config = config_manager.get_config().clone();
+    let twitter = &config.twitter;
+    println!("\u2705 Loaded config from: {}", &args.config);
     
     // Create TwitterClient
     let config = twitter_api::TwitterConfig {
-        api_key,
-        api_secret,
-        access_token,
-        access_token_secret,
+        api_key: twitter.api_key.clone(),
+        api_secret: twitter.api_secret.clone(),
+        access_token: twitter.access_token.clone(),
+        access_token_secret: twitter.access_token_secret.clone(),
     };
     let client = TwitterClient::new(config);
     

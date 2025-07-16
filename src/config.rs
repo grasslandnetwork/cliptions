@@ -176,6 +176,11 @@ impl ConfigManager {
     /// Create configuration manager with custom path
     pub fn with_path<P: AsRef<Path>>(config_path: P) -> Result<Self> {
         let config_path = config_path.as_ref().to_path_buf();
+
+        // let raw = std::fs::read_to_string(&config_path).unwrap();
+        // println!("RAW YAML:\n{}", raw);
+        // let config: CliptionsConfig = serde_yaml::from_str(&raw).unwrap();
+        
         let config = Self::load_config(&config_path)?;
         
         Ok(Self {
@@ -197,68 +202,15 @@ impl ConfigManager {
                 format!("Failed to read config file: {}", e)
             ))?;
 
-        let mut config: CliptionsConfig = serde_yaml::from_str(&content)
+        let config: CliptionsConfig = serde_yaml::from_str(&content)
             .map_err(|e| CliptionsError::ConfigError(
                 format!("Failed to parse config file: {}", e)
             ))?;
-
-        // Override with environment variables if present
-        Self::apply_env_overrides(&mut config);
 
         // Validate configuration
         Self::validate_config(&config)?;
 
         Ok(config)
-    }
-
-    /// Apply environment variable overrides
-    fn apply_env_overrides(config: &mut CliptionsConfig) {
-        // OpenAI overrides
-        if let Ok(api_key) = env::var("OPENAI_API_KEY") {
-            config.openai.api_key = api_key;
-        }
-
-        if let Ok(project_id) = env::var("OPENAI_PROJECT_ID") {
-            config.openai.project_id = project_id;
-        }
-
-        if let Ok(limit) = env::var("OPENAI_DAILY_SPENDING_LIMIT") {
-            if let Ok(limit_value) = limit.parse::<f64>() {
-                config.openai.daily_spending_limit_usd = limit_value;
-            }
-        }
-
-        // Twitter overrides
-        if let Ok(api_key) = env::var("TWITTER_API_KEY") {
-            config.twitter.api_key = api_key;
-        }
-
-        if let Ok(api_secret) = env::var("TWITTER_API_SECRET") {
-            config.twitter.api_secret = api_secret;
-        }
-
-        if let Ok(access_token) = env::var("TWITTER_ACCESS_TOKEN") {
-            config.twitter.access_token = access_token;
-        }
-
-        if let Ok(access_token_secret) = env::var("TWITTER_ACCESS_TOKEN_SECRET") {
-            config.twitter.access_token_secret = access_token_secret;
-        }
-
-        if let Ok(validator_username) = env::var("TWITTER_VALIDATOR_USERNAME") {
-            config.twitter.validator_username = validator_username;
-        }
-
-        // Base overrides
-        if let Ok(rpc_url) = env::var("BASE_RPC_URL") {
-            config.base.rpc_url = rpc_url;
-        }
-
-        if let Ok(chain_id) = env::var("BASE_CHAIN_ID") {
-            if let Ok(chain_id_value) = chain_id.parse::<u64>() {
-                config.base.chain_id = chain_id_value;
-            }
-        }
     }
 
     /// Validate configuration
