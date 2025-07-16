@@ -30,6 +30,7 @@ pub mod round_processor;
 pub mod scoring;
 pub mod social;
 pub mod types;
+pub mod twitter_utils;
 
 // New async round engine
 pub mod round_engine;

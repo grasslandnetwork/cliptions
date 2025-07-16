@@ -377,7 +377,12 @@ impl TwitterClient {
     /// Internal method to handle all tweet posting logic
     async fn post_tweet_internal(&self, tweet_data: serde_json::Value) -> Result<PostTweetResult> {
         let url = "https://api.twitter.com/2/tweets";
-        
+       
+        if std::env::var("CLIPTIONS_DEBUG").is_ok() {
+            println!("[DEBUG] post_tweet_internal: url = {}", url);
+            println!("[DEBUG] post_tweet_internal: tweet_data = {}", tweet_data);
+        }
+      
         let response = self.make_authenticated_request("POST", url, Some(tweet_data)).await?;
         let json: serde_json::Value = response.json().await?;
 
@@ -506,6 +511,14 @@ impl TwitterClient {
         };
 
         let auth_header = self.create_oauth_header(method, base_url, query_params)?;
+        if std::env::var("CLIPTIONS_DEBUG").is_ok() {
+            println!("[DEBUG] make_authenticated_request: method = {}", method);
+            println!("[DEBUG] make_authenticated_request: url = {}", url);
+            println!("[DEBUG] make_authenticated_request: Authorization = {}", auth_header);
+            if let Some(ref json_body) = body {
+                println!("[DEBUG] make_authenticated_request: body = {}", json_body);
+            }
+        }
 
         let mut request_builder = match method {
             "GET" => self.client.get(url),

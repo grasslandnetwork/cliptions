@@ -12,6 +12,7 @@ use chrono::{Utc, DateTime};
 use std::io::{self, Write};
 use twitter_api::{TwitterApi, TwitterClient, TwitterConfig};
 use cliptions_core::social::TweetCacheManager;
+use cliptions_core::twitter_utils::post_tweet_or_reply;
 
 #[derive(Parser)]
 #[command(name = "cliptions_app")]
@@ -72,7 +73,12 @@ async fn main() -> Result<()> {
     
     if args.verbose {
         println!("✅ Configuration loaded successfully");
+        println!("🔑 Using Twitter API key: {}", config.twitter.api_key);
+        println!("  api_secret: {}...", &config.twitter.api_secret.chars().take(4).collect::<String>());
+        println!("  access_token: {}...", &config.twitter.access_token.chars().take(4).collect::<String>());
+        println!("  access_token_secret: {}...", &config.twitter.access_token_secret.chars().take(4).collect::<String>());
         println!("📄 Loading config from: {}", &args.config);
+        println!("🔍 Loaded config: [masked]");
     }
     
     // Initialize TwitterClient
@@ -270,14 +276,22 @@ async fn run_miner_loop(
                         println!("\nWould you like to post this reply via the CLI? (y/n)");
                         let post = prompt_user("");
                         if post.to_lowercase() == "y" {
-                            // Call the twitter_post binary
-                            // Use the tweet_id from above
-                            let output = Command::new("./target/debug/cliptions_twitter_post")
-                                .arg("--reply-to").arg(&_tweet_id)
-                                .arg("--text").arg(&reply_text)
-                                .output()
-                                .expect("Failed to run cliptions_twitter_post");
-                            println!("\nCLI post output:\n{}", String::from_utf8_lossy(&output.stdout));
+                            // Post the reply directly using the shared function
+                            let result = post_tweet_or_reply(
+                                &client,
+                                &reply_text,
+                                Some(&_tweet_id),
+                            ).await;
+                            match result {
+                                Ok(post_result) => {
+                                    println!("✅ Tweet posted successfully!");
+                                    println!("Tweet ID: {}", post_result.tweet.id);
+                                    println!("URL: https://twitter.com/i/status/{}", post_result.tweet.id);
+                                }
+                                Err(e) => {
+                                    eprintln!("❌ Failed to post tweet: {}", e);
+                                }
+                            }
                         } else {
                             println!("OK, not posting via CLI.");
                         }

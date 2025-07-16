@@ -11,6 +11,7 @@ use chrono::{Utc, Duration as ChronoDuration};
 use chrono_tz;
 use cliptions_core::social::AnnouncementFormatter;
 use cliptions_core::config::ConfigManager;
+use cliptions_core::twitter_utils::post_tweet_or_reply;
 
 #[derive(Parser)]
 #[command(name = "twitter_post")]
@@ -65,6 +66,15 @@ async fn main() {
 
     if args.verbose {
         println!("✅ Loaded config from: {}", &args.config);
+        println!("TwitterConfig being sent to API: {{");
+        println!("  api_key: {}", &twitter.api_key);
+        println!("  api_secret: {}...", &twitter.api_secret.chars().take(4).collect::<String>());
+        println!("  access_token: {}...", &twitter.access_token.chars().take(4).collect::<String>());
+        println!("  access_token_secret: {}...", &twitter.access_token_secret.chars().take(4).collect::<String>());
+        println!("}}\n");
+        println!("[DEBUG] Calling post_tweet_or_reply from twitter_post.rs");
+        println!("  tweet_text: {}", tweet_text);
+        println!("  reply_to: {:?}", args.reply_to);
     }
     
     // Get tweet text either from direct input or generate it from state parameters
@@ -122,31 +132,12 @@ async fn main() {
     // Clone image path for use in async context
     let image_path = args.image.clone();
     
-    // Post the tweet using the existing logic
-    let result = if let Some(image_path) = image_path {
-        if args.verbose {
-            println!("🖼️ Posting tweet with image...");
-        }
-        
-        if let Some(_reply_id) = &args.reply_to {
-            // Reply with image - TwitterClient doesn't support reply with image yet
-            // For now, we'll post with image (without reply functionality)
-            let reply_text = format!("{}", tweet_text);
-            client.post_tweet_with_image(&reply_text, image_path.clone()).await
-        } else {
-            client.post_tweet_with_image(&tweet_text, image_path).await
-        }
-    } else if let Some(reply_id) = &args.reply_to {
-        if args.verbose {
-            println!("💬 Posting reply tweet...");
-        }
-        client.reply_to_tweet(&tweet_text, reply_id).await
-    } else {
-        if args.verbose {
-            println!("📝 Posting text tweet...");
-        }
-        client.post_tweet(&tweet_text).await
-    };
+    // Post the tweet using the shared utility function
+    let result = post_tweet_or_reply(
+        &client,
+        &tweet_text,
+        args.reply_to.as_deref(),
+    ).await;
     
     match result {
         Ok(post_result) => {
