@@ -11,6 +11,7 @@ use cliptions_core::error::Result;
 use chrono::{Utc, DateTime};
 use std::io::{self, Write};
 use twitter_api::{TwitterApi, TwitterClient, TwitterConfig};
+use cliptions_core::social::TweetCacheManager;
 
 #[derive(Parser)]
 #[command(name = "cliptions_app")]
@@ -71,6 +72,7 @@ async fn main() -> Result<()> {
     
     if args.verbose {
         println!("✅ Configuration loaded successfully");
+        println!("📄 Loading config from: {}", &args.config);
     }
     
     // Initialize TwitterClient
@@ -186,13 +188,44 @@ async fn run_miner_loop(
         return Ok(());
     }
     
+    let tweet_cache_manager = TweetCacheManager::default();
+    
     loop {
         println!("🔄 Miner: Checking @{} for round updates...", validator_username);
 
-        match client.get_latest_tweet(validator_username, true).await {
-            Ok(Some(latest_tweet)) => {
-                let tweet_text = latest_tweet.text.clone();
-                println!("- Found latest tweet: \n{}\n", tweet_text);
+        // Try to get a fresh state tweet from cache
+        let mut used_cache = false;
+        let tweet_result = match tweet_cache_manager.get_fresh_state_tweet() {
+            Ok(Some(cache)) => {
+                used_cache = true;
+                Ok(Some((cache.tweet_id.clone(), cache.tweet_text.clone())))
+            },
+            _ => {
+                // Fallback to Twitter API
+                match client.get_latest_tweet(validator_username, true).await {
+                    Ok(Some(latest_tweet)) => {
+                        // Update cache
+                        let _ = tweet_cache_manager.update_cache(
+                            latest_tweet.id.clone(),
+                            latest_tweet.text.clone(),
+                            validator_username.clone(),
+                        );
+                        Ok(Some((latest_tweet.id.clone(), latest_tweet.text.clone())))
+                    },
+                    Ok(None) => Ok(None),
+                    Err(e) => Err(e),
+                }
+            }
+        };
+
+        match tweet_result {
+            Ok(Some((_tweet_id, tweet_text))) => {
+                if used_cache {
+                    println!("- Using cached tweet:");
+                } else {
+                    println!("- Found latest tweet:");
+                }
+                println!("\n{}\n", tweet_text);
 
                 // Simple prototype: look for CommitmentsOpen
                 if tweet_text.to_lowercase().contains("#commitmentsopen") {
@@ -238,9 +271,9 @@ async fn run_miner_loop(
                         let post = prompt_user("");
                         if post.to_lowercase() == "y" {
                             // Call the twitter_post binary
-                            let tweet_id = latest_tweet.id.clone();
+                            // Use the tweet_id from above
                             let output = Command::new("./target/debug/cliptions_twitter_post")
-                                .arg("--reply-to").arg(&tweet_id)
+                                .arg("--reply-to").arg(&_tweet_id)
                                 .arg("--text").arg(&reply_text)
                                 .output()
                                 .expect("Failed to run cliptions_twitter_post");

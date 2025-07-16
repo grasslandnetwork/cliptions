@@ -3,6 +3,9 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use url::Url;
 use regex::Regex;
+use std::fs;
+use std::path::Path;
+use chrono::{DateTime, Utc, Duration};
 
 /// Tweet ID extracted from URLs
 pub type TweetId = String;
@@ -368,6 +371,141 @@ impl SocialWorkflow {
     /// Get announcement formatter
     pub fn get_announcement_formatter(&self) -> &AnnouncementFormatter {
         &self.announcement_formatter
+    }
+}
+
+/// Simple tweet cache for reducing Twitter API calls
+/// Stores the last validator tweet and only queries Twitter when needed
+///
+/// Note: `cached_at` is always the local system time when the tweet was cached, not the tweet's original creation time.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TweetCache {
+    pub tweet_id: String,
+    pub tweet_text: String,
+    pub cached_at: chrono::DateTime<chrono::Utc>,
+    pub validator_username: String,
+}
+
+impl TweetCache {
+    /// Create a new tweet cache entry
+    pub fn new(tweet_id: String, tweet_text: String, validator_username: String) -> Self {
+        Self {
+            tweet_id,
+            tweet_text,
+            cached_at: chrono::Utc::now(),
+            validator_username,
+        }
+    }
+
+    /// Check if the cached tweet is still fresh (less than 15 minutes old)
+    pub fn is_fresh(&self) -> bool {
+        let now = chrono::Utc::now();
+        let cache_age = now - self.cached_at;
+        cache_age < chrono::Duration::minutes(15)
+    }
+
+    /// Check if the tweet contains state hashtags that indicate it's a round state tweet
+    pub fn has_state_hashtags(&self) -> bool {
+        let hashtag_manager = HashtagManager::new();
+        let hashtags = hashtag_manager.extract_hashtags(&self.tweet_text);
+        
+        // Look for state hashtags: #cliptions, #round{number}, state-specific hashtags
+        let has_cliptions = hashtags.iter().any(|h| h.to_lowercase() == "#cliptions");
+        let has_round = hashtags.iter().any(|h| h.to_lowercase().starts_with("#round"));
+        let has_state = hashtags.iter().any(|h| {
+            let h_lower = h.to_lowercase();
+            h_lower == "#commitmentsopen" || 
+            h_lower == "#commitmentsclosed" || 
+            h_lower == "#revealsopen" || 
+            h_lower == "#revealsclosed" || 
+            h_lower == "#payouts" || 
+            h_lower == "#finished"
+        });
+        
+        has_cliptions && has_round && has_state
+    }
+}
+
+pub struct TweetCacheManager {
+    cache_file: String,
+}
+
+impl TweetCacheManager {
+    /// Create a new cache manager with the specified cache file
+    pub fn new(cache_file: String) -> Self {
+        Self { cache_file }
+    }
+
+    /// Create a cache manager with default cache file location
+    pub fn default() -> Self {
+        Self::new("data/validator_tweet_cache.json".to_string())
+    }
+
+    /// Load cached tweet from file
+    pub fn load_cache(&self) -> Result<Option<TweetCache>> {
+        if !std::path::Path::new(&self.cache_file).exists() {
+            return Ok(None);
+        }
+
+        let content = std::fs::read_to_string(&self.cache_file)
+            .map_err(|e| CliptionsError::ValidationError(format!("Failed to read cache file: {}", e)))?;
+
+        if content.trim().is_empty() {
+            return Ok(None);
+        }
+
+        let cache: TweetCache = serde_json::from_str(&content)
+            .map_err(|e| CliptionsError::ValidationError(format!("Failed to parse cache file: {}", e)))?;
+
+        Ok(Some(cache))
+    }
+
+    /// Save tweet to cache file
+    pub fn save_cache(&self, cache: &TweetCache) -> Result<()> {
+        // Ensure the directory exists
+        if let Some(parent) = std::path::Path::new(&self.cache_file).parent() {
+            std::fs::create_dir_all(parent)
+                .map_err(|e| CliptionsError::ValidationError(format!("Failed to create cache directory: {}", e)))?;
+        }
+
+        let content = serde_json::to_string_pretty(cache)
+            .map_err(|e| CliptionsError::ValidationError(format!("Failed to serialize cache: {}", e)))?;
+
+        std::fs::write(&self.cache_file, content)
+            .map_err(|e| CliptionsError::ValidationError(format!("Failed to write cache file: {}", e)))?;
+
+        Ok(())
+    }
+
+    /// Clear the cache file
+    pub fn clear_cache(&self) -> Result<()> {
+        if std::path::Path::new(&self.cache_file).exists() {
+            std::fs::remove_file(&self.cache_file)
+                .map_err(|e| CliptionsError::ValidationError(format!("Failed to remove cache file: {}", e)))?;
+        }
+        Ok(())
+    }
+
+    /// Get cached tweet if it's fresh and has state hashtags
+    pub fn get_fresh_state_tweet(&self) -> Result<Option<TweetCache>> {
+        if let Some(cache) = self.load_cache()? {
+            if cache.is_fresh() && cache.has_state_hashtags() {
+                return Ok(Some(cache));
+            }
+        }
+        Ok(None)
+    }
+
+    /// Update cache with new tweet data (always uses Utc::now for cached_at)
+    pub fn update_cache(&self, tweet_id: String, tweet_text: String, validator_username: String) -> Result<()> {
+        let cache = TweetCache::new(tweet_id, tweet_text, validator_username);
+        self.save_cache(&cache)
+    }
+}
+
+impl Default for TweetCacheManager {
+    fn default() -> Self {
+        Self::default()
     }
 }
 
