@@ -12,7 +12,7 @@ use chrono::{Utc, DateTime};
 use std::io::{self, Write};
 use twitter_api::{TwitterApi, TwitterClient, TwitterConfig};
 use cliptions_core::social::TweetCacheManager;
-use cliptions_core::twitter_utils::post_tweet_or_reply;
+use cliptions_core::twitter_utils::post_tweet_flexible;
 
 #[derive(Parser)]
 #[command(name = "cliptions_app")]
@@ -277,10 +277,11 @@ async fn run_miner_loop(
                         let post = prompt_user("");
                         if post.to_lowercase() == "y" {
                             // Post the reply directly using the shared function
-                            let result = post_tweet_or_reply(
+                            let result = post_tweet_flexible(
                                 &client,
                                 &reply_text,
                                 Some(&_tweet_id),
+                                None,
                             ).await;
                             match result {
                                 Ok(post_result) => {
