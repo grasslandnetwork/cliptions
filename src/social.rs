@@ -214,7 +214,7 @@ impl AnnouncementFormatter {
         };
         
         format!(
-            "🎯 Round {} is now live! Target will be revealed at {}.{} Submit your predictions below! {}",
+            "🎯 Round {} is now live! Target frame reveal at {}.{} Submit your predictions below! {}",
             data.round_id,
             data.target_time,
             prize_info,
@@ -268,6 +268,38 @@ impl AnnouncementFormatter {
             Reply format ->\nCommit: [hash]\nWallet: [address]",
             data.round_id,
             data.livestream_url.as_deref().unwrap_or(""),
+            data.target_time
+        );
+
+        format!("{}\n\n{}", hashtag_string, instructions)
+    }
+
+    /// Create a reveals phase announcement
+    pub fn create_reveals_announcement(&self, data: &AnnouncementData) -> String {
+        // Generate hashtags with reveals-specific format
+        let mut hashtags = vec![
+            "#cliptions".to_string(),
+            "#ai".to_string(),
+            "#CLIP".to_string(),
+            format!("#round{}", data.round_id),
+            format!("#{}", data.state_name.to_lowercase()),
+        ];
+        
+        // Add any custom hashtags
+        hashtags.extend(data.hashtags.clone());
+        
+        let hashtag_string = self.hashtag_manager.format_hashtags(&hashtags);
+
+        let instructions = format!(
+            "ROUND {} - REVEAL PHASE - Target frame below \n\n\
+            Reply to THIS tweet with the unencrypted text of your #round{} commitment before the deadline\n\n\
+            Deadline: {}\n\n\
+            Use this format:\n\
+            Guess: [your-guess]\n\
+            Salt: [your-salt]\n\n\
+            ",
+            data.round_id,
+            data.round_id,
             data.target_time
         );
 

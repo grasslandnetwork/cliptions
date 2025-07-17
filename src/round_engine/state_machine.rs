@@ -243,7 +243,7 @@ impl Round<FrameCaptured> {
                 self.id, reveals_deadline.to_rfc3339()
             ),
             prize_pool: None,
-            livestream_url: Some(self.livestream_url.clone()),
+            livestream_url: None, // No livestream URL needed for reveals open announcement
         };
         let tweet_text = formatter.format_announcement(&announcement_data, true);
 

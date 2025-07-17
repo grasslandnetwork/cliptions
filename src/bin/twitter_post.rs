@@ -78,8 +78,8 @@ async fn main() {
     }
     
     // Get tweet text either from direct input or generate it from state parameters
-    let tweet_text = if let (Some(state), Some(round), Some(livestream), Some(hours)) = 
-        (&args.state, args.round, &args.livestream, args.target_time) {
+    let tweet_text = if let (Some(state), Some(round), Some(hours)) = 
+        (&args.state, args.round, args.target_time) {
         // Calculate target time (hours from now)
         let target_time = Utc::now() + ChronoDuration::hours(hours as i64);
         
@@ -96,19 +96,32 @@ async fn main() {
         let announcement_data = cliptions_core::social::AnnouncementData {
             round_id: round,
             state_name: state.to_string(),
-            target_time: formatted_target_time,
+            target_time: formatted_target_time.clone(),
             hashtags: vec![], // The formatter will add standard hashtags
             message: String::new(), // Not used for commitment announcements
             prize_pool: None,
-            livestream_url: Some(livestream.to_string()),
+            livestream_url: args.livestream.clone(), // Optional - None for reveals, Some for commitments
         };
         
-        // Format the announcement
+        // Format the announcement based on state
         let formatter = AnnouncementFormatter::new();
-        formatter.create_commitment_announcement(&announcement_data)
+        if state.to_lowercase() == "revealsopen" {
+            // For reveals announcements, use the dedicated reveals formatter
+            formatter.create_reveals_announcement(&announcement_data)
+        } else {
+            // For commitment announcements, require livestream URL
+            if args.livestream.is_none() {
+                eprintln!("❌ Error: --livestream is required for commitment announcements (state: {})", state);
+                eprintln!("For reveals announcements, --livestream is optional");
+                std::process::exit(1);
+            }
+            // For commitment announcements, use create_commitment_announcement
+            formatter.create_commitment_announcement(&announcement_data)
+        }
     } else {
         args.text.ok_or_else(|| {
-            eprintln!("Either --text or all of --state, --round, --livestream, and --target-time must be provided");
+            eprintln!("Either --text or all of --state, --round, and --target-time must be provided");
+            eprintln!("Note: --livestream is optional for reveals announcements but required for commitment announcements");
             std::process::exit(1);
         }).unwrap()
     };
