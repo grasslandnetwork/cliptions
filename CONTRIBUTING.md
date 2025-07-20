@@ -280,6 +280,81 @@ src/
 
 The Cliptions system uses a **dual-language data architecture** where Rust serves as the single source of truth for data structures, while Python uses mirrored Pydantic models for validation and interface safety.
 
+#### Dual-Layer Data Model Architecture
+
+**Why We Have Both `src/models.rs` AND `src/types.rs`**
+
+The Cliptions architecture implements a sophisticated **Data Transfer Object (DTO) pattern** with two distinct data layers:
+
+##### **Transport Layer (`src/models.rs`)**
+- **Purpose**: Data exchange between Python browser automation and Rust core
+- **PyO3 Integration**: Uses `#[cfg_attr(feature = "python", derive(FromPyObject))]` for seamless Python bindings
+- **Simple Types**: Uses `String` for timestamps (Python datetime compatibility), flat structures
+- **Network Efficiency**: Optimized for JSON serialization and browser-use data responses
+- **Browser Compatibility**: Exactly matches what browser automation tools return from Twitter/X
+
+```rust
+// Transport layer - simple, flat structures for data exchange
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[cfg_attr(feature = "python", derive(FromPyObject))]
+pub struct Commitment {
+    pub username: String,
+    pub commitment_hash: String,
+    pub wallet_address: String,
+    pub tweet_url: String,
+    pub timestamp: String, // String for Python compatibility
+}
+```
+
+##### **Domain Layer (`src/types.rs`)**
+- **Purpose**: Rich business logic and internal Rust operations
+- **Rust-Native Types**: Uses `DateTime<Utc>`, enums, and complex validation
+- **Business Methods**: Contains methods like `is_verified()`, `get_active_participants()`
+- **Performance Optimized**: Designed for high-performance internal computation
+- **State Management**: Full round lifecycle with metadata and validation rules
+
+```rust
+// Domain layer - rich types with business logic
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Participant {
+    pub user_id: String,
+    pub username: String,
+    pub guess: Guess,
+    pub commitment: String,
+    pub salt: Option<String>,
+    pub verified: bool, // Rich validation state
+}
+
+impl Participant {
+    pub fn is_verified(&self) -> bool { /* business logic */ }
+    pub fn mark_verified(mut self) -> Self { /* state transitions */ }
+}
+```
+
+##### **Data Flow**
+```
+Browser-use (Python) → Pydantic Models → src/models.rs (Transport) → src/types.rs (Domain) → Business Logic
+                                           ↓
+                          JSON/Network ← Transport Layer ← Domain Layer ← Database/Files
+```
+
+##### **Benefits of This Architecture**
+1. **Clean Separation**: External interfaces don't leak into core business logic
+2. **Type Safety**: Rich Rust types for internal operations, simple types for transport
+3. **Performance**: Optimized data structures for each use case
+4. **Maintainability**: Changes to external APIs don't break core logic
+5. **Testing**: Can test transport and domain layers independently
+
+##### **Conversion Pattern**
+Future development should include conversion utilities:
+```rust
+impl From<crate::models::Round> for crate::types::RoundData {
+    fn from(transport: crate::models::Round) -> Self {
+        // Convert simple transport DTO to rich domain model
+    }
+}
+```
+
 #### Schema Consistency Testing
 
 The system includes automated tests that ensure Python and Rust data models stay synchronized:

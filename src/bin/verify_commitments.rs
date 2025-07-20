@@ -12,7 +12,7 @@ use colored::Colorize;
 
 use cliptions_core::embedder::{MockEmbedder, ClipEmbedder, EmbedderTrait};
 use cliptions_core::scoring::ClipBatchStrategy;
-use cliptions_core::round::RoundProcessor;
+use cliptions_core::round_processor::RoundProcessor;
 use cliptions_core::config::ConfigManager;
 
 #[derive(Parser)]

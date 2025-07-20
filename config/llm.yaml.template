@@ -16,4 +16,49 @@ browser_use:
 cost_tracking:
   enabled: true
   sync_frequency_hours: 1
-  alert_threshold_percent: 80  # Alert when 80% of daily limit is reached 
+  alert_threshold_percent: 80  # Alert when 80% of daily limit is reached
+
+#
+# If you are applying for a Twitter/X developer account to participate as a miner, you can use the following description in your application:
+#
+# I am participating in a game where users make predictions about livestream events by replying to official round announcement tweets.
+#
+# My application will:
+# - Read round announcement tweets from the game organizer’s account.
+# - Reply to those tweets with a prediction
+# - (Optionally) read replies to see my own submissions.
+#
+# I will use the Twitter API to:
+# - Read tweets from a specific account (the organizer).
+# - Post replies to those tweets with my prediction
+#
+# This is an educational and experimental project. I will only interact with public tweets and replies, and will not collect or analyze data beyond my own participation.
+
+# --- Twitter API Configuration ---
+#
+# To ensure your app can post tweets and replies, follow these steps:
+# 1. Go to https://developer.twitter.com/en/portal/projects-and-apps and select your app.
+# 2. Under 'User authentication settings' or 'App permissions', select:
+#      - Read and write (Read and Post Posts and profile information)
+#      - Do NOT select 'Read' only (cannot post), and only select 'Direct message' if you need DM access.
+# 3. For 'Type of App', choose:
+#      - Web App, Automated App or Bot (Confidential client)
+# 4. Save your changes.
+# 5. After changing permissions, REGENERATE your Access Token and Access Token Secret in the 'Keys and tokens' section.
+# 6. Update the values below with your new access token and secret.
+#
+# If you see a 403 error about OAuth permissions, your app likely does not have 'Read and write' enabled, or you need to regenerate your tokens after changing permissions.
+#
+twitter:
+  api_key: "YOUR_TWITTER_API_KEY_HERE"  # Replace with your Twitter API key
+  api_secret: "YOUR_TWITTER_API_SECRET_HERE"  # Replace with your Twitter API secret
+  access_token: "YOUR_TWITTER_ACCESS_TOKEN_HERE"  # Replace with your Twitter access token
+  access_token_secret: "YOUR_TWITTER_ACCESS_TOKEN_SECRET_HERE"  # Replace with your Twitter access token secret
+  validator_username: "THE_VALIDATORS_TWITTER_USERNAME_WITHOUT_@_HERE"  # Either "cliptions" for mainnet or "cliptions_test" for testnet
+
+# Base blockchain configuration
+base:
+  rpc_url: "https://mainnet.base.org"  # Base mainnet RPC URL
+  chain_id: 8453  # Base mainnet chain ID
+  gas_limit: 21000  # Default gas limit for transactions
+  gas_price_gwei: 1.0  # Default gas price in Gwei 

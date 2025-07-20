@@ -45,6 +45,8 @@ The generated task list _must_ follow this structure:
 
 ### Notes
 
+- If this project uses Rust, it uses **Rust 2024 Edition** with at least rustc 1.86.0. 
+- **No `mod.rs` files needed** - Rust 2024 supports directory-based modules without `mod.rs`.
 - Unit tests can be placed in the same file as the code they are testing, inside a `#[cfg(test)] mod tests { ... }` block.
 - Use `cargo test` to run all tests. To run a specific test, you can use `cargo test <test_name>`.
 

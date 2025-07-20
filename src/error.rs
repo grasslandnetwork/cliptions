@@ -23,6 +23,9 @@ pub enum CliptionsError {
     #[error("Round processing error: {0}")]
     Round(#[from] RoundError),
     
+    #[error("API error: {0}")]
+    ApiError(String),
+
     #[error("Validation error: {0}")]
     ValidationError(String),
     
@@ -37,6 +40,22 @@ pub enum CliptionsError {
     
     #[error("JSON error: {0}")]
     Json(#[from] serde_json::Error),
+    
+    #[error("Parse error: {0}")]
+    Parse(#[from] chrono::ParseError),
+    
+    #[error("Parse int error: {0}")]
+    ParseInt(#[from] std::num::ParseIntError),
+    
+    #[error("String error: {0}")]
+    Generic(String),
+}
+
+// Add From implementation for String to CliptionsError
+impl From<String> for CliptionsError {
+    fn from(s: String) -> Self {
+        CliptionsError::Generic(s)
+    }
 }
 
 /// Commitment-related errors
