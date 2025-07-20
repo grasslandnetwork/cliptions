@@ -45,19 +45,19 @@
   - [x] 5.1 In `src/config.rs`, add `TwitterConfig` and `BaseConfig` structs to `CliptionsConfig`.
   - [x] 5.2 Update `config/llm.yaml.template` with placeholders for the new `twitter` and `base` sections.
 
-- [ ] 6.0 Implement Async State Machine with API Libraries
+- [x] 6.0 Implement Async State Machine with API Libraries
   - [x] 6.1 In `src/round_engine/state_machine.rs`, define the granular state markers.
   - [x] 6.2 Implement the generic async `Round<S>` struct. This struct MUST store the `round_description`, `livestream_url`, and `target_timestamp`. It will store the `target_frame_path` once it has been captured.
-  - [ ] 6.3 Implement async state transition methods that call the `TwitterClient`.
-    - [ ] 6.3.1 Implement `Round<Pending>::open_commitments(self, client: &TwitterClient) -> Result<Round<CommitmentsOpen>>`. This method will post a text-only tweet announcing the round, including the description, livestream URL, and target timestamp.
-    - [ ] 6.3.2 Implement `Round<CommitmentsOpen>::close_commitments(self, client: &TwitterClient) -> Result<Round<CommitmentsClosed>>`. This method posts a tweet announcing commitments are closed.
-    - [ ] 6.3.3 Implement `Round<CommitmentsClosed>::capture_frame(self, target_frame_path: PathBuf) -> Result<Round<FrameCaptured>>`. This is an internal state transition that does not tweet, it simply updates the state to include the path to the now-known frame.
-    - [ ] 6.3.4 Implement `Round<FrameCaptured>::open_reveals(self, client: &TwitterClient) -> Result<Round<RevealsOpen>>`. This method MUST post a tweet containing the `target_frame` image.
+  - [x] 6.3 Implement async state transition methods that call the `TwitterClient`.
+    - [x] 6.3.1 Implement `Round<Pending>::open_commitments(self, client: &TwitterClient) -> Result<Round<CommitmentsOpen>>`. This method will post a text-only tweet announcing the round, including the description, livestream URL, and target timestamp.
+    - [x] 6.3.2 Implement `Round<CommitmentsOpen>::close_commitments(self, client: &TwitterClient) -> Result<Round<CommitmentsClosed>>`. This method posts a tweet announcing commitments are closed.
+    - [x] 6.3.3 Implement `Round<CommitmentsClosed>::capture_frame(self, target_frame_path: PathBuf) -> Result<Round<FrameCaptured>>`. This is an internal state transition that does not tweet, it simply updates the state to include the path to the now-known frame.
+    - [x] 6.3.4 Implement `Round<FrameCaptured>::open_reveals(self, client: &TwitterClient) -> Result<Round<RevealsOpen>>`. This method MUST post a tweet containing the `target_frame` image.
 
 - [ ] 7.0 Implement Role-Based Application Logic
   - [x] 7.1 In `src/bin/cliptions_app.rs`, parse the `--role` argument.
-  - [ ] 7.2 Initialize `ConfigManager` and create `TwitterClient`.
-  - [ ] 7.3 Implement main async application loop for both roles.
+  - [x] 7.2 Initialize `ConfigManager` and create `TwitterClient`.
+  - [x] 7.3 Implement main async application loop for both roles.
   - [ ] 7.4 **Validator Logic**: Implement the `run_validator_loop`.
     - [ ] 7.4.1 Check for the latest tweet from the validator to see if a round is in progress.
     - [ ] 7.4.2 If no round is active, prompt the user to start a new round by providing: 1) a text description/theme, 2) the `livestream_url`, and 3) the `target_timestamp`.
