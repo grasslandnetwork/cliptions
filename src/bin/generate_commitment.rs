@@ -1,15 +1,15 @@
 //! Generate cryptographic commitments for Cliptions predictions
-//! 
+//!
 //! Enhanced CLI tool for generating secure commitment hashes from prediction messages
 //! and salt values. This tool replaces the Python generate_commitment.py script with
 //! a native Rust implementation for better performance and integration.
 
-use std::process;
-use std::path::PathBuf;
-use std::fs;
 use clap::Parser;
 use colored::Colorize;
 use serde_json::Value;
+use std::fs;
+use std::path::PathBuf;
+use std::process;
 
 use cliptions_core::commitment::CommitmentGenerator;
 use cliptions_core::config::ConfigManager;
@@ -41,11 +41,11 @@ Examples:
 struct Args {
     /// Prediction message to commit to
     message: Option<String>,
-    
+
     /// Salt value for the commitment (required)
     #[arg(long, short)]
     salt: Option<String>,
-    
+
     /// Output format: text, json, csv
     #[arg(long, short, default_value = "text", value_parser = ["text", "json", "csv"])]
     output: String,
@@ -57,7 +57,7 @@ struct Args {
     /// Batch process commitments from JSON file
     #[arg(long)]
     batch_file: Option<PathBuf>,
-    
+
     /// Enable verbose output with detailed information
     #[arg(short, long)]
     verbose: bool,
@@ -96,7 +96,7 @@ struct CommitmentResults {
 
 fn main() {
     let args = Args::parse();
-    
+
     // Initialize colored output
     if args.no_color || args.quiet {
         colored::control::set_override(false);
@@ -107,17 +107,19 @@ fn main() {
         match ConfigManager::with_path(config_path) {
             Ok(manager) => {
                 if args.verbose && !args.quiet {
-                    println!("{} Loaded configuration from {}", 
-                        "Info:".blue().bold(), 
+                    println!(
+                        "{} Loaded configuration from {}",
+                        "Info:".blue().bold(),
                         config_path.display()
                     );
                 }
                 Some(manager)
             }
             Err(e) => {
-                eprintln!("{} Failed to load config from {}: {}", 
-                    "Error:".red().bold(), 
-                    config_path.display(), 
+                eprintln!(
+                    "{} Failed to load config from {}: {}",
+                    "Error:".red().bold(),
+                    config_path.display(),
                     e
                 );
                 process::exit(1);
@@ -126,11 +128,14 @@ fn main() {
     } else {
         None
     };
-    
+
     // Validate arguments
     if let Err(e) = validate_inputs(&args) {
         eprintln!("{} {}", "Error:".red().bold(), e);
-        eprintln!("{} Use --help for usage information", "Tip:".yellow().bold());
+        eprintln!(
+            "{} Use --help for usage information",
+            "Tip:".yellow().bold()
+        );
         process::exit(1);
     }
 
@@ -155,17 +160,22 @@ fn main() {
                     eprintln!("{} Failed to save results: {}", "Error:".red().bold(), e);
                     process::exit(1);
                 }
-                
+
                 if !args.quiet {
-                    println!("{} Commitment data saved to {}", 
-                        "Success:".green().bold(), 
+                    println!(
+                        "{} Commitment data saved to {}",
+                        "Success:".green().bold(),
                         save_path.display()
                     );
                 }
             }
         }
         Err(e) => {
-            eprintln!("{} Failed to generate commitment: {}", "Error:".red().bold(), e);
+            eprintln!(
+                "{} Failed to generate commitment: {}",
+                "Error:".red().bold(),
+                e
+            );
             process::exit(1);
         }
     }
@@ -206,21 +216,25 @@ fn validate_inputs(args: &Args) -> Result<(), String> {
     Ok(())
 }
 
-fn generate_single_commitment(args: &Args) -> Result<CommitmentResults, Box<dyn std::error::Error>> {
+fn generate_single_commitment(
+    args: &Args,
+) -> Result<CommitmentResults, Box<dyn std::error::Error>> {
     let generator = CommitmentGenerator::new();
-    
+
     let message = args.message.as_ref().unwrap();
     let salt = args.salt.as_ref().unwrap().clone();
 
     if args.verbose && !args.quiet {
-        println!("{} Generating commitment for message: {}", 
-            "Info:".blue().bold(), 
-            message.chars().take(50).collect::<String>() + if message.len() > 50 { "..." } else { "" }
+        println!(
+            "{} Generating commitment for message: {}",
+            "Info:".blue().bold(),
+            message.chars().take(50).collect::<String>()
+                + if message.len() > 50 { "..." } else { "" }
         );
     }
 
     let commitment = generator.generate(message, &salt)?;
-    
+
     let timestamp = if args.timestamp {
         Some(chrono::Utc::now().to_rfc3339())
     } else {
@@ -240,7 +254,9 @@ fn generate_single_commitment(args: &Args) -> Result<CommitmentResults, Box<dyn 
     })
 }
 
-fn generate_batch_commitments(args: &Args) -> Result<CommitmentResults, Box<dyn std::error::Error>> {
+fn generate_batch_commitments(
+    args: &Args,
+) -> Result<CommitmentResults, Box<dyn std::error::Error>> {
     let batch_file = args.batch_file.as_ref().unwrap();
     let file_content = fs::read_to_string(batch_file)?;
     let batch_data: Value = serde_json::from_str(&file_content)?;
@@ -250,17 +266,21 @@ fn generate_batch_commitments(args: &Args) -> Result<CommitmentResults, Box<dyn 
 
     if let Some(batch_array) = batch_data.as_array() {
         for (index, item) in batch_array.iter().enumerate() {
-            let message = item.get("message")
+            let message = item
+                .get("message")
                 .and_then(|v| v.as_str())
-                .ok_or_else(|| format!("Missing or invalid 'message' field in batch item {}", index))?;
+                .ok_or_else(|| {
+                    format!("Missing or invalid 'message' field in batch item {}", index)
+                })?;
 
-            let salt = item.get("salt")
+            let salt = item
+                .get("salt")
                 .and_then(|v| v.as_str())
                 .ok_or_else(|| format!("Missing or invalid 'salt' field in batch item {}", index))?
                 .to_string();
 
             let commitment = generator.generate(message, &salt)?;
-            
+
             let timestamp = if args.timestamp {
                 Some(chrono::Utc::now().to_rfc3339())
             } else {
@@ -279,8 +299,9 @@ fn generate_batch_commitments(args: &Args) -> Result<CommitmentResults, Box<dyn 
     }
 
     if args.verbose && !args.quiet {
-        println!("{} Generated {} commitments from batch file", 
-            "Info:".blue().bold(), 
+        println!(
+            "{} Generated {} commitments from batch file",
+            "Info:".blue().bold(),
             commitments.len()
         );
     }
@@ -291,7 +312,10 @@ fn generate_batch_commitments(args: &Args) -> Result<CommitmentResults, Box<dyn 
     })
 }
 
-fn display_results(results: &CommitmentResults, args: &Args) -> Result<(), Box<dyn std::error::Error>> {
+fn display_results(
+    results: &CommitmentResults,
+    args: &Args,
+) -> Result<(), Box<dyn std::error::Error>> {
     match args.output.as_str() {
         "text" => display_text_format(results, args),
         "json" => display_json_format(results),
@@ -300,7 +324,10 @@ fn display_results(results: &CommitmentResults, args: &Args) -> Result<(), Box<d
     }
 }
 
-fn display_text_format(results: &CommitmentResults, args: &Args) -> Result<(), Box<dyn std::error::Error>> {
+fn display_text_format(
+    results: &CommitmentResults,
+    args: &Args,
+) -> Result<(), Box<dyn std::error::Error>> {
     if args.quiet {
         // In quiet mode, only output the commitment hash(es)
         for commitment_data in &results.commitments {
@@ -311,13 +338,13 @@ fn display_text_format(results: &CommitmentResults, args: &Args) -> Result<(), B
 
     if results.commitments.len() == 1 {
         let data = &results.commitments[0];
-        
+
         if args.verbose {
             println!("{}", "Commitment Generation Results".bold().underline());
             println!("{}: {}", "Message".blue().bold(), data.message);
             println!("{}: {}", "Salt".blue().bold(), data.salt);
             println!("{}: {}", "Commitment".green().bold(), data.commitment);
-            
+
             if let Some(ref timestamp) = data.timestamp {
                 println!("{}: {}", "Timestamp".blue().bold(), timestamp);
             }
@@ -327,16 +354,31 @@ fn display_text_format(results: &CommitmentResults, args: &Args) -> Result<(), B
         }
     } else {
         // Batch mode
-        println!("{}", format!("Generated {} Commitments", results.total_generated).bold().underline());
+        println!(
+            "{}",
+            format!("Generated {} Commitments", results.total_generated)
+                .bold()
+                .underline()
+        );
         println!();
-        
+
         for (index, data) in results.commitments.iter().enumerate() {
-            println!("{}{}:", "Commitment ".blue().bold(), (index + 1).to_string().blue().bold());
-            println!("  Message: {}", data.message.chars().take(60).collect::<String>() + 
-                     if data.message.len() > 60 { "..." } else { "" });
-            println!("  Salt: {}...", data.salt.chars().take(16).collect::<String>());
+            println!(
+                "{}{}:",
+                "Commitment ".blue().bold(),
+                (index + 1).to_string().blue().bold()
+            );
+            println!(
+                "  Message: {}",
+                data.message.chars().take(60).collect::<String>()
+                    + if data.message.len() > 60 { "..." } else { "" }
+            );
+            println!(
+                "  Salt: {}...",
+                data.salt.chars().take(16).collect::<String>()
+            );
             println!("  Hash: {}", data.commitment.green());
-            
+
             if let Some(ref timestamp) = data.timestamp {
                 println!("  Timestamp: {}", timestamp);
             }
@@ -355,16 +397,17 @@ fn display_json_format(results: &CommitmentResults) -> Result<(), Box<dyn std::e
 
 fn display_csv_format(results: &CommitmentResults) -> Result<(), Box<dyn std::error::Error>> {
     println!("message,salt,commitment,timestamp");
-    
+
     for data in &results.commitments {
-        println!("{},{},{},{}", 
+        println!(
+            "{},{},{},{}",
             csv_escape(&data.message),
             csv_escape(&data.salt),
             data.commitment,
             data.timestamp.as_deref().unwrap_or("")
         );
     }
-    
+
     Ok(())
 }
 
@@ -376,7 +419,10 @@ fn csv_escape(field: &str) -> String {
     }
 }
 
-fn save_results(results: &CommitmentResults, save_path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+fn save_results(
+    results: &CommitmentResults,
+    save_path: &PathBuf,
+) -> Result<(), Box<dyn std::error::Error>> {
     let json_output = serde_json::to_string_pretty(results)?;
     fs::write(save_path, json_output)?;
     Ok(())
@@ -400,7 +446,7 @@ mod tests {
             config: None,
             timestamp: false,
         };
-        
+
         assert!(validate_inputs(&args).is_ok());
     }
 
@@ -418,7 +464,7 @@ mod tests {
             config: None,
             timestamp: false,
         };
-        
+
         assert!(validate_inputs(&args).is_err());
     }
 
@@ -436,7 +482,7 @@ mod tests {
             config: None,
             timestamp: false,
         };
-        
+
         assert!(validate_inputs(&args).is_err());
     }
 
@@ -454,7 +500,7 @@ mod tests {
             config: None,
             timestamp: false,
         };
-        
+
         assert!(validate_inputs(&args).is_err());
     }
 
@@ -472,7 +518,7 @@ mod tests {
             config: None,
             timestamp: false,
         };
-        
+
         assert!(validate_inputs(&args).is_err());
     }
 
@@ -490,7 +536,7 @@ mod tests {
             config: None,
             timestamp: false,
         };
-        
+
         let result = generate_single_commitment(&args).unwrap();
         assert_eq!(result.total_generated, 1);
         assert_eq!(result.commitments.len(), 1);
@@ -506,4 +552,4 @@ mod tests {
         assert_eq!(csv_escape("with\"quote"), "\"with\"\"quote\"");
         assert_eq!(csv_escape("with\nline"), "\"with\nline\"");
     }
-} 
+}
