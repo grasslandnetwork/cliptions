@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Cache Cargo registry & Git data
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/registry
@@ -32,33 +32,45 @@ jobs:
           override: true
 
       - name: Build (release)
-        run: cargo build --locked --release
+        run: cargo build --locked --release --all-targets
 
-      - name: Package binary
+      - name: Package binaries
         run: |
           mkdir -p dist
           case "${{ matrix.os }}" in
             ubuntu-latest)
-              tar -czvf dist/myapp-linux-v${{ github.ref_name }}.tar.gz -C target/release myapp
+              tar -czvf dist/cliptions-linux-v${{ github.ref_name }}.tar.gz -C target/release cliptions-app calculate-scores generate-commitment process-payouts twitter-latest-tweet twitter-post twitter-search-replies verify-commitments
               ;;
             macos-latest)
-              tar -czvf dist/myapp-macos-v${{ github.ref_name }}.tar.gz -C target/release myapp
+              tar -czvf dist/cliptions-macos-v${{ github.ref_name }}.tar.gz -C target/release cliptions-app calculate-scores generate-commitment process-payouts twitter-latest-tweet twitter-post twitter-search-replies verify-commitments
               ;;
             windows-latest)
-              zip -j dist/myapp-windows-v${{ github.ref_name }}.zip target/release/myapp.exe
+              zip -j dist/cliptions-windows-v${{ github.ref_name }}.zip target/release/cliptions-app.exe target/release/calculate-scores.exe target/release/generate-commitment.exe target/release/process-payouts.exe target/release/twitter-latest-tweet.exe target/release/twitter-post.exe target/release/twitter-search-replies.exe target/release/verify-commitments.exe
               ;;
           esac
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
+          body: |
+            ## Cliptions Core ${{ github.ref_name }}
+            
+            ### Binaries Included:
+            - `cliptions-app` - Main application
+            - `calculate-scores` - Score calculation utility
+            - `generate-commitment` - Commitment generation
+            - `process-payouts` - Payout processing
+            - `twitter-latest-tweet` - Twitter utilities
+            - `twitter-post` - Twitter posting
+            - `twitter-search-replies` - Twitter reply search
+            - `verify-commitments` - Commitment verification
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Release Assets
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: dist/*
         env:
