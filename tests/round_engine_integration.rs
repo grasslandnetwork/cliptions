@@ -25,6 +25,12 @@ mock! {
             image_path: P,
         ) -> Result<PostTweetResult, TwitterError>;
         async fn reply_to_tweet(&self, text: &str, reply_to_tweet_id: &str) -> Result<PostTweetResult, TwitterError>;
+        async fn reply_to_tweet_with_image<P: AsRef<Path> + Send + 'static>(
+            &self,
+            text: &str,
+            reply_to_tweet_id: &str,
+            image_path: P,
+        ) -> Result<PostTweetResult, TwitterError>;
         async fn get_latest_tweet(
             &self,
             username: &str,
@@ -72,10 +78,10 @@ async fn test_full_round_lifecycle_with_mocks() {
 
     // 3. FeeCollectionOpen -> RevealsOpen
     mock_twitter_client
-        .expect_post_tweet_with_image()
-        .withf(|text, _| text.contains("Time to reveal your commitments!"))
+        .expect_reply_to_tweet_with_image()
+        .withf(|text, _, _| text.contains("Target frame revealed!"))
         .times(1)
-        .returning(|text, _: std::path::PathBuf| {
+        .returning(|text, _, _: std::path::PathBuf| {
             let tweet = create_mock_tweet("1003", text);
             Ok(PostTweetResult { tweet, success: true })
         });
@@ -140,7 +146,7 @@ async fn test_full_round_lifecycle_with_mocks() {
     let frame_captured_round = commitments_closed_round.capture_frame(target_frame_path.clone()).unwrap();
     assert_eq!(frame_captured_round.state_name(), "FrameCaptured");
     assert_eq!(frame_captured_round.target_frame_path.clone().unwrap(), target_frame_path.clone());
-    let reveals_open_round = frame_captured_round.open_reveals(reveals_deadline, &mock_twitter_client).await.unwrap();
+    let reveals_open_round = frame_captured_round.open_reveals(reveals_deadline, &mock_twitter_client, "parent_tweet_id").await.unwrap();
     assert_eq!(reveals_open_round.state_name(), "RevealsOpen");
     assert_eq!(reveals_open_round.reveals_deadline, Some(reveals_deadline));
     assert_eq!(reveals_open_round.target_frame_path, Some(target_frame_path.clone()));
@@ -198,12 +204,10 @@ async fn test_round_lifecycle_with_machine_readable_tweets() {
         });
 
     mock_twitter_client
-        .expect_post_tweet_with_image()
-        .withf(|text, _| {
-            text.contains("#revealsopen")
-        })
+        .expect_reply_to_tweet_with_image()
+        .withf(|text, _, _| text.contains("#revealsopen"))
         .times(1)
-        .returning(|text, _: std::path::PathBuf| {
+        .returning(|text, _, _: std::path::PathBuf| {
             let tweet = create_mock_tweet("2003", text);
             Ok(PostTweetResult { tweet, success: true })
         });
@@ -254,7 +258,7 @@ async fn test_round_lifecycle_with_machine_readable_tweets() {
     commitments_closed_round.target_timestamp = now - Duration::seconds(1);
     let test_frame_path: std::path::PathBuf = "test_frame.jpg".into();
     let frame_captured_round = commitments_closed_round.capture_frame(test_frame_path.clone()).unwrap();
-    let reveals_round = frame_captured_round.open_reveals(now + Duration::hours(72), &mock_twitter_client).await.unwrap();
+    let reveals_round = frame_captured_round.open_reveals(now + Duration::hours(72), &mock_twitter_client, "parent_tweet_id").await.unwrap();
 
     let payouts_round = reveals_round
         .close_reveals(&mock_twitter_client)
