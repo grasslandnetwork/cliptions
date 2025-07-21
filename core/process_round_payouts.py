@@ -4,11 +4,11 @@ import json
 import sys
 from pathlib import Path
 import argparse
-from calculate_scores_payout import ScoreValidator, calculate_payouts
+from .calculate_scores_payout import ScoreValidator, calculate_payouts
 import numpy as np
-from verify_commitments import verify_round_commitments
-from interfaces import IScoreValidator, IEmbedder
-from scoring_strategies import RawSimilarityStrategy
+from .verify_commitments import verify_round_commitments
+from .interfaces import IScoreValidator, IEmbedder
+from .scoring_strategies import RawSimilarityStrategy
 
 class LegacyScoreValidator(IScoreValidator):
     """Replicates the scoring logic used before baseline adjustment was added.
@@ -28,7 +28,7 @@ class LegacyScoreValidator(IScoreValidator):
                             (defaults to RawSimilarityStrategy)
         """
         if embedder is None:
-            from clip_embedder import ClipEmbedder
+            from .clip_embedder import ClipEmbedder
             embedder = ClipEmbedder()
         
         self.embedder = embedder
@@ -235,7 +235,7 @@ def process_all_rounds(save_to_file=True, verify_commitments=True):
     return round_data
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Process payouts for RealMir rounds")
+    parser = argparse.ArgumentParser(description="Process payouts for Cliptions rounds")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--round', type=str, help="Process a specific round (e.g., round1)")
     group.add_argument('--all', action='store_true', help="Process all rounds that need payouts")

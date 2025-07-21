@@ -1,0 +1,151 @@
+[workspace]
+members = [
+    ".",
+    "crates/twitter-api",
+    "crates/base-api",
+]
+resolver = "2"
+
+[package]
+name = "cliptions-core"
+version = "0.5.0"
+edition = "2021"
+description = "Cliptions prediction market core functionality implemented in Rust with optional Python bindings"
+license = "MIT"
+authors = ["Cliptions Team"]
+repository = "https://github.com/grasslandnetwork/cliptions"
+keywords = ["prediction-market", "machine-learning", "embeddings", "commitments"]
+categories = ["science", "algorithms"]
+
+[lib]
+name = "cliptions_core"
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = []
+# Python bindings feature - enables PyO3 integration
+python = ["pyo3"]
+
+[dependencies]
+# Python integration (optional)
+pyo3 = { version = "0.22.2", features = ["extension-module", "abi3-py38"], optional = true }
+
+# Cryptography
+sha2 = "0.10.8"
+hex = "0.4"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+
+# URL and regex handling
+url = "2.5"
+regex = "1.10"
+
+# Date/time handling
+chrono = { version = "0.4", features = ["serde"] }
+chrono-tz = "0.8"
+
+# Error handling
+thiserror = "1.0"
+anyhow = "1.0"
+
+# Math and arrays
+ndarray = "0.16"
+
+# Random number generation
+rand = "0.8"
+
+# Image processing
+image = { version = "0.25", features = ["png", "jpeg", "webp"] }
+
+# Base64 encoding/decoding
+base64 = "0.22"
+
+# Candle ML framework for native CLIP support
+candle-core = "0.8.0"
+candle-nn = "0.8.0"
+candle-transformers = "0.8.0"
+tokenizers = "0.21.0"
+hf-hub = "0.3.0"
+
+# Parallel processing
+rayon = "1.7"
+
+# Argument parsing for CLI tools
+clap = { version = "4.0", features = ["derive"] }
+
+# Colored terminal output
+colored = "2.0"
+
+# HTTP client for downloading models and API requests
+reqwest = { version = "0.12", features = ["blocking", "json", "multipart"] }
+
+# Async runtime for HTTP requests
+tokio = { version = "1.0", features = ["full"] }
+async-trait = "0.1"
+
+# Web server framework
+axum = "0.7"
+tower-http = { version = "0.5", features = ["fs"] }
+
+# Ethereum library for signature verification
+ethers = "2.0"
+
+# URL encoding
+urlencoding = "2.1"
+
+# HMAC for OAuth signatures
+hmac = "0.12"
+sha1 = "0.10"
+
+# Internal dependencies
+twitter-api = { path = "crates/twitter-api" }
+
+[dev-dependencies]
+# Testing
+rstest = "0.21"
+proptest = "1.0"
+tempfile = "3.0"
+mockall = "0.13"
+
+# Benchmarking
+criterion = "0.5"
+
+[[bench]]
+name = "scoring_benchmark"
+harness = false
+
+[[bin]]
+name = "cliptions_calculate_scores"
+path = "src/bin/calculate_scores.rs"
+
+[[bin]]
+name = "cliptions_generate_commitment"
+path = "src/bin/generate_commitment.rs"
+
+[[bin]]
+name = "cliptions_process_payouts"
+path = "src/bin/process_payouts.rs"
+
+[[bin]]
+name = "cliptions_verify_commitments"
+path = "src/bin/verify_commitments.rs"
+
+[[bin]]
+name = "cliptions_twitter_post"
+path = "src/bin/twitter_post.rs"
+
+[[bin]]
+name = "cliptions_twitter_search_replies"
+path = "src/bin/twitter_search_replies.rs"
+
+[[bin]]
+name = "cliptions_twitter_latest_tweet"
+path = "src/bin/twitter_latest_tweet.rs"
+
+[[bin]]
+name = "cliptions_app"
+path = "src/bin/cliptions_app.rs"
+

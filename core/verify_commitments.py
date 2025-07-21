@@ -2,7 +2,7 @@
 import json
 import sys
 from pathlib import Path
-from generate_commitment import generate_commitment
+from .generate_commitment import generate_commitment
 
 def verify_round_commitments(round_id):
     """Verify that all guesses and salts in a round match their commitments.

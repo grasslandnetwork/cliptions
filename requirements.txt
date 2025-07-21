@@ -13,7 +13,17 @@ Pillow>=9.0.0
 # clip>=1.0  # Original OpenAI CLIP implementation for comparison testing
 
 # Testing dependencies (required for running tests)
-pytest>=7.0.0
+pytest>=7.0.0 
+pytest-asyncio>=0.21.0 
+maturin==1.8.7  # For building and testing the Rust core
+
+# Browser Use
+browser-use==0.1.40
+pyperclip==1.9.0
+gradio==5.10.0
+json-repair
+langchain-mistralai==0.2.4
+PyYAML>=6.0
 
 # Optional dependencies for specific features
 # requests>=2.25.0  # For additional web functionality 

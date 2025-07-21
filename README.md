@@ -1,4 +1,4 @@
-# realmir
+# Cliptions
 
 Predict how an AI Agent will caption upcoming frames from live video streams. Players compete for cryptocurrency rewards based on prediction accuracy.
 
@@ -7,9 +7,12 @@ Predict how an AI Agent will caption upcoming frames from live video streams. Pl
 - [Key Rules](#key-rules)
 - [Key Features](#key-features)
 - [Example Round](#example-round)
-- [Commitment Hash Generation](#commitment-hash-generation)
-  - [Usage](#usage)
-  - [Common Errors](#common-errors)
+- [CLI Tools](#cli-tools)
+  - [Commitment Generation](#commitment-generation)
+  - [Score Calculation](#score-calculation)
+  - [Payout Processing](#payout-processing)
+  - [Commitment Verification](#commitment-verification)
+  - [Advanced Usage](#advanced-usage)
 - [Score and Payout Calculation](#score-and-payout-calculation)
   - [Ranking Process](#ranking-process)
   - [Payout Distribution](#payout-distribution)
@@ -23,7 +26,7 @@ Predict how an AI Agent will caption upcoming frames from live video streams. Pl
 2. Players submit predictions in two steps:
    - First, reply to announcement with a commitment hash of their prediction
    - Later, reveal their actual prediction and salt to verify the commitment
-3. When that moment arrives and the frame is revealed, each prediction is compared using CLIP
+3. When that moment arrives and the frame is revealed, each prediction is compared using CLIP ([OpenAI's vision-language AI model](https://github.com/openai/CLIP))
 4. Players are ranked by how well their predictions matched CLIP's understanding
 5. The prize pool is distributed based on rankings, with better predictions earning larger shares
 
@@ -50,29 +53,119 @@ Predict how an AI Agent will caption upcoming frames from live video streams. Pl
 4. Players are ranked by score
 5. Prize pool is distributed according to rankings
 
-## Commitment Hash Generation
-Players must generate a hash commitment for their prediction.
+## CLI Tools
 
-### Usage
-Run the script using the following format:
+Cliptions provides a complete suite of Rust-based CLI tools for all game operations. All tools use real CLIP models by default for accurate similarity calculations.
+
+### Commitment Generation
+
+Generate secure commitment hashes for your predictions:
+
 ```bash
-python3 generate_commitment.py "Your predicted caption here" --salt "your-salt-value-here"
+# Basic commitment generation
+./target/release/generate_commitment "Cat sanctuary with woman wearing snoopy sweater" --salt "random_secret_123"
+
+# Verbose output with details
+./target/release/generate_commitment "My prediction" --salt "mysalt" --verbose
 ```
 
-**Example:**  
+**Example Output:**
+```
+Commitment: b30bc27636a63a2c9ce07b9b24e39161e64e975399df2c773c4240b924735ed4
+```
+
+### Score Calculation
+
+Calculate similarity scores and rankings for a round:
+
 ```bash
-python3 generate_commitment.py "Cat sanctuary with woman wearing snoopy sweater" --salt "random_secret_123"
+# Basic score calculation with CLIP
+./target/release/calculate_scores target.jpg 100.0 "ocean waves" "mountain sunset" "city skyline"
+
+# Save results to JSON file
+./target/release/calculate_scores --output json --output-file results.json target.jpg 100.0 "guess1" "guess2"
+
+# Detailed similarity breakdown
+./target/release/calculate_scores --detailed --verbose target.jpg 100.0 "prediction1" "prediction2"
 ```
 
-This will output:
-```
-Commitment: f7b7889b520e01e8a2e915e8e9124bc299c6f584c0e0dd255a7e38fe8ec35747
+### Payout Processing
+
+Process payouts for completed rounds:
+
+```bash
+# Process single round
+./target/release/process_payouts round1 --prize-pool 100.0
+
+# Process all rounds with batch mode
+./target/release/process_payouts --all
+
+# Save payout results with error handling
+./target/release/process_payouts --all --continue-on-error --output csv --output-file payouts.csv
 ```
 
-### Common Errors
-- **Missing Quotes:** Always use **quotes** around both the **caption** and **salt**.
-- **Argument Order:** The **caption** must come **first**, followed by the `--salt` argument.
-- **PowerShell Users:** Ensure you use **double quotes** to avoid argument parsing issues.
+### Commitment Verification
+
+Verify the integrity of player commitments:
+
+```bash
+# Verify single round
+./target/release/verify_commitments round1
+
+# Batch verify all rounds
+./target/release/verify_commitments --all --verbose
+
+# Strict mode - fail on any invalid commitment
+./target/release/verify_commitments --all --strict --output json --output-file verification.json
+```
+
+### Advanced Usage
+
+All CLI tools support advanced features for production use:
+
+```bash
+# Use custom CLIP model
+./target/release/calculate_scores --clip-model models/custom-clip target.jpg 100.0 "guess1"
+
+# Load configuration from YAML
+./target/release/process_payouts --config config.yaml --all
+
+# Testing mode with MockEmbedder
+./target/release/calculate_scores --use-mock target.jpg 100.0 "test1" "test2"
+
+# Multiple output formats
+./target/release/verify_commitments round1 --output table  # Default
+./target/release/verify_commitments round1 --output json
+./target/release/verify_commitments round1 --output csv
+
+# Quiet mode for scripts
+./target/release/generate_commitment "My prediction" --salt "mysalt" --quiet
+```
+
+**Common Options:**
+- `--verbose` - Detailed progress information
+- `--no-color` - Disable colored output for scripts
+- `--output-file <path>` - Save results to file
+- `--config <path>` - Load YAML configuration
+- `--continue-on-error` - Continue batch processing on errors
+
+### Getting Help
+
+Each CLI tool provides comprehensive built-in documentation with examples and detailed option descriptions:
+
+```bash
+# Get help for any command
+./target/release/generate_commitment --help
+./target/release/calculate_scores --help
+./target/release/process_payouts --help
+./target/release/verify_commitments --help
+```
+
+The built-in help includes:
+- **Usage syntax** with required and optional parameters
+- **Real-world examples** for common use cases
+- **Complete option reference** with descriptions and defaults
+- **Configuration guidance** for YAML files and advanced features
 
 ## Score and Payout Calculation
 The system calculates payouts based on similarity rankings between guesses and the target image.
@@ -121,83 +214,13 @@ Groups:
 [Player4, Player5]   - Split points for 4th/5th
 ```
 
-## CLIP Embedder
-The CLIP embedder generates embeddings for images and text using OpenAI's CLIP model. It can be used from the command line and accepts input via stdin.
-
-### Installation
-```bash
-pip install -r requirements.txt
-```
-
-### Usage
-
-#### Generate Image Embeddings
-```bash
-echo '{"image": "'$(cat image.jpg | base64)'"}' | python clip_embedder.py --mode image
-```
-
-#### Generate Text Embeddings
-```bash
-echo '{"text": "a photo of a dog"}' | python clip_embedder.py --mode text
-```
-
-### Output Format
-```json
-{
-    "embedding": [0.1, 0.2, ...],
-    "shape": [512]
-}
-```
-
 ## Contributing
 
-### Development Setup
-1. Clone the repository.
-2. Create a new branch for your feature or bugfix.
-3. Install dependencies using:
-```bash
-pip install -r requirements.txt
-```
-4. Set up pre-commit hooks.
+We welcome contributions! For detailed setup instructions, development guidelines, and advanced configuration options, please see [CONTRIBUTING.md](CONTRIBUTING.md).
 
-### Installing Dependencies
-
-The `requirements.txt` file contains different groups of dependencies:
-
-- **Core dependencies**: Always installed by default
-  ```bash
-  pip install -r requirements.txt
-  ```
-
-- **Development dependencies**: For Jupyter notebooks and development tools
-  ```bash
-  # Edit requirements.txt to uncomment development dependencies
-  # Then run:
-  pip install -r requirements.txt
-  ```
-
-- **Testing dependencies**: Required for running tests
-  ```bash
-  # Already included when installing requirements.txt
-  ```
-
-- **Optional dependencies**: For specific features
-  ```bash
-  # Edit requirements.txt to uncomment optional dependencies
-  # Then run:
-  pip install -r requirements.txt
-  ```
-
-### Running Tests
-```bash
-python -m unittest discover tests
-```
-
-### Pull Request Process
-1. Create a new branch for your feature or bugfix.
-2. Make your changes.
-3. Run tests to ensure everything works.
-4. Commit your changes.
-5. Push your branch to GitHub.
-6. Create a pull request.
-7. Wait for review and merge.
+### Quick Start
+1. Clone the repository
+2. Install dependencies: `pip install -r requirements.txt`
+3. Build CLI tools: `cargo build --release --no-default-features`
+4. Run tests: `python -m unittest discover tests`
+5. Create a pull request

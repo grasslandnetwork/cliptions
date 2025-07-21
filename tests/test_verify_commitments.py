@@ -9,8 +9,8 @@ from unittest.mock import patch, MagicMock, mock_open
 # Add parent directory to path to import verify_commitments
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from verify_commitments import verify_round_commitments
-from generate_commitment import generate_commitment
+from core.verify_commitments import verify_round_commitments
+from core.generate_commitment import generate_commitment
 
 class TestVerifyCommitments(unittest.TestCase):
     def setUp(self):
@@ -125,7 +125,7 @@ class TestVerifyCommitments(unittest.TestCase):
         """Clean up temporary files."""
         self.temp_dir.cleanup()
     
-    @patch('verify_commitments.Path')
+    @patch('core.verify_commitments.Path')
     def test_file_not_found(self, mock_path):
         """Test handling of missing guesses.json file."""
         # Mock Path to return a non-existent file
@@ -139,19 +139,19 @@ class TestVerifyCommitments(unittest.TestCase):
     
     def test_round_not_found(self):
         """Test handling of non-existent round."""
-        with patch('verify_commitments.Path', return_value=self.guesses_file):
+        with patch('core.verify_commitments.Path', return_value=self.guesses_file):
             result = verify_round_commitments("non_existent_round")
             self.assertFalse(result)
     
     def test_empty_round(self):
         """Test handling of a round with no participants."""
-        with patch('verify_commitments.Path', return_value=self.guesses_file):
+        with patch('core.verify_commitments.Path', return_value=self.guesses_file):
             result = verify_round_commitments("empty_round")
             self.assertFalse(result)
     
     def test_valid_commitments(self):
         """Test verifying a round with valid commitments."""
-        with patch('verify_commitments.Path', return_value=self.guesses_file):
+        with patch('core.verify_commitments.Path', return_value=self.guesses_file):
             with patch('builtins.open', new_callable=mock_open, read_data=json.dumps(self.test_data)):
                 # Mock json.load to return our test data directly
                 with patch('json.load', return_value=self.test_data):
@@ -171,7 +171,7 @@ class TestVerifyCommitments(unittest.TestCase):
     
     def test_invalid_commitments(self):
         """Test verifying a round with invalid commitments."""
-        with patch('verify_commitments.Path', return_value=self.guesses_file):
+        with patch('core.verify_commitments.Path', return_value=self.guesses_file):
             with patch('builtins.open', new_callable=mock_open, read_data=json.dumps(self.test_data)):
                 # Mock json.load to return our test data directly
                 with patch('json.load', return_value=self.test_data):
@@ -191,7 +191,7 @@ class TestVerifyCommitments(unittest.TestCase):
     
     def test_mixed_commitments(self):
         """Test verifying a round with both valid and invalid commitments."""
-        with patch('verify_commitments.Path', return_value=self.guesses_file):
+        with patch('core.verify_commitments.Path', return_value=self.guesses_file):
             with patch('builtins.open', new_callable=mock_open, read_data=json.dumps(self.test_data)):
                 # Mock json.load to return our test data directly
                 with patch('json.load', return_value=self.test_data):
@@ -212,7 +212,7 @@ class TestVerifyCommitments(unittest.TestCase):
     
     def test_missing_data(self):
         """Test verifying a round with missing guess or salt."""
-        with patch('verify_commitments.Path', return_value=self.guesses_file):
+        with patch('core.verify_commitments.Path', return_value=self.guesses_file):
             with patch('builtins.open', new_callable=mock_open, read_data=json.dumps(self.test_data)):
                 # Mock json.load to return our test data directly
                 with patch('json.load', return_value=self.test_data):
