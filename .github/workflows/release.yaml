@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'v*'  # triggers on tags like v0.4.1
+      - '[0-9]*'   # catch numeric-only tags like 0.4.1
 
 jobs:
   build-and-release:
