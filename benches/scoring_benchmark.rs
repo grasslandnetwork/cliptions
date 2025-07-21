@@ -8,9 +8,9 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 use cliptions_core::commitment::{CommitmentGenerator, CommitmentVerifier};
-use cliptions_core::embedder::MockEmbedder;
+use cliptions_core::embedder::{EmbedderTrait, MockEmbedder};
 use cliptions_core::scoring::{
-    calculate_payouts, calculate_rankings, ClipBatchStrategy, ScoreValidator,
+    calculate_payouts, calculate_rankings, ClipBatchStrategy, ScoreValidator, ScoringStrategy,
 };
 
 fn benchmark_commitment_generation(c: &mut Criterion) {
@@ -148,7 +148,7 @@ fn benchmark_payout_calculation(c: &mut Criterion) {
 
     for &num_participants in &[10, 25, 50, 100, 500] {
         // Create ranked results with some ties
-        let mut ranked_results = Vec::new();
+        let mut ranked_results: Vec<(String, f64)> = Vec::new();
         for i in 0..num_participants {
             let score = 1.0 - (i as f64 / num_participants as f64) * 0.5;
             // Create some ties every 5 positions
