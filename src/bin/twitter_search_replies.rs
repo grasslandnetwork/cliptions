@@ -1,11 +1,11 @@
 //! Twitter API reply search tool
-//! 
+//!
 //! Searches for all replies to a specific tweet using Twitter API v2
 
-use std::env;
 use clap::Parser;
-use twitter_api::{TwitterApi, TwitterClient, TwitterError};
 use cliptions_core::config::ConfigManager;
+use std::env;
+use twitter_api::{TwitterApi, TwitterClient, TwitterError};
 
 #[derive(Parser)]
 #[command(name = "twitter_search_replies")]
@@ -14,11 +14,11 @@ struct Args {
     /// Tweet ID to search replies for
     #[arg(short, long)]
     tweet_id: String,
-    
+
     /// Maximum results per page (default: 100)
     #[arg(short, long, default_value = "100")]
     max_results: u32,
-    
+
     /// Show verbose output
     #[arg(short, long)]
     verbose: bool,
@@ -30,14 +30,14 @@ struct Args {
 #[tokio::main]
 async fn main() {
     let args = Args::parse();
-    
+
     if args.verbose {
         println!("Starting Twitter API reply search...");
         println!("Searching for replies to tweet: {}", args.tweet_id);
     }
     // Load config
-    let config_manager = ConfigManager::with_path(&args.config)
-        .expect("Failed to load config file");
+    let config_manager =
+        ConfigManager::with_path(&args.config).expect("Failed to load config file");
     let config = config_manager.get_config().clone();
     let twitter = &config.twitter;
     println!("\u{2705} Loaded config from: {}", &args.config);
@@ -49,15 +49,17 @@ async fn main() {
         access_token_secret: twitter.access_token_secret.clone(),
     };
     let client = TwitterClient::new(config);
-    
+
     // Search for replies
-    let result = client.search_replies(&args.tweet_id, args.max_results).await;
-    
+    let result = client
+        .search_replies(&args.tweet_id, args.max_results)
+        .await;
+
     match result {
         Ok(replies) => {
             println!("✅ Search complete!");
             println!("Total replies found: {}", replies.len());
-            
+
             for (i, reply) in replies.iter().enumerate() {
                 println!("\n--- Reply {} ---", i + 1);
                 println!("🐦 Tweet ID: {}", reply.id);
@@ -67,19 +69,23 @@ async fn main() {
                 }
                 println!("💬 Text: {}", reply.text);
                 println!("🔗 URL: {}", reply.url);
-                
+
                 if args.verbose {
                     if let Some(conversation_id) = &reply.conversation_id {
                         println!("🔗 Conversation ID: {}", conversation_id);
                     }
                     if let Some(metrics) = &reply.public_metrics {
-                        println!("📊 Metrics: {} retweets, {} likes, {} replies, {} quotes", 
-                                 metrics.retweet_count, metrics.like_count, 
-                                 metrics.reply_count, metrics.quote_count);
+                        println!(
+                            "📊 Metrics: {} retweets, {} likes, {} replies, {} quotes",
+                            metrics.retweet_count,
+                            metrics.like_count,
+                            metrics.reply_count,
+                            metrics.quote_count
+                        );
                     }
                 }
             }
-            
+
             if replies.is_empty() {
                 println!("❌ No replies found for tweet {}", args.tweet_id);
                 println!("💡 This could mean:");
@@ -128,4 +134,4 @@ async fn main() {
             std::process::exit(1);
         }
     }
-} 
+}

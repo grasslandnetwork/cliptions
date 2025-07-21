@@ -1,11 +1,11 @@
 use crate::error::{CliptionsError, Result};
+use chrono::{DateTime, Duration, Utc};
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use url::Url;
-use regex::Regex;
 use std::fs;
 use std::path::Path;
-use chrono::{DateTime, Utc, Duration};
+use url::Url;
 
 /// Tweet ID extracted from URLs
 pub type TweetId = String;
@@ -34,10 +34,10 @@ pub struct TaskContext {
 pub trait SocialTask {
     /// Execute the social media task
     fn execute(&self, context: &TaskContext) -> Result<String>;
-    
+
     /// Get task name
     fn get_name(&self) -> &str;
-    
+
     /// Validate task parameters
     fn validate_parameters(&self, params: &HashMap<String, String>) -> Result<()>;
 }
@@ -50,12 +50,11 @@ pub struct UrlParser {
 impl UrlParser {
     /// Create a new URL parser
     pub fn new() -> Result<Self> {
-        let twitter_regex = Regex::new(r"https?://(?:www\.)?(?:twitter\.com|x\.com)/[^/]+/status/(\d+)")
-            .map_err(|e| CliptionsError::ValidationError(format!("Invalid regex: {}", e)))?;
-        
-        Ok(Self {
-            twitter_regex,
-        })
+        let twitter_regex =
+            Regex::new(r"https?://(?:www\.)?(?:twitter\.com|x\.com)/[^/]+/status/(\d+)")
+                .map_err(|e| CliptionsError::ValidationError(format!("Invalid regex: {}", e)))?;
+
+        Ok(Self { twitter_regex })
     }
 
     /// Extract tweet ID from Twitter/X URL
@@ -65,10 +64,11 @@ impl UrlParser {
                 return Ok(tweet_id.as_str().to_string());
             }
         }
-        
-        Err(CliptionsError::ValidationError(
-            format!("Invalid Twitter URL: {}", url)
-        ))
+
+        Err(CliptionsError::ValidationError(format!(
+            "Invalid Twitter URL: {}",
+            url
+        )))
     }
 
     /// Validate URL format
@@ -82,7 +82,7 @@ impl UrlParser {
     pub fn extract_domain(&self, url: &str) -> Result<String> {
         let parsed = Url::parse(url)
             .map_err(|e| CliptionsError::ValidationError(format!("Invalid URL: {}", e)))?;
-        
+
         Ok(parsed.domain().unwrap_or("unknown").to_string())
     }
 }
@@ -118,36 +118,45 @@ impl HashtagManager {
     }
 
     /// Generate hashtags for a round with state information
-    pub fn generate_hashtags(&self, round_id: &str, custom_hashtags: Option<Vec<String>>) -> Vec<String> {
+    pub fn generate_hashtags(
+        &self,
+        round_id: &str,
+        custom_hashtags: Option<Vec<String>>,
+    ) -> Vec<String> {
         let mut hashtags = self.standard_hashtags.clone();
-        
+
         // Add round-specific hashtag
         hashtags.push(format!("#round{}", round_id));
-        
+
         // Add custom hashtags if provided
         if let Some(custom) = custom_hashtags {
             hashtags.extend(custom);
         }
-        
+
         hashtags
     }
 
     /// Generate hashtags for a round with state information
-    pub fn generate_hashtags_with_state(&self, round_id: u64, state_name: &str, custom_hashtags: Option<Vec<String>>) -> Vec<String> {
+    pub fn generate_hashtags_with_state(
+        &self,
+        round_id: u64,
+        state_name: &str,
+        custom_hashtags: Option<Vec<String>>,
+    ) -> Vec<String> {
         let mut hashtags = self.standard_hashtags.clone();
-        
+
         // Add round-specific hashtag
         hashtags.push(format!("#round{}", round_id));
-        
+
         // Add state-specific hashtag (lowercase, no prefix)
         let state_hashtag = format!("#{}", state_name.to_lowercase());
         hashtags.push(state_hashtag);
-        
+
         // Add custom hashtags if provided
         if let Some(custom) = custom_hashtags {
             hashtags.extend(custom);
         }
-        
+
         hashtags
     }
 
@@ -193,26 +202,24 @@ impl AnnouncementFormatter {
 
     /// Create announcement formatter with custom hashtag manager
     pub fn with_hashtag_manager(hashtag_manager: HashtagManager) -> Self {
-        Self {
-            hashtag_manager,
-        }
+        Self { hashtag_manager }
     }
 
     /// Create a standard round announcement
     pub fn create_standard_announcement(&self, data: &AnnouncementData) -> String {
         let hashtags = self.hashtag_manager.generate_hashtags_with_state(
-            data.round_id, 
-            &data.state_name, 
-            None
+            data.round_id,
+            &data.state_name,
+            None,
         );
         let hashtag_string = self.hashtag_manager.format_hashtags(&hashtags);
-        
+
         let prize_info = if let Some(prize) = data.prize_pool {
             format!(" Prize pool: {} TAO.", prize)
         } else {
             String::new()
         };
-        
+
         format!(
             "🎯 Round {} is now live! Target frame reveal at {}.{} Submit your predictions below! {}",
             data.round_id,
@@ -225,12 +232,12 @@ impl AnnouncementFormatter {
     /// Create a custom announcement with provided message
     pub fn create_custom_announcement(&self, data: &AnnouncementData) -> String {
         let hashtags = self.hashtag_manager.generate_hashtags_with_state(
-            data.round_id, 
-            &data.state_name, 
-            Some(data.hashtags.clone())
+            data.round_id,
+            &data.state_name,
+            Some(data.hashtags.clone()),
         );
         let hashtag_string = self.hashtag_manager.format_hashtags(&hashtags);
-        
+
         format!("{} {}", data.message, hashtag_string)
     }
 
@@ -253,10 +260,10 @@ impl AnnouncementFormatter {
             format!("#round{}", data.round_id),
             format!("#{}", data.state_name.to_lowercase()),
         ];
-        
+
         // Add any custom hashtags
         hashtags.extend(data.hashtags.clone());
-        
+
         let hashtag_string = self.hashtag_manager.format_hashtags(&hashtags);
 
         let instructions = format!(
@@ -284,10 +291,10 @@ impl AnnouncementFormatter {
             format!("#round{}", data.round_id),
             format!("#{}", data.state_name.to_lowercase()),
         ];
-        
+
         // Add any custom hashtags
         hashtags.extend(data.hashtags.clone());
-        
+
         let hashtag_string = self.hashtag_manager.format_hashtags(&hashtags);
 
         let instructions = format!(
@@ -340,11 +347,15 @@ impl MockSocialTask {
 impl SocialTask for MockSocialTask {
     fn execute(&self, context: &TaskContext) -> Result<String> {
         if self.should_succeed {
-            Ok(format!("Mock task '{}' executed successfully with context: {:?}", self.name, context))
-        } else {
-            Err(CliptionsError::ValidationError(
-                format!("Mock task '{}' failed", self.name)
+            Ok(format!(
+                "Mock task '{}' executed successfully with context: {:?}",
+                self.name, context
             ))
+        } else {
+            Err(CliptionsError::ValidationError(format!(
+                "Mock task '{}' failed",
+                self.name
+            )))
         }
     }
 
@@ -382,16 +393,16 @@ impl SocialWorkflow {
     /// Execute all tasks in the workflow
     pub fn execute_workflow(&self, contexts: &[TaskContext]) -> Result<Vec<String>> {
         let mut results = Vec::new();
-        
+
         for (task, context) in self.tasks.iter().zip(contexts.iter()) {
             // Validate parameters first
             task.validate_parameters(&context.parameters)?;
-            
+
             // Execute the task
             let result = task.execute(context)?;
             results.push(result);
         }
-        
+
         Ok(results)
     }
 
@@ -440,20 +451,22 @@ impl TweetCache {
     pub fn has_state_hashtags(&self) -> bool {
         let hashtag_manager = HashtagManager::new();
         let hashtags = hashtag_manager.extract_hashtags(&self.tweet_text);
-        
+
         // Look for state hashtags: #cliptions, #round{number}, state-specific hashtags
         let has_cliptions = hashtags.iter().any(|h| h.to_lowercase() == "#cliptions");
-        let has_round = hashtags.iter().any(|h| h.to_lowercase().starts_with("#round"));
+        let has_round = hashtags
+            .iter()
+            .any(|h| h.to_lowercase().starts_with("#round"));
         let has_state = hashtags.iter().any(|h| {
             let h_lower = h.to_lowercase();
-            h_lower == "#commitmentsopen" || 
-            h_lower == "#commitmentsclosed" || 
-            h_lower == "#revealsopen" || 
-            h_lower == "#revealsclosed" || 
-            h_lower == "#payouts" || 
-            h_lower == "#finished"
+            h_lower == "#commitmentsopen"
+                || h_lower == "#commitmentsclosed"
+                || h_lower == "#revealsopen"
+                || h_lower == "#revealsclosed"
+                || h_lower == "#payouts"
+                || h_lower == "#finished"
         });
-        
+
         has_cliptions && has_round && has_state
     }
 }
@@ -479,15 +492,17 @@ impl TweetCacheManager {
             return Ok(None);
         }
 
-        let content = std::fs::read_to_string(&self.cache_file)
-            .map_err(|e| CliptionsError::ValidationError(format!("Failed to read cache file: {}", e)))?;
+        let content = std::fs::read_to_string(&self.cache_file).map_err(|e| {
+            CliptionsError::ValidationError(format!("Failed to read cache file: {}", e))
+        })?;
 
         if content.trim().is_empty() {
             return Ok(None);
         }
 
-        let cache: TweetCache = serde_json::from_str(&content)
-            .map_err(|e| CliptionsError::ValidationError(format!("Failed to parse cache file: {}", e)))?;
+        let cache: TweetCache = serde_json::from_str(&content).map_err(|e| {
+            CliptionsError::ValidationError(format!("Failed to parse cache file: {}", e))
+        })?;
 
         Ok(Some(cache))
     }
@@ -496,15 +511,18 @@ impl TweetCacheManager {
     pub fn save_cache(&self, cache: &TweetCache) -> Result<()> {
         // Ensure the directory exists
         if let Some(parent) = std::path::Path::new(&self.cache_file).parent() {
-            std::fs::create_dir_all(parent)
-                .map_err(|e| CliptionsError::ValidationError(format!("Failed to create cache directory: {}", e)))?;
+            std::fs::create_dir_all(parent).map_err(|e| {
+                CliptionsError::ValidationError(format!("Failed to create cache directory: {}", e))
+            })?;
         }
 
-        let content = serde_json::to_string_pretty(cache)
-            .map_err(|e| CliptionsError::ValidationError(format!("Failed to serialize cache: {}", e)))?;
+        let content = serde_json::to_string_pretty(cache).map_err(|e| {
+            CliptionsError::ValidationError(format!("Failed to serialize cache: {}", e))
+        })?;
 
-        std::fs::write(&self.cache_file, content)
-            .map_err(|e| CliptionsError::ValidationError(format!("Failed to write cache file: {}", e)))?;
+        std::fs::write(&self.cache_file, content).map_err(|e| {
+            CliptionsError::ValidationError(format!("Failed to write cache file: {}", e))
+        })?;
 
         Ok(())
     }
@@ -512,8 +530,9 @@ impl TweetCacheManager {
     /// Clear the cache file
     pub fn clear_cache(&self) -> Result<()> {
         if std::path::Path::new(&self.cache_file).exists() {
-            std::fs::remove_file(&self.cache_file)
-                .map_err(|e| CliptionsError::ValidationError(format!("Failed to remove cache file: {}", e)))?;
+            std::fs::remove_file(&self.cache_file).map_err(|e| {
+                CliptionsError::ValidationError(format!("Failed to remove cache file: {}", e))
+            })?;
         }
         Ok(())
     }
@@ -529,7 +548,12 @@ impl TweetCacheManager {
     }
 
     /// Update cache with new tweet data (always uses Utc::now for cached_at)
-    pub fn update_cache(&self, tweet_id: String, tweet_text: String, validator_username: String) -> Result<()> {
+    pub fn update_cache(
+        &self,
+        tweet_id: String,
+        tweet_text: String,
+        validator_username: String,
+    ) -> Result<()> {
         let cache = TweetCache::new(tweet_id, tweet_text, validator_username);
         self.save_cache(&cache)
     }
@@ -548,17 +572,17 @@ mod tests {
     #[test]
     fn test_extract_tweet_id_from_url() {
         let parser = UrlParser::new().unwrap();
-        
+
         // Test Twitter URL
         let twitter_url = "https://twitter.com/cliptions_test/status/1234567890";
         let tweet_id = parser.extract_tweet_id(twitter_url).unwrap();
         assert_eq!(tweet_id, "1234567890");
-        
+
         // Test X URL
         let x_url = "https://x.com/cliptions_test/status/9876543210";
         let tweet_id = parser.extract_tweet_id(x_url).unwrap();
         assert_eq!(tweet_id, "9876543210");
-        
+
         // Test invalid URL
         let invalid_url = "https://example.com/not-a-tweet";
         assert!(parser.extract_tweet_id(invalid_url).is_err());
@@ -567,7 +591,7 @@ mod tests {
     #[test]
     fn test_validate_url() {
         let parser = UrlParser::new().unwrap();
-        
+
         assert!(parser.validate_url("https://twitter.com/test").is_ok());
         assert!(parser.validate_url("http://example.com").is_ok());
         assert!(parser.validate_url("not-a-url").is_err());
@@ -576,10 +600,10 @@ mod tests {
     #[test]
     fn test_extract_domain() {
         let parser = UrlParser::new().unwrap();
-        
+
         let domain = parser.extract_domain("https://twitter.com/test").unwrap();
         assert_eq!(domain, "twitter.com");
-        
+
         let domain = parser.extract_domain("https://x.com/test").unwrap();
         assert_eq!(domain, "x.com");
     }
@@ -587,11 +611,11 @@ mod tests {
     #[test]
     fn test_generate_hashtags() {
         let hashtag_manager = HashtagManager::new();
-        
+
         let hashtags = hashtag_manager.generate_hashtags("1", None);
         assert!(hashtags.contains(&"#cliptions".to_string()));
         assert!(hashtags.contains(&"#round1".to_string()));
-        
+
         let custom_hashtags = vec!["#custom".to_string()];
         let hashtags = hashtag_manager.generate_hashtags("2", Some(custom_hashtags));
         assert!(hashtags.contains(&"#custom".to_string()));
@@ -601,7 +625,7 @@ mod tests {
     fn test_custom_hashtags() {
         let custom_defaults = vec!["#customtag".to_string()];
         let hashtag_manager = HashtagManager::with_defaults(custom_defaults);
-        
+
         let hashtags = hashtag_manager.generate_hashtags("1", None);
         assert!(hashtags.contains(&"#customtag".to_string()));
         assert!(hashtags.contains(&"#round1".to_string()));
@@ -610,15 +634,16 @@ mod tests {
     #[test]
     fn test_generate_hashtags_with_state() {
         let hashtag_manager = HashtagManager::new();
-        
+
         let hashtags = hashtag_manager.generate_hashtags_with_state(5, "CommitmentsOpen", None);
         assert!(hashtags.contains(&"#cliptions".to_string()));
         assert!(hashtags.contains(&"#round5".to_string()));
         assert!(hashtags.contains(&"#commitmentsopen".to_string()));
         assert!(hashtags.contains(&"#CLIP".to_string()));
-        
+
         let custom_hashtags = vec!["#custom".to_string()];
-        let hashtags = hashtag_manager.generate_hashtags_with_state(3, "RevealsOpen", Some(custom_hashtags));
+        let hashtags =
+            hashtag_manager.generate_hashtags_with_state(3, "RevealsOpen", Some(custom_hashtags));
         assert!(hashtags.contains(&"#custom".to_string()));
         assert!(hashtags.contains(&"#round3".to_string()));
         assert!(hashtags.contains(&"#revealsopen".to_string()));
@@ -627,7 +652,7 @@ mod tests {
     #[test]
     fn test_machine_readable_tweet_format() {
         let formatter = AnnouncementFormatter::new();
-        
+
         // Test CommitmentsOpen state
         let data = AnnouncementData {
             round_id: 42,
@@ -638,17 +663,32 @@ mod tests {
             prize_pool: None,
             livestream_url: Some("https://example.com/livestream".to_string()),
         };
-        
+
         let tweet = formatter.format_announcement(&data, true);
-        
+
         // Verify machine-readable components
-        assert!(tweet.contains("#cliptions"), "Tweet should contain lowercase #cliptions");
-        assert!(tweet.contains("#round42"), "Tweet should contain round-specific hashtag");
-        assert!(tweet.contains("#commitmentsopen"), "Tweet should contain state hashtag");
-        assert!(tweet.contains("#CLIP"), "Tweet should contain uppercase #CLIP for model reference");
+        assert!(
+            tweet.contains("#cliptions"),
+            "Tweet should contain lowercase #cliptions"
+        );
+        assert!(
+            tweet.contains("#round42"),
+            "Tweet should contain round-specific hashtag"
+        );
+        assert!(
+            tweet.contains("#commitmentsopen"),
+            "Tweet should contain state hashtag"
+        );
+        assert!(
+            tweet.contains("#CLIP"),
+            "Tweet should contain uppercase #CLIP for model reference"
+        );
         assert!(tweet.contains("#ai"), "Tweet should contain #ai hashtag");
-        assert!(!tweet.contains("#predictionmarket"), "Tweet should not contain removed hashtag");
-        
+        assert!(
+            !tweet.contains("#predictionmarket"),
+            "Tweet should not contain removed hashtag"
+        );
+
         // Test RevealsOpen state with different round
         let data2 = AnnouncementData {
             round_id: 7,
@@ -659,21 +699,33 @@ mod tests {
             prize_pool: Some(100.0),
             livestream_url: Some("https://example.com/livestream2".to_string()),
         };
-        
+
         let tweet2 = formatter.format_announcement(&data2, true);
-        assert!(tweet2.contains("#round7"), "Tweet should contain correct round number");
-        assert!(tweet2.contains("#revealsopen"), "Tweet should contain correct state");
-        
+        assert!(
+            tweet2.contains("#round7"),
+            "Tweet should contain correct round number"
+        );
+        assert!(
+            tweet2.contains("#revealsopen"),
+            "Tweet should contain correct state"
+        );
+
         // Verify hashtag format consistency
-        assert!(!tweet2.contains("#RevealsOpen"), "State hashtag should be lowercase");
-        assert!(!tweet2.contains("#Round7"), "Round hashtag should be lowercase");
+        assert!(
+            !tweet2.contains("#RevealsOpen"),
+            "State hashtag should be lowercase"
+        );
+        assert!(
+            !tweet2.contains("#Round7"),
+            "Round hashtag should be lowercase"
+        );
     }
 
     #[test]
     fn test_format_hashtags() {
         let hashtag_manager = HashtagManager::new();
         let hashtags = vec!["#tag1".to_string(), "#tag2".to_string()];
-        
+
         let formatted = hashtag_manager.format_hashtags(&hashtags);
         assert_eq!(formatted, "#tag1 #tag2");
     }
@@ -682,7 +734,7 @@ mod tests {
     fn test_extract_hashtags() {
         let hashtag_manager = HashtagManager::new();
         let text = "This is a tweet with #hashtag1 and #hashtag2";
-        
+
         let hashtags = hashtag_manager.extract_hashtags(text);
         assert_eq!(hashtags, vec!["#hashtag1", "#hashtag2"]);
     }
@@ -690,7 +742,7 @@ mod tests {
     #[test]
     fn test_validate_hashtag() {
         let hashtag_manager = HashtagManager::new();
-        
+
         assert!(hashtag_manager.validate_hashtag("#validhashtag"));
         assert!(hashtag_manager.validate_hashtag("#valid123"));
         assert!(!hashtag_manager.validate_hashtag("invalid"));
@@ -709,7 +761,7 @@ mod tests {
             prize_pool: Some(100.0),
             livestream_url: None,
         };
-        
+
         let announcement = formatter.create_standard_announcement(&data);
         assert!(announcement.contains("Round 1 is now live"));
         assert!(announcement.contains("2024-01-01 12:00:00"));
@@ -731,7 +783,7 @@ mod tests {
             prize_pool: None,
             livestream_url: None,
         };
-        
+
         let announcement = formatter.create_custom_announcement(&data);
         assert!(announcement.contains("Custom announcement message"));
         assert!(announcement.contains("#custom"));
@@ -751,11 +803,11 @@ mod tests {
             prize_pool: Some(50.0),
             livestream_url: None,
         };
-        
+
         // Test standard announcement
         let standard = formatter.format_announcement(&data, false);
         assert!(standard.contains("Round 3 is now live"));
-        
+
         // Test custom announcement (should fallback to standard when message is empty)
         let custom = formatter.format_announcement(&data, true);
         assert!(custom.contains("Round 3 is now live"));
@@ -769,7 +821,7 @@ mod tests {
             parameters: HashMap::new(),
             timeout_seconds: 30,
         };
-        
+
         let result = task.execute(&context);
         assert!(result.is_ok());
         assert!(result.unwrap().contains("executed successfully"));
@@ -780,13 +832,13 @@ mod tests {
         let task = MockSocialTask::new("test_task".to_string());
         let mut parameters = HashMap::new();
         parameters.insert("param1".to_string(), "value1".to_string());
-        
+
         let context = TaskContext {
             task_name: "test_task".to_string(),
             parameters,
             timeout_seconds: 30,
         };
-        
+
         let result = task.execute(&context);
         assert!(result.is_ok());
     }
@@ -799,7 +851,7 @@ mod tests {
             parameters: HashMap::new(),
             timeout_seconds: 30,
         };
-        
+
         let result = task.execute(&context);
         assert!(result.is_err());
     }
@@ -807,13 +859,13 @@ mod tests {
     #[test]
     fn test_social_workflow() {
         let mut workflow = SocialWorkflow::new().unwrap();
-        
+
         let task1 = Box::new(MockSocialTask::new("task1".to_string()));
         let task2 = Box::new(MockSocialTask::new("task2".to_string()));
-        
+
         workflow.add_task(task1);
         workflow.add_task(task2);
-        
+
         let contexts = vec![
             TaskContext {
                 task_name: "task1".to_string(),
@@ -826,7 +878,7 @@ mod tests {
                 timeout_seconds: 30,
             },
         ];
-        
+
         let results = workflow.execute_workflow(&contexts).unwrap();
         assert_eq!(results.len(), 2);
         assert!(results[0].contains("task1"));
@@ -844,7 +896,7 @@ mod tests {
             prize_pool: Some(100.0),
             livestream_url: None,
         };
-        
+
         assert_eq!(data.round_id, 1);
         assert_eq!(data.target_time, "2024-01-01 12:00:00");
         assert_eq!(data.hashtags, vec!["#test"]);

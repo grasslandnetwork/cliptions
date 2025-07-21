@@ -25,4 +25,4 @@ pub struct Round {
     pub reveal_deadline: String,
     #[serde(default)]
     pub commitments: Vec<Commitment>,
-} 
+}

@@ -1,17 +1,19 @@
 //! Calculate scores and payouts for Cliptions guesses
-//! 
+//!
 //! Enhanced CLI tool with comprehensive error handling, multiple output formats,
 //! configuration support, and improved user experience.
 
-use std::process;
-use std::path::PathBuf;
-use std::fs;
 use clap::Parser;
 use colored::Colorize;
+use std::fs;
+use std::path::PathBuf;
+use std::process;
 
-use cliptions_core::embedder::{MockEmbedder, ClipEmbedder, EmbedderTrait};
-use cliptions_core::scoring::{ClipBatchStrategy, ScoreValidator, calculate_rankings, calculate_payouts};
 use cliptions_core::config::ConfigManager;
+use cliptions_core::embedder::{ClipEmbedder, EmbedderTrait, MockEmbedder};
+use cliptions_core::scoring::{
+    calculate_payouts, calculate_rankings, ClipBatchStrategy, ScoreValidator,
+};
 
 #[derive(Parser)]
 #[command(name = "calculate_scores")]
@@ -40,10 +42,10 @@ Examples:
 struct Args {
     /// Path to the target image
     target_image_path: String,
-    
+
     /// Prize pool amount (must be positive)
     prize_pool: f64,
-    
+
     /// List of guesses to rank (minimum 1 required)
     guesses: Vec<String>,
 
@@ -90,7 +92,7 @@ struct Args {
 
 fn main() {
     let args = Args::parse();
-    
+
     // Initialize colored output
     if args.no_color {
         colored::control::set_override(false);
@@ -101,17 +103,19 @@ fn main() {
         match ConfigManager::with_path(config_path) {
             Ok(manager) => {
                 if args.verbose {
-                    println!("{} Loaded configuration from {}", 
-                        "Info:".blue().bold(), 
+                    println!(
+                        "{} Loaded configuration from {}",
+                        "Info:".blue().bold(),
                         config_path.display()
                     );
                 }
                 Some(manager)
             }
             Err(e) => {
-                eprintln!("{} Failed to load config from {}: {}", 
-                    "Error:".red().bold(), 
-                    config_path.display(), 
+                eprintln!(
+                    "{} Failed to load config from {}: {}",
+                    "Error:".red().bold(),
+                    config_path.display(),
                     e
                 );
                 process::exit(1);
@@ -121,15 +125,14 @@ fn main() {
         match ConfigManager::new() {
             Ok(manager) => {
                 if args.verbose {
-                    println!("{} Using default configuration", 
-                        "Info:".blue().bold()
-                    );
+                    println!("{} Using default configuration", "Info:".blue().bold());
                 }
                 Some(manager)
             }
             Err(_) => {
                 if args.verbose {
-                    println!("{} No configuration file found, using built-in defaults", 
+                    println!(
+                        "{} No configuration file found, using built-in defaults",
                         "Info:".blue().bold()
                     );
                 }
@@ -141,25 +144,33 @@ fn main() {
     // Validate inputs with enhanced error messages
     if let Err(e) = validate_inputs(&args) {
         eprintln!("{} {}", "Error:".red().bold(), e);
-        eprintln!("{} Use --help for usage information", "Tip:".yellow().bold());
+        eprintln!(
+            "{} Use --help for usage information",
+            "Tip:".yellow().bold()
+        );
         process::exit(1);
     }
 
     // Filter guesses by length
-    let filtered_guesses = filter_guesses(&args.guesses, args.min_guess_length, args.max_guess_length);
-    
+    let filtered_guesses =
+        filter_guesses(&args.guesses, args.min_guess_length, args.max_guess_length);
+
     if filtered_guesses.len() != args.guesses.len() {
         let filtered_count = args.guesses.len() - filtered_guesses.len();
         if args.verbose {
-            println!("{} Filtered out {} guess(es) due to length constraints", 
-                "Info:".blue().bold(), 
+            println!(
+                "{} Filtered out {} guess(es) due to length constraints",
+                "Info:".blue().bold(),
                 filtered_count
             );
         }
     }
 
     if filtered_guesses.is_empty() {
-        eprintln!("{} No valid guesses remaining after filtering", "Error:".red().bold());
+        eprintln!(
+            "{} No valid guesses remaining after filtering",
+            "Error:".red().bold()
+        );
         process::exit(1);
     }
 
@@ -174,19 +185,27 @@ fn main() {
 
             // Save to file if requested
             if let Some(output_file) = &args.output_file {
-                if let Err(e) = save_results(&ranked_results, &payouts, args.prize_pool, output_file, &args.output) {
+                if let Err(e) = save_results(
+                    &ranked_results,
+                    &payouts,
+                    args.prize_pool,
+                    output_file,
+                    &args.output,
+                ) {
                     eprintln!("{} Failed to save results: {}", "Error:".red().bold(), e);
                     process::exit(1);
                 }
-                
-                println!("{} Results saved to {}", 
-                    "Success:".green().bold(), 
+
+                println!(
+                    "{} Results saved to {}",
+                    "Success:".green().bold(),
                     output_file.display()
                 );
             }
 
             if args.verbose {
-                println!("{} Score calculation completed successfully", 
+                println!(
+                    "{} Score calculation completed successfully",
                     "Success:".green().bold()
                 );
             }
@@ -210,7 +229,10 @@ fn validate_inputs(args: &Args) -> Result<(), String> {
 
     // Validate target image path
     if !std::path::Path::new(&args.target_image_path).exists() {
-        return Err(format!("Target image file does not exist: {}", args.target_image_path));
+        return Err(format!(
+            "Target image file does not exist: {}",
+            args.target_image_path
+        ));
     }
 
     // Validate guesses
@@ -226,7 +248,10 @@ fn validate_inputs(args: &Args) -> Result<(), String> {
     // Validate CLIP model path if provided
     if let Some(model_path) = &args.clip_model {
         if !model_path.exists() {
-            return Err(format!("CLIP model path does not exist: {}", model_path.display()));
+            return Err(format!(
+                "CLIP model path does not exist: {}",
+                model_path.display()
+            ));
         }
     }
 
@@ -234,7 +259,10 @@ fn validate_inputs(args: &Args) -> Result<(), String> {
     if let Some(output_file) = &args.output_file {
         if let Some(parent) = output_file.parent() {
             if !parent.exists() {
-                return Err(format!("Output directory does not exist: {}", parent.display()));
+                return Err(format!(
+                    "Output directory does not exist: {}",
+                    parent.display()
+                ));
             }
         }
     }
@@ -243,23 +271,21 @@ fn validate_inputs(args: &Args) -> Result<(), String> {
 }
 
 fn filter_guesses(guesses: &[String], min_len: usize, max_len: usize) -> Vec<String> {
-    guesses.iter()
+    guesses
+        .iter()
         .filter(|guess| guess.len() >= min_len && guess.len() <= max_len)
         .cloned()
         .collect()
 }
 
 fn calculate_scores_with_embedder(
-    args: &Args, 
-    guesses: &[String]
+    args: &Args,
+    guesses: &[String],
 ) -> Result<(Vec<(String, f64)>, Vec<f64>), Box<dyn std::error::Error>> {
-    
     // Create embedder based on user preference (defaults to CLIP)
     if args.use_mock {
         if args.verbose {
-            println!("{} Using MockEmbedder for testing", 
-                "Info:".blue().bold()
-            );
+            println!("{} Using MockEmbedder for testing", "Info:".blue().bold());
         }
         let embedder = MockEmbedder::clip_like();
         calculate_with_embedder(embedder, args, guesses)
@@ -269,22 +295,22 @@ fn calculate_scores_with_embedder(
             match ClipEmbedder::from_path(&model_path.to_string_lossy()) {
                 Ok(embedder) => {
                     if args.verbose {
-                        println!("{} Using CLIP embedder from {}", 
-                            "Info:".blue().bold(), 
+                        println!(
+                            "{} Using CLIP embedder from {}",
+                            "Info:".blue().bold(),
                             model_path.display()
                         );
                     }
                     calculate_with_embedder(embedder, args, guesses)
                 }
                 Err(e) => {
-                    eprintln!("{} Failed to load CLIP model from {}: {}", 
-                        "Warning:".yellow().bold(), 
+                    eprintln!(
+                        "{} Failed to load CLIP model from {}: {}",
+                        "Warning:".yellow().bold(),
                         model_path.display(),
                         e
                     );
-                    eprintln!("{} Falling back to MockEmbedder", 
-                        "Info:".blue().bold()
-                    );
+                    eprintln!("{} Falling back to MockEmbedder", "Info:".blue().bold());
                     let embedder = MockEmbedder::clip_like();
                     calculate_with_embedder(embedder, args, guesses)
                 }
@@ -293,20 +319,17 @@ fn calculate_scores_with_embedder(
             match ClipEmbedder::new() {
                 Ok(embedder) => {
                     if args.verbose {
-                        println!("{} Using default CLIP embedder", 
-                            "Info:".blue().bold()
-                        );
+                        println!("{} Using default CLIP embedder", "Info:".blue().bold());
                     }
                     calculate_with_embedder(embedder, args, guesses)
                 }
                 Err(e) => {
-                    eprintln!("{} Failed to load default CLIP model: {}", 
-                        "Warning:".yellow().bold(), 
+                    eprintln!(
+                        "{} Failed to load default CLIP model: {}",
+                        "Warning:".yellow().bold(),
                         e
                     );
-                    eprintln!("{} Falling back to MockEmbedder", 
-                        "Info:".blue().bold()
-                    );
+                    eprintln!("{} Falling back to MockEmbedder", "Info:".blue().bold());
                     let embedder = MockEmbedder::clip_like();
                     calculate_with_embedder(embedder, args, guesses)
                 }
@@ -318,16 +341,16 @@ fn calculate_scores_with_embedder(
 fn calculate_with_embedder<E: EmbedderTrait>(
     embedder: E,
     args: &Args,
-    guesses: &[String]
+    guesses: &[String],
 ) -> Result<(Vec<(String, f64)>, Vec<f64>), Box<dyn std::error::Error>> {
-    
     let strategy = ClipBatchStrategy::new();
     let validator = ScoreValidator::new(embedder, strategy);
 
     // Calculate rankings
     if args.verbose {
-        println!("{} Calculating similarity scores for {} guesses...", 
-            "Info:".blue().bold(), 
+        println!(
+            "{} Calculating similarity scores for {} guesses...",
+            "Info:".blue().bold(),
             guesses.len()
         );
     }
@@ -337,9 +360,7 @@ fn calculate_with_embedder<E: EmbedderTrait>(
 
     // Calculate payouts
     if args.verbose {
-        println!("{} Computing payout distribution...", 
-            "Info:".blue().bold()
-        );
+        println!("{} Computing payout distribution...", "Info:".blue().bold());
     }
 
     let payouts = calculate_payouts(&ranked_results, args.prize_pool)
@@ -349,12 +370,11 @@ fn calculate_with_embedder<E: EmbedderTrait>(
 }
 
 fn display_results(
-    ranked_results: &[(String, f64)], 
-    payouts: &[f64], 
-    prize_pool: f64, 
-    args: &Args
+    ranked_results: &[(String, f64)],
+    payouts: &[f64],
+    prize_pool: f64,
+    args: &Args,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    
     match args.output.as_str() {
         "table" => display_table_format(ranked_results, payouts, prize_pool, args),
         "json" => display_json_format(ranked_results, payouts, prize_pool),
@@ -364,56 +384,60 @@ fn display_results(
 }
 
 fn display_table_format(
-    ranked_results: &[(String, f64)], 
-    payouts: &[f64], 
+    ranked_results: &[(String, f64)],
+    payouts: &[f64],
     prize_pool: f64,
-    args: &Args
+    args: &Args,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    
     println!("\n{}", "Rankings and Payouts:".bold().underline());
     println!("{}", "=".repeat(80));
-    
-    for (i, ((guess, similarity), payout)) in ranked_results.iter().zip(payouts.iter()).enumerate() {
+
+    for (i, ((guess, similarity), payout)) in ranked_results.iter().zip(payouts.iter()).enumerate()
+    {
         let rank = format!("#{}", i + 1);
-        println!("{} {}", 
-            rank.bold().blue(), 
-            guess.bright_white()
-        );
-        
+        println!("{} {}", rank.bold().blue(), guess.bright_white());
+
         if args.detailed {
             println!("   {} {:.6}", "Similarity:".dimmed(), similarity);
             println!("   {} {:.9} TAO", "Payout:".dimmed(), payout);
-            
+
             if i == 0 {
                 println!("   {} {}", "Status:".dimmed(), "🏆 Winner".green().bold());
             } else if i < 3 {
                 println!("   {} {}", "Status:".dimmed(), "🥉 Top 3".yellow());
             }
         } else {
-            println!("   Similarity: {:.4} | Payout: {:.9} TAO", similarity, payout);
+            println!(
+                "   Similarity: {:.4} | Payout: {:.9} TAO",
+                similarity, payout
+            );
         }
         println!();
     }
-    
+
     println!("{}", "=".repeat(80));
     println!("{} {:.9} TAO", "Total Prize Pool:".bold(), prize_pool);
-    println!("{} {:.9} TAO", "Total Distributed:".bold(), payouts.iter().sum::<f64>());
-    
+    println!(
+        "{} {:.9} TAO",
+        "Total Distributed:".bold(),
+        payouts.iter().sum::<f64>()
+    );
+
     let efficiency = (payouts.iter().sum::<f64>() / prize_pool) * 100.0;
     println!("{} {:.2}%", "Distribution Efficiency:".bold(), efficiency);
-    
+
     Ok(())
 }
 
 fn display_json_format(
-    ranked_results: &[(String, f64)], 
-    payouts: &[f64], 
-    prize_pool: f64
+    ranked_results: &[(String, f64)],
+    payouts: &[f64],
+    prize_pool: f64,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    
     let mut results = serde_json::Map::new();
-    
-    let rankings: Vec<serde_json::Value> = ranked_results.iter()
+
+    let rankings: Vec<serde_json::Value> = ranked_results
+        .iter()
         .zip(payouts.iter())
         .enumerate()
         .map(|(i, ((guess, similarity), payout))| {
@@ -425,47 +449,62 @@ fn display_json_format(
             })
         })
         .collect();
-    
+
     results.insert("rankings".to_string(), serde_json::Value::Array(rankings));
-    results.insert("prize_pool".to_string(), serde_json::Value::from(prize_pool));
-    results.insert("total_distributed".to_string(), serde_json::Value::from(payouts.iter().sum::<f64>()));
-    results.insert("num_participants".to_string(), serde_json::Value::from(ranked_results.len()));
-    
+    results.insert(
+        "prize_pool".to_string(),
+        serde_json::Value::from(prize_pool),
+    );
+    results.insert(
+        "total_distributed".to_string(),
+        serde_json::Value::from(payouts.iter().sum::<f64>()),
+    );
+    results.insert(
+        "num_participants".to_string(),
+        serde_json::Value::from(ranked_results.len()),
+    );
+
     let json_output = serde_json::to_string_pretty(&results)?;
     println!("{}", json_output);
-    
+
     Ok(())
 }
 
 fn display_csv_format(
-    ranked_results: &[(String, f64)], 
-    payouts: &[f64]
+    ranked_results: &[(String, f64)],
+    payouts: &[f64],
 ) -> Result<(), Box<dyn std::error::Error>> {
-    
     println!("rank,guess,similarity_score,payout");
-    
-    for (i, ((guess, similarity), payout)) in ranked_results.iter().zip(payouts.iter()).enumerate() {
+
+    for (i, ((guess, similarity), payout)) in ranked_results.iter().zip(payouts.iter()).enumerate()
+    {
         // Escape quotes in CSV format
         let escaped_guess = guess.replace("\"", "\"\"");
-        println!("{},\"{}\",{:.6},{:.9}", i + 1, escaped_guess, similarity, payout);
+        println!(
+            "{},\"{}\",{:.6},{:.9}",
+            i + 1,
+            escaped_guess,
+            similarity,
+            payout
+        );
     }
-    
+
     Ok(())
 }
 
 fn save_results(
-    ranked_results: &[(String, f64)], 
-    payouts: &[f64], 
-    prize_pool: f64, 
+    ranked_results: &[(String, f64)],
+    payouts: &[f64],
+    prize_pool: f64,
     output_file: &PathBuf,
-    format: &str
+    format: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    
     let content = match format {
         "json" => {
             let mut results = serde_json::Map::new();
-            
-            let rankings: Vec<serde_json::Value> = ranked_results.iter()
+
+            let rankings: Vec<serde_json::Value> = ranked_results
+                .iter()
                 .zip(payouts.iter())
                 .enumerate()
                 .map(|(i, ((guess, similarity), payout))| {
@@ -477,45 +516,67 @@ fn save_results(
                     })
                 })
                 .collect();
-            
+
             results.insert("rankings".to_string(), serde_json::Value::Array(rankings));
-            results.insert("prize_pool".to_string(), serde_json::Value::from(prize_pool));
-            results.insert("total_distributed".to_string(), serde_json::Value::from(payouts.iter().sum::<f64>()));
-            results.insert("timestamp".to_string(), serde_json::Value::from(chrono::Utc::now().to_rfc3339()));
-            
+            results.insert(
+                "prize_pool".to_string(),
+                serde_json::Value::from(prize_pool),
+            );
+            results.insert(
+                "total_distributed".to_string(),
+                serde_json::Value::from(payouts.iter().sum::<f64>()),
+            );
+            results.insert(
+                "timestamp".to_string(),
+                serde_json::Value::from(chrono::Utc::now().to_rfc3339()),
+            );
+
             serde_json::to_string_pretty(&results)?
         }
         "csv" => {
             let mut content = String::from("rank,guess,similarity_score,payout\n");
-            
-            for (i, ((guess, similarity), payout)) in ranked_results.iter().zip(payouts.iter()).enumerate() {
+
+            for (i, ((guess, similarity), payout)) in
+                ranked_results.iter().zip(payouts.iter()).enumerate()
+            {
                 let escaped_guess = guess.replace("\"", "\"\"");
-                content.push_str(&format!("{},\"{}\",{:.6},{:.9}\n", i + 1, escaped_guess, similarity, payout));
+                content.push_str(&format!(
+                    "{},\"{}\",{:.6},{:.9}\n",
+                    i + 1,
+                    escaped_guess,
+                    similarity,
+                    payout
+                ));
             }
-            
+
             content
         }
         "table" => {
             let mut content = String::from("Rankings and Payouts\n");
             content.push_str(&"=".repeat(50));
             content.push('\n');
-            
-            for (i, ((guess, similarity), payout)) in ranked_results.iter().zip(payouts.iter()).enumerate() {
+
+            for (i, ((guess, similarity), payout)) in
+                ranked_results.iter().zip(payouts.iter()).enumerate()
+            {
                 content.push_str(&format!("{}. \"{}\"\n", i + 1, guess));
                 content.push_str(&format!("   Similarity score: {:.4}\n", similarity));
                 content.push_str(&format!("   Payout: {:.9}\n\n", payout));
             }
-            
+
             content.push_str(&"=".repeat(50));
             content.push('\n');
             content.push_str(&format!("Total prize pool: {:.9}\n", prize_pool));
-            content.push_str(&format!("Total payout: {:.9}\n", payouts.iter().sum::<f64>()));
-            
+            content.push_str(&format!(
+                "Total payout: {:.9}\n",
+                payouts.iter().sum::<f64>()
+            ));
+
             content
         }
         _ => return Err(format!("Unsupported output format for file save: {}", format).into()),
     };
-    
+
     fs::write(output_file, content)?;
     Ok(())
 }
@@ -541,7 +602,7 @@ mod tests {
             detailed: false,
             use_mock: false,
         };
-        
+
         // This will fail if the test image doesn't exist, which is expected
         // In a real test environment, we'd create the test file
         let result = validate_inputs(&args);
@@ -566,21 +627,23 @@ mod tests {
             detailed: false,
             use_mock: false,
         };
-        
+
         let result = validate_inputs(&args);
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("Prize pool must be greater than zero"));
+        assert!(result
+            .unwrap_err()
+            .contains("Prize pool must be greater than zero"));
     }
 
     #[test]
     fn test_filter_guesses() {
         let guesses = vec![
-            "a".to_string(),      // too short
-            "valid guess".to_string(),  // valid
-            "x".repeat(300),      // too long
+            "a".to_string(),             // too short
+            "valid guess".to_string(),   // valid
+            "x".repeat(300),             // too long
             "another valid".to_string(), // valid
         ];
-        
+
         let filtered = filter_guesses(&guesses, 5, 100);
         assert_eq!(filtered.len(), 2);
         assert_eq!(filtered[0], "valid guess");
@@ -592,19 +655,19 @@ mod tests {
         let embedder = MockEmbedder::clip_like();
         let strategy = ClipBatchStrategy::new();
         let validator = ScoreValidator::new(embedder, strategy);
-        
+
         let guesses = vec![
             "guess1".to_string(),
             "guess2".to_string(),
             "guess3".to_string(),
         ];
-        
+
         let ranked_results = calculate_rankings("test.jpg", &guesses, &validator).unwrap();
         let payouts = calculate_payouts(&ranked_results, 100.0).unwrap();
-        
+
         assert_eq!(ranked_results.len(), 3);
         assert_eq!(payouts.len(), 3);
-        
+
         // Total payout should equal prize pool
         let total: f64 = payouts.iter().sum();
         assert!((total - 100.0).abs() < 1e-10);

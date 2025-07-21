@@ -1,17 +1,17 @@
 //! Async State Machine for Cliptions Round Engine
-//! 
+//!
 //! This module implements the round lifecycle using the Rust typestate pattern.
 //! Each state is a marker type that ensures operations can only be performed
 //! when the round is in the correct state, enforced by the compiler.
 
-use std::fmt;
-use std::path::PathBuf;
-use serde::{Deserialize, Serialize};
-use chrono::{DateTime, Utc};
 use crate::error::{CliptionsError, Result};
-use crate::social::{AnnouncementFormatter, AnnouncementData};
-use twitter_api::TwitterApi;
+use crate::social::{AnnouncementData, AnnouncementFormatter};
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+use std::fmt;
 use std::path::Path;
+use std::path::PathBuf;
+use twitter_api::TwitterApi;
 
 // --- State Markers ---
 
@@ -52,37 +52,68 @@ pub trait StateMarker {
     fn state_name() -> &'static str;
 }
 
-impl StateMarker for Pending { fn state_name() -> &'static str { "Pending" } }
-impl StateMarker for CommitmentsOpen { fn state_name() -> &'static str { "CommitmentsOpen" } }
-impl StateMarker for CommitmentsClosed { fn state_name() -> &'static str { "CommitmentsClosed" } }
-impl StateMarker for FrameCaptured { fn state_name() -> &'static str { "FrameCaptured" } }
-impl StateMarker for RevealsOpen { fn state_name() -> &'static str { "RevealsOpen" } }
-impl StateMarker for RevealsClosed { fn state_name() -> &'static str { "RevealsClosed" } }
-impl StateMarker for Payouts { fn state_name() -> &'static str { "Payouts" } }
-impl StateMarker for Finished { fn state_name() -> &'static str { "Finished" } }
+impl StateMarker for Pending {
+    fn state_name() -> &'static str {
+        "Pending"
+    }
+}
+impl StateMarker for CommitmentsOpen {
+    fn state_name() -> &'static str {
+        "CommitmentsOpen"
+    }
+}
+impl StateMarker for CommitmentsClosed {
+    fn state_name() -> &'static str {
+        "CommitmentsClosed"
+    }
+}
+impl StateMarker for FrameCaptured {
+    fn state_name() -> &'static str {
+        "FrameCaptured"
+    }
+}
+impl StateMarker for RevealsOpen {
+    fn state_name() -> &'static str {
+        "RevealsOpen"
+    }
+}
+impl StateMarker for RevealsClosed {
+    fn state_name() -> &'static str {
+        "RevealsClosed"
+    }
+}
+impl StateMarker for Payouts {
+    fn state_name() -> &'static str {
+        "Payouts"
+    }
+}
+impl StateMarker for Finished {
+    fn state_name() -> &'static str {
+        "Finished"
+    }
+}
 
 /// Round data structure with typestate pattern
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Round<S> {
     pub id: String,
     pub created_at: DateTime<Utc>,
-    
+
     // --- Round Parameters (Known at Start) ---
     pub description: String,
     pub livestream_url: String,
     pub target_timestamp: DateTime<Utc>,
-    
+
     // --- Captured Data (Known Later) ---
     pub target_frame_path: Option<PathBuf>,
-    
+
     // --- Deadlines ---
     pub commitment_deadline: Option<DateTime<Utc>>,
     pub reveals_deadline: Option<DateTime<Utc>>,
-    
+
     #[serde(skip)]
     pub state: std::marker::PhantomData<S>,
 }
-
 
 impl<S> Round<S> {
     /// Get the current state name
@@ -106,7 +137,12 @@ where
 /// Implementation for Pending state
 impl Round<Pending> {
     /// Create a new pending round
-    pub fn new(id: String, description: String, livestream_url: String, target_timestamp: DateTime<Utc>) -> Self {
+    pub fn new(
+        id: String,
+        description: String,
+        livestream_url: String,
+        target_timestamp: DateTime<Utc>,
+    ) -> Self {
         Self {
             id,
             created_at: Utc::now(),
@@ -131,7 +167,7 @@ impl Round<Pending> {
             round_id: self.id.parse().unwrap_or(0),
             state_name: "CommitmentsOpen".to_string(),
             target_time: commitment_deadline.to_rfc3339(),
-            hashtags: vec![], // The formatter will add standard hashtags
+            hashtags: vec![],       // The formatter will add standard hashtags
             message: String::new(), // Not used for commitment announcements
             prize_pool: None,
             livestream_url: Some(self.livestream_url.clone()),
@@ -142,9 +178,9 @@ impl Round<Pending> {
             .post_tweet(&tweet_text)
             .await
             .map_err(|e| CliptionsError::ApiError(e.to_string()))?;
-        
+
         self.commitment_deadline = Some(commitment_deadline);
-        
+
         Ok(Round {
             id: self.id,
             created_at: self.created_at,
@@ -174,18 +210,19 @@ impl Round<CommitmentsOpen> {
             hashtags: vec![],
             message: format!(
                 "Round '{}': Commitments are now closed. Waiting for target time at {}.",
-                self.id, self.target_timestamp.to_rfc3339()
+                self.id,
+                self.target_timestamp.to_rfc3339()
             ),
             prize_pool: None,
             livestream_url: Some(self.livestream_url.clone()),
         };
         let tweet_text = formatter.format_announcement(&announcement_data, true);
-        
+
         client
             .post_tweet(&tweet_text)
             .await
             .map_err(|e| CliptionsError::ApiError(e.to_string()))?;
-        
+
         Ok(Round {
             id: self.id,
             created_at: self.created_at,
@@ -206,7 +243,9 @@ impl Round<CommitmentsClosed> {
     /// This is an internal state transition and does not tweet.
     pub fn capture_frame(mut self, target_frame_path: PathBuf) -> Result<Round<FrameCaptured>> {
         if Utc::now() < self.target_timestamp {
-            return Err(CliptionsError::ValidationError("Target timestamp has not yet been reached.".to_string()));
+            return Err(CliptionsError::ValidationError(
+                "Target timestamp has not yet been reached.".to_string(),
+            ));
         }
         self.target_frame_path = Some(target_frame_path);
         Ok(Round {
@@ -240,22 +279,25 @@ impl Round<FrameCaptured> {
             hashtags: vec![],
             message: format!(
                 "Round '{}': Target frame revealed! Reveals are open until {}.",
-                self.id, reveals_deadline.to_rfc3339()
+                self.id,
+                reveals_deadline.to_rfc3339()
             ),
             prize_pool: None,
             livestream_url: None, // No livestream URL needed for reveals open announcement
         };
         let tweet_text = formatter.format_announcement(&announcement_data, true);
 
-        let frame_path = self.target_frame_path.clone().ok_or_else(|| CliptionsError::ValidationError("Target frame path not set".to_string()))?;
+        let frame_path = self.target_frame_path.clone().ok_or_else(|| {
+            CliptionsError::ValidationError("Target frame path not set".to_string())
+        })?;
 
         client
             .reply_to_tweet_with_image(&tweet_text, parent_tweet_id, frame_path) // Pass owned PathBuf
             .await
             .map_err(|e| CliptionsError::ApiError(e.to_string()))?;
-        
+
         self.reveals_deadline = Some(reveals_deadline);
-        
+
         Ok(Round {
             id: self.id,
             created_at: self.created_at,
@@ -269,7 +311,6 @@ impl Round<FrameCaptured> {
         })
     }
 }
-
 
 /// Implementation for RevealsOpen state
 impl Round<RevealsOpen> {
@@ -309,9 +350,10 @@ impl Round<Payouts> {
 }
 
 impl Round<Finished> {
-    pub fn is_complete(&self) -> bool { true }
+    pub fn is_complete(&self) -> bool {
+        true
+    }
 }
-
 
 // Utility functions for state transitions
 impl<S> Round<S> {
@@ -349,12 +391,12 @@ pub fn parse_state_from_string(state_str: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::Duration;
-    use twitter_api::{PostTweetResult, Tweet, TwitterError};
     use async_trait::async_trait;
-    use std::sync::{Arc, Mutex};
+    use chrono::Duration;
     use chrono::Utc;
     use std::path::PathBuf;
+    use std::sync::{Arc, Mutex};
+    use twitter_api::{PostTweetResult, Tweet, TwitterError};
 
     /// A mock Twitter client that records calls for verification.
     #[derive(Clone)]
@@ -377,7 +419,10 @@ mod tests {
         async fn post_tweet(&self, text: &str) -> twitter_api::Result<PostTweetResult> {
             *self.last_tweet_text.lock().unwrap() = Some(text.to_string());
             *self.last_image_path.lock().unwrap() = None;
-            Ok(PostTweetResult { tweet: Tweet::default(), success: true })
+            Ok(PostTweetResult {
+                tweet: Tweet::default(),
+                success: true,
+            })
         }
         async fn post_tweet_with_image<P: AsRef<Path> + Send + 'static>(
             &self,
@@ -386,10 +431,20 @@ mod tests {
         ) -> twitter_api::Result<PostTweetResult> {
             *self.last_tweet_text.lock().unwrap() = Some(text.to_string());
             *self.last_image_path.lock().unwrap() = Some(image_path.as_ref().to_path_buf());
-            Ok(PostTweetResult { tweet: Tweet::default(), success: true })
+            Ok(PostTweetResult {
+                tweet: Tweet::default(),
+                success: true,
+            })
         }
-        async fn reply_to_tweet(&self, _text: &str, _reply_to_tweet_id: &str) -> twitter_api::Result<PostTweetResult> { 
-            Ok(PostTweetResult { tweet: Tweet::default(), success: true })
+        async fn reply_to_tweet(
+            &self,
+            _text: &str,
+            _reply_to_tweet_id: &str,
+        ) -> twitter_api::Result<PostTweetResult> {
+            Ok(PostTweetResult {
+                tweet: Tweet::default(),
+                success: true,
+            })
         }
         async fn reply_to_tweet_with_image<P: AsRef<Path> + Send + 'static>(
             &self,
@@ -399,10 +454,25 @@ mod tests {
         ) -> twitter_api::Result<PostTweetResult> {
             *self.last_tweet_text.lock().unwrap() = Some(text.to_string());
             *self.last_image_path.lock().unwrap() = Some(image_path.as_ref().to_path_buf());
-            Ok(PostTweetResult { tweet: Tweet::default(), success: true })
+            Ok(PostTweetResult {
+                tweet: Tweet::default(),
+                success: true,
+            })
         }
-        async fn get_latest_tweet(&self, _username: &str, _exclude_retweets_replies: bool) -> twitter_api::Result<Option<Tweet>> { unimplemented!() }
-        async fn search_replies(&self, _tweet_id: &str, _max_results: u32) -> twitter_api::Result<Vec<Tweet>> { unimplemented!() }
+        async fn get_latest_tweet(
+            &self,
+            _username: &str,
+            _exclude_retweets_replies: bool,
+        ) -> twitter_api::Result<Option<Tweet>> {
+            unimplemented!()
+        }
+        async fn search_replies(
+            &self,
+            _tweet_id: &str,
+            _max_results: u32,
+        ) -> twitter_api::Result<Vec<Tweet>> {
+            unimplemented!()
+        }
     }
 
     fn common_round() -> Round<Pending> {
@@ -410,7 +480,7 @@ mod tests {
             "1".to_string(),
             "Test Theme".to_string(),
             "http://twitch.tv/test".to_string(),
-            Utc::now() + Duration::days(1)
+            Utc::now() + Duration::days(1),
         )
     }
 
@@ -419,10 +489,13 @@ mod tests {
         let client = MockTwitterClient::new();
         let commitment_deadline = Utc::now() + Duration::hours(24);
         let reveals_deadline = Utc::now() + Duration::hours(48);
-        
+
         // 1. Pending -> CommitmentsOpen
         let round = common_round();
-        let round = round.open_commitments(commitment_deadline, &client).await.unwrap();
+        let round = round
+            .open_commitments(commitment_deadline, &client)
+            .await
+            .unwrap();
         assert_eq!(round.state_name(), "CommitmentsOpen");
         assert_eq!(round.commitment_deadline, Some(commitment_deadline));
         let tweet1 = client.last_tweet_text.lock().unwrap().clone().unwrap();
@@ -436,7 +509,7 @@ mod tests {
         assert_eq!(round.state_name(), "CommitmentsClosed");
         let tweet2 = client.last_tweet_text.lock().unwrap().clone().unwrap();
         assert!(tweet2.contains("Commitments are now closed"));
-        
+
         // 3. CommitmentsClosed -> FrameCaptured (Internal state change)
         // We simulate time passing for the check inside capture_frame
         let mut round = round;
@@ -445,16 +518,19 @@ mod tests {
         let round = round.capture_frame(frame_path.clone()).unwrap();
         assert_eq!(round.state_name(), "FrameCaptured");
         assert_eq!(round.target_frame_path.clone().unwrap(), frame_path);
-        
+
         // 4. FrameCaptured -> RevealsOpen
-        let round = round.open_reveals(reveals_deadline, &client, &tweet1).await.unwrap();
+        let round = round
+            .open_reveals(reveals_deadline, &client, &tweet1)
+            .await
+            .unwrap();
         assert_eq!(round.state_name(), "RevealsOpen");
         assert_eq!(round.reveals_deadline, Some(reveals_deadline));
         let tweet3 = client.last_tweet_text.lock().unwrap().clone().unwrap();
         let image_path = client.last_image_path.lock().unwrap().clone().unwrap();
         assert!(tweet3.contains("Target frame revealed!"));
         assert_eq!(image_path, frame_path);
-        
+
         // ... subsequent states would follow
     }
 
@@ -462,9 +538,13 @@ mod tests {
     async fn test_capture_frame_before_timestamp_fails() {
         let client = MockTwitterClient::new();
         let round = common_round()
-            .open_commitments(Utc::now() + Duration::hours(1), &client).await.unwrap()
-            .close_commitments(&client).await.unwrap();
-        
+            .open_commitments(Utc::now() + Duration::hours(1), &client)
+            .await
+            .unwrap()
+            .close_commitments(&client)
+            .await
+            .unwrap();
+
         // This should fail because the target_timestamp is in the future
         let result = round.capture_frame(PathBuf::from("/tmp/fail.jpg"));
         assert!(result.is_err());

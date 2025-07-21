@@ -166,7 +166,7 @@ impl ConfigManager {
     pub fn new() -> Result<Self> {
         let config_path = PathBuf::from("config/llm.yaml");
         let config = Self::load_config(&config_path)?;
-        
+
         Ok(Self {
             config,
             config_path,
@@ -180,9 +180,9 @@ impl ConfigManager {
         // let raw = std::fs::read_to_string(&config_path).unwrap();
         // println!("RAW YAML:\n{}", raw);
         // let config: CliptionsConfig = serde_yaml::from_str(&raw).unwrap();
-        
+
         let config = Self::load_config(&config_path)?;
-        
+
         Ok(Self {
             config,
             config_path,
@@ -192,20 +192,19 @@ impl ConfigManager {
     /// Load configuration from file
     fn load_config(config_path: &Path) -> Result<CliptionsConfig> {
         if !config_path.exists() {
-            return Err(CliptionsError::ConfigError(
-                format!("Configuration file not found: {}", config_path.display())
-            ));
+            return Err(CliptionsError::ConfigError(format!(
+                "Configuration file not found: {}",
+                config_path.display()
+            )));
         }
 
-        let content = fs::read_to_string(config_path)
-            .map_err(|e| CliptionsError::ConfigError(
-                format!("Failed to read config file: {}", e)
-            ))?;
+        let content = fs::read_to_string(config_path).map_err(|e| {
+            CliptionsError::ConfigError(format!("Failed to read config file: {}", e))
+        })?;
 
-        let config: CliptionsConfig = serde_yaml::from_str(&content)
-            .map_err(|e| CliptionsError::ConfigError(
-                format!("Failed to parse config file: {}", e)
-            ))?;
+        let config: CliptionsConfig = serde_yaml::from_str(&content).map_err(|e| {
+            CliptionsError::ConfigError(format!("Failed to parse config file: {}", e))
+        })?;
 
         // Validate configuration
         Self::validate_config(&config)?;
@@ -218,75 +217,77 @@ impl ConfigManager {
         // OpenAI validation
         if config.openai.api_key.is_empty() {
             return Err(CliptionsError::ConfigError(
-                "OpenAI API key is required".to_string()
+                "OpenAI API key is required".to_string(),
             ));
         }
 
         if config.openai.project_id.is_empty() {
             return Err(CliptionsError::ConfigError(
-                "OpenAI project ID is required".to_string()
+                "OpenAI project ID is required".to_string(),
             ));
         }
 
         if config.openai.daily_spending_limit_usd <= 0.0 {
             return Err(CliptionsError::ConfigError(
-                "Daily spending limit must be positive".to_string()
+                "Daily spending limit must be positive".to_string(),
             ));
         }
 
         if config.openai.temperature < 0.0 || config.openai.temperature > 2.0 {
             return Err(CliptionsError::ConfigError(
-                "Temperature must be between 0.0 and 2.0".to_string()
+                "Temperature must be between 0.0 and 2.0".to_string(),
             ));
         }
 
-        if config.cost_tracking.alert_threshold_percent < 0.0 || config.cost_tracking.alert_threshold_percent > 100.0 {
+        if config.cost_tracking.alert_threshold_percent < 0.0
+            || config.cost_tracking.alert_threshold_percent > 100.0
+        {
             return Err(CliptionsError::ConfigError(
-                "Alert threshold percent must be between 0 and 100".to_string()
+                "Alert threshold percent must be between 0 and 100".to_string(),
             ));
         }
 
         // Twitter validation
         if config.twitter.api_key.is_empty() {
             return Err(CliptionsError::ConfigError(
-                "Twitter API key is required".to_string()
+                "Twitter API key is required".to_string(),
             ));
         }
 
         if config.twitter.api_secret.is_empty() {
             return Err(CliptionsError::ConfigError(
-                "Twitter API secret is required".to_string()
+                "Twitter API secret is required".to_string(),
             ));
         }
 
         if config.twitter.access_token.is_empty() {
             return Err(CliptionsError::ConfigError(
-                "Twitter access token is required".to_string()
+                "Twitter access token is required".to_string(),
             ));
         }
 
         if config.twitter.access_token_secret.is_empty() {
             return Err(CliptionsError::ConfigError(
-                "Twitter access token secret is required".to_string()
+                "Twitter access token secret is required".to_string(),
             ));
         }
 
         if config.twitter.validator_username.is_empty() {
             return Err(CliptionsError::ConfigError(
-                "Twitter validator username is required".to_string()
+                "Twitter validator username is required".to_string(),
             ));
         }
 
         // Base validation
         if config.base.rpc_url.is_empty() {
             return Err(CliptionsError::ConfigError(
-                "Base RPC URL is required".to_string()
+                "Base RPC URL is required".to_string(),
             ));
         }
 
         if config.base.chain_id == 0 {
             return Err(CliptionsError::ConfigError(
-                "Base chain ID must be greater than 0".to_string()
+                "Base chain ID must be greater than 0".to_string(),
             ));
         }
 
@@ -327,25 +328,23 @@ impl ConfigManager {
     pub fn set_daily_spending_limit(&mut self, limit: f64) -> Result<()> {
         if limit <= 0.0 {
             return Err(CliptionsError::ConfigError(
-                "Daily spending limit must be positive".to_string()
+                "Daily spending limit must be positive".to_string(),
             ));
         }
-        
+
         self.config.openai.daily_spending_limit_usd = limit;
         Ok(())
     }
 
     /// Save configuration to file
     pub fn save_config(&self) -> Result<()> {
-        let content = serde_yaml::to_string(&self.config)
-            .map_err(|e| CliptionsError::ConfigError(
-                format!("Failed to serialize config: {}", e)
-            ))?;
+        let content = serde_yaml::to_string(&self.config).map_err(|e| {
+            CliptionsError::ConfigError(format!("Failed to serialize config: {}", e))
+        })?;
 
-        fs::write(&self.config_path, content)
-            .map_err(|e| CliptionsError::ConfigError(
-                format!("Failed to write config file: {}", e)
-            ))?;
+        fs::write(&self.config_path, content).map_err(|e| {
+            CliptionsError::ConfigError(format!("Failed to write config file: {}", e))
+        })?;
 
         Ok(())
     }
@@ -380,18 +379,12 @@ impl CostTracker {
     /// Create a new cost tracker
     pub fn new(project_id: String) -> Result<Self> {
         let config = ConfigManager::new()?;
-        Ok(Self {
-            project_id,
-            config,
-        })
+        Ok(Self { project_id, config })
     }
 
     /// Create cost tracker with custom config
     pub fn with_config(project_id: String, config: ConfigManager) -> Self {
-        Self {
-            project_id,
-            config,
-        }
+        Self { project_id, config }
     }
 
     /// Check if execution is allowed based on spending limits
@@ -470,13 +463,13 @@ cost_tracking:
         env::remove_var("OPENAI_API_KEY");
         env::remove_var("OPENAI_PROJECT_ID");
         env::remove_var("OPENAI_DAILY_SPENDING_LIMIT");
-        
+
         let temp_dir = TempDir::new().unwrap();
         let config_path = create_test_config(&temp_dir);
-        
+
         let config_manager = ConfigManager::with_path(&config_path).unwrap();
         let config = config_manager.get_config();
-        
+
         assert_eq!(config.openai.api_key, "test-api-key");
         assert_eq!(config.openai.project_id, "test-project-id");
         assert_eq!(config.openai.daily_spending_limit_usd, 10.0);
@@ -488,7 +481,7 @@ cost_tracking:
         env::remove_var("OPENAI_API_KEY");
         env::remove_var("OPENAI_PROJECT_ID");
         env::remove_var("OPENAI_DAILY_SPENDING_LIMIT");
-        
+
         let temp_dir = TempDir::new().unwrap();
         let config_path = temp_dir.path().join("invalid_config.yaml");
         let config_content = r#"
@@ -511,20 +504,23 @@ cost_tracking:
   alert_threshold_percent: 80
 "#;
         fs::write(&config_path, config_content).unwrap();
-        
+
         let result = ConfigManager::with_path(&config_path);
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("OpenAI API key is required"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("OpenAI API key is required"));
     }
 
     #[test]
     fn test_daily_spending_limit_config_loading() {
         let temp_dir = TempDir::new().unwrap();
         let config_path = create_test_config(&temp_dir);
-        
+
         let config_manager = ConfigManager::with_path(&config_path).unwrap();
         let config = config_manager.get_openai_config();
-        
+
         assert_eq!(config.daily_spending_limit_usd, 10.0);
     }
 
@@ -532,10 +528,10 @@ cost_tracking:
     fn test_spending_limit_check_under_limit() {
         let temp_dir = TempDir::new().unwrap();
         let config_path = create_test_config(&temp_dir);
-        
+
         let config_manager = ConfigManager::with_path(&config_path).unwrap();
         let under_limit = config_manager.check_spending_limit(5.0).unwrap();
-        
+
         assert!(under_limit);
     }
 
@@ -543,10 +539,10 @@ cost_tracking:
     fn test_spending_limit_check_over_limit() {
         let temp_dir = TempDir::new().unwrap();
         let config_path = create_test_config(&temp_dir);
-        
+
         let config_manager = ConfigManager::with_path(&config_path).unwrap();
         let over_limit = config_manager.check_spending_limit(15.0).unwrap();
-        
+
         assert!(!over_limit);
     }
 
@@ -554,10 +550,10 @@ cost_tracking:
     fn test_spending_limit_check_no_data() {
         let temp_dir = TempDir::new().unwrap();
         let config_path = create_test_config(&temp_dir);
-        
+
         let config_manager = ConfigManager::with_path(&config_path).unwrap();
         let under_limit = config_manager.check_spending_limit(0.0).unwrap();
-        
+
         assert!(under_limit);
     }
 
@@ -565,10 +561,10 @@ cost_tracking:
     fn test_project_specific_spending_limit_check() {
         let temp_dir = TempDir::new().unwrap();
         let config_path = create_test_config(&temp_dir);
-        
+
         let config_manager = ConfigManager::with_path(&config_path).unwrap();
         let cost_tracker = CostTracker::with_config("test-proj".to_string(), config_manager);
-        
+
         let status = cost_tracker.get_spending_status(8.0);
         assert_eq!(status.project_id, "test-proj");
         assert_eq!(status.current_spending, 8.0);
@@ -582,13 +578,13 @@ cost_tracking:
     fn test_cost_tracking_during_execution() {
         let temp_dir = TempDir::new().unwrap();
         let config_path = create_test_config(&temp_dir);
-        
+
         let config_manager = ConfigManager::with_path(&config_path).unwrap();
         let cost_tracker = CostTracker::with_config("test-proj".to_string(), config_manager);
-        
+
         // Under limit
         assert!(cost_tracker.check_execution_allowed(5.0).unwrap());
-        
+
         // Over limit
         assert!(!cost_tracker.check_execution_allowed(15.0).unwrap());
     }
@@ -599,10 +595,10 @@ cost_tracking:
         env::remove_var("OPENAI_API_KEY");
         env::remove_var("OPENAI_PROJECT_ID");
         env::remove_var("OPENAI_DAILY_SPENDING_LIMIT");
-        
+
         let temp_dir = TempDir::new().unwrap();
         let config_path = temp_dir.path().join("invalid_config.yaml");
-        
+
         // Test invalid temperature
         let config_content = r#"
 openai:
@@ -624,25 +620,28 @@ cost_tracking:
   alert_threshold_percent: 80
 "#;
         fs::write(&config_path, config_content).unwrap();
-        
+
         let result = ConfigManager::with_path(&config_path);
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Temperature must be between"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("Temperature must be between"));
     }
 
     #[test]
     fn test_alert_threshold() {
         let temp_dir = TempDir::new().unwrap();
         let config_path = create_test_config(&temp_dir);
-        
+
         let config_manager = ConfigManager::with_path(&config_path).unwrap();
-        
+
         // Below threshold (80% of $10 = $8)
         assert!(!config_manager.check_alert_threshold(7.0));
-        
+
         // At threshold
         assert!(config_manager.check_alert_threshold(8.0));
-        
+
         // Above threshold
         assert!(config_manager.check_alert_threshold(9.0));
     }
@@ -651,15 +650,15 @@ cost_tracking:
     fn test_remaining_budget() {
         let temp_dir = TempDir::new().unwrap();
         let config_path = create_test_config(&temp_dir);
-        
+
         let config_manager = ConfigManager::with_path(&config_path).unwrap();
-        
+
         // Normal case
         assert_eq!(config_manager.get_remaining_budget(3.0), 7.0);
-        
+
         // Over budget should return 0
         assert_eq!(config_manager.get_remaining_budget(15.0), 0.0);
-        
+
         // Exactly at limit
         assert_eq!(config_manager.get_remaining_budget(10.0), 0.0);
     }
@@ -668,19 +667,19 @@ cost_tracking:
     fn test_env_override() {
         let temp_dir = TempDir::new().unwrap();
         let config_path = create_test_config(&temp_dir);
-        
+
         // Save the current environment variable if it exists
         let original_api_key = env::var("OPENAI_API_KEY").ok();
-        
+
         // Set our test environment variable
         env::set_var("OPENAI_API_KEY", "env-override-key");
-        
+
         let config_manager = ConfigManager::with_path(&config_path).unwrap();
         let config = config_manager.get_config();
-        
+
         // Should use environment variable value
         assert_eq!(config.openai.api_key, "env-override-key");
-        
+
         // Restore the original environment variable
         match original_api_key {
             Some(key) => env::set_var("OPENAI_API_KEY", key),

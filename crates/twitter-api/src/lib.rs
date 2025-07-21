@@ -1,5 +1,5 @@
 //! Twitter API client library for Cliptions
-//! 
+//!
 //! Provides a high-level async interface for Twitter API v2 operations
 //! including posting tweets, uploading images, and retrieving user data.
 
@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use async_trait::async_trait;
 use base64::Engine;
 use chrono::{DateTime, Utc};
 use hmac::{Hmac, Mac};
@@ -16,7 +17,6 @@ use serde::{Deserialize, Serialize};
 use sha1::Sha1;
 use thiserror::Error;
 use urlencoding;
-use async_trait::async_trait;
 
 type HmacSha1 = Hmac<Sha1>;
 
@@ -24,28 +24,28 @@ type HmacSha1 = Hmac<Sha1>;
 pub enum TwitterError {
     #[error("HTTP request failed: {0}")]
     HttpError(#[from] reqwest::Error),
-    
+
     #[error("Twitter API error ({status}): {message}")]
     ApiError { status: u16, message: String },
-    
+
     #[error("Authentication failed: {0}")]
     AuthError(String),
-    
+
     #[error("Invalid file format: {0}")]
     FileError(String),
-    
+
     #[error("Response parsing error: {0}")]
     ParseError(String),
-    
+
     #[error("Network error: {0}")]
     NetworkError(String),
-    
+
     #[error("Media upload error: {0}")]
     MediaError(String),
-    
+
     #[error("Invalid input: {0}")]
     InvalidInput(String),
-    
+
     #[error("Serialization error: {0}")]
     SerializationError(#[from] serde_json::Error),
 }
@@ -66,14 +66,24 @@ impl TwitterConfig {
     /// Create configuration from environment variables
     pub fn from_env() -> Result<Self> {
         Ok(Self {
-            api_key: std::env::var("TWITTER_API_KEY")
-                .map_err(|_| TwitterError::AuthError("TWITTER_API_KEY environment variable not set".to_string()))?,
-            api_secret: std::env::var("TWITTER_API_SECRET")
-                .map_err(|_| TwitterError::AuthError("TWITTER_API_SECRET environment variable not set".to_string()))?,
-            access_token: std::env::var("TWITTER_ACCESS_TOKEN")
-                .map_err(|_| TwitterError::AuthError("TWITTER_ACCESS_TOKEN environment variable not set".to_string()))?,
-            access_token_secret: std::env::var("TWITTER_ACCESS_TOKEN_SECRET")
-                .map_err(|_| TwitterError::AuthError("TWITTER_ACCESS_TOKEN_SECRET environment variable not set".to_string()))?,
+            api_key: std::env::var("TWITTER_API_KEY").map_err(|_| {
+                TwitterError::AuthError("TWITTER_API_KEY environment variable not set".to_string())
+            })?,
+            api_secret: std::env::var("TWITTER_API_SECRET").map_err(|_| {
+                TwitterError::AuthError(
+                    "TWITTER_API_SECRET environment variable not set".to_string(),
+                )
+            })?,
+            access_token: std::env::var("TWITTER_ACCESS_TOKEN").map_err(|_| {
+                TwitterError::AuthError(
+                    "TWITTER_ACCESS_TOKEN environment variable not set".to_string(),
+                )
+            })?,
+            access_token_secret: std::env::var("TWITTER_ACCESS_TOKEN_SECRET").map_err(|_| {
+                TwitterError::AuthError(
+                    "TWITTER_ACCESS_TOKEN_SECRET environment variable not set".to_string(),
+                )
+            })?,
         })
     }
 }
@@ -237,7 +247,11 @@ impl TwitterApi for TwitterClient {
         self.post_tweet_internal(tweet_data).await
     }
 
-    async fn get_latest_tweet(&self, username: &str, exclude_retweets_replies: bool) -> Result<Option<Tweet>> {
+    async fn get_latest_tweet(
+        &self,
+        username: &str,
+        exclude_retweets_replies: bool,
+    ) -> Result<Option<Tweet>> {
         // Step 1: Get user ID from username
         let user_id = self.get_user_id(username).await?;
 
@@ -251,7 +265,9 @@ impl TwitterApi for TwitterClient {
             tweets_url.push_str("&exclude=retweets,replies");
         }
 
-        let response = self.make_authenticated_request("GET", &tweets_url, None).await?;
+        let response = self
+            .make_authenticated_request("GET", &tweets_url, None)
+            .await?;
         let json: serde_json::Value = response.json().await?;
 
         // Extract the first tweet if available
@@ -282,7 +298,9 @@ impl TwitterApi for TwitterClient {
                 current_url.push_str(&format!("&pagination_token={}", token));
             }
 
-            let response = self.make_authenticated_request("GET", &current_url, None).await?;
+            let response = self
+                .make_authenticated_request("GET", &current_url, None)
+                .await?;
             let json: serde_json::Value = response.json().await?;
 
             // Get tweets from this page
@@ -323,18 +341,25 @@ impl TwitterClient {
         let config = TwitterConfig::from_env()?;
         Ok(Self::new(config))
     }
-    
+
     /// Upload media file to Twitter and return media ID
     async fn upload_media<P: AsRef<Path>>(&self, image_path: P) -> Result<MediaUploadResult> {
         let path = image_path.as_ref();
-        
+
         // Read the image file
-        let image_data = std::fs::read(path)
-            .map_err(|e| TwitterError::FileError(format!("Failed to read image file {}: {}", path.display(), e)))?;
+        let image_data = std::fs::read(path).map_err(|e| {
+            TwitterError::FileError(format!(
+                "Failed to read image file {}: {}",
+                path.display(),
+                e
+            ))
+        })?;
 
         // Validate file size (5MB limit for images)
         if image_data.len() > 5 * 1024 * 1024 {
-            return Err(TwitterError::FileError("Image file too large (max 5MB)".to_string()));
+            return Err(TwitterError::FileError(
+                "Image file too large (max 5MB)".to_string(),
+            ));
         }
 
         // Detect media type from file extension
@@ -343,9 +368,11 @@ impl TwitterClient {
             Some("png") => "image/png",
             Some("gif") => "image/gif",
             Some("webp") => "image/webp",
-            _ => return Err(TwitterError::FileError(
-                "Unsupported image format. Supported: jpg, png, gif, webp".to_string()
-            )),
+            _ => {
+                return Err(TwitterError::FileError(
+                    "Unsupported image format. Supported: jpg, png, gif, webp".to_string(),
+                ))
+            }
         };
 
         // Twitter media upload endpoint
@@ -364,7 +391,8 @@ impl TwitterClient {
         );
 
         // Make upload request
-        let response = self.client
+        let response = self
+            .client
             .post(upload_url)
             .header("Authorization", auth_header)
             .multipart(form)
@@ -374,7 +402,7 @@ impl TwitterClient {
         let status = response.status();
         if status.is_success() {
             let json: serde_json::Value = response.json().await?;
-            
+
             let media_id = json["media_id_string"]
                 .as_str()
                 .ok_or_else(|| TwitterError::ApiError {
@@ -391,7 +419,10 @@ impl TwitterClient {
                 media_type: media_type.to_string(),
             })
         } else {
-            let error_text = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
+            let error_text = response
+                .text()
+                .await
+                .unwrap_or_else(|_| "Unknown error".to_string());
             Err(TwitterError::ApiError {
                 status: status.as_u16(),
                 message: error_text,
@@ -402,18 +433,20 @@ impl TwitterClient {
     /// Internal method to handle all tweet posting logic
     async fn post_tweet_internal(&self, tweet_data: serde_json::Value) -> Result<PostTweetResult> {
         let url = "https://api.twitter.com/2/tweets";
-       
+
         if std::env::var("CLIPTIONS_DEBUG").is_ok() {
             println!("[DEBUG] post_tweet_internal: url = {}", url);
             println!("[DEBUG] post_tweet_internal: tweet_data = {}", tweet_data);
         }
-      
-        let response = self.make_authenticated_request("POST", url, Some(tweet_data)).await?;
+
+        let response = self
+            .make_authenticated_request("POST", url, Some(tweet_data))
+            .await?;
         let json: serde_json::Value = response.json().await?;
 
         // Parse the tweet from the response
         if let Some(tweet_data) = json["data"].as_object() {
-            // For posted tweets, we need to create a minimal Tweet struct since the API 
+            // For posted tweets, we need to create a minimal Tweet struct since the API
             // doesn't return all fields. We'll use the authenticated user's ID as author_id.
             let id = tweet_data["id"]
                 .as_str()
@@ -436,7 +469,8 @@ impl TwitterClient {
                 text,
                 author_id,
                 created_at: Some(Utc::now()), // Use current time for posted tweets
-                conversation_id: tweet_data.get("conversation_id")
+                conversation_id: tweet_data
+                    .get("conversation_id")
                     .and_then(|v| v.as_str())
                     .map(|s| s.to_string()),
                 public_metrics: None, // Not available immediately after posting
@@ -458,8 +492,10 @@ impl TwitterClient {
     /// Get user ID from username
     async fn get_user_id(&self, username: &str) -> Result<String> {
         let user_lookup_url = format!("https://api.twitter.com/2/users/by/username/{}", username);
-        
-        let response = self.make_authenticated_request("GET", &user_lookup_url, None).await?;
+
+        let response = self
+            .make_authenticated_request("GET", &user_lookup_url, None)
+            .await?;
         let json: serde_json::Value = response.json().await?;
 
         json["data"]["id"]
@@ -497,14 +533,15 @@ impl TwitterClient {
             .as_str()
             .map(|s| s.to_string());
 
-        let public_metrics = tweet_data["public_metrics"].as_object().map(|metrics| {
-            PublicMetrics {
-                retweet_count: metrics["retweet_count"].as_u64().unwrap_or(0) as u32,
-                reply_count: metrics["reply_count"].as_u64().unwrap_or(0) as u32,
-                like_count: metrics["like_count"].as_u64().unwrap_or(0) as u32,
-                quote_count: metrics["quote_count"].as_u64().unwrap_or(0) as u32,
-            }
-        });
+        let public_metrics =
+            tweet_data["public_metrics"]
+                .as_object()
+                .map(|metrics| PublicMetrics {
+                    retweet_count: metrics["retweet_count"].as_u64().unwrap_or(0) as u32,
+                    reply_count: metrics["reply_count"].as_u64().unwrap_or(0) as u32,
+                    like_count: metrics["like_count"].as_u64().unwrap_or(0) as u32,
+                    quote_count: metrics["quote_count"].as_u64().unwrap_or(0) as u32,
+                });
 
         let url = format!("https://twitter.com/i/status/{}", id);
 
@@ -539,7 +576,10 @@ impl TwitterClient {
         if std::env::var("CLIPTIONS_DEBUG").is_ok() {
             println!("[DEBUG] make_authenticated_request: method = {}", method);
             println!("[DEBUG] make_authenticated_request: url = {}", url);
-            println!("[DEBUG] make_authenticated_request: Authorization = {}", auth_header);
+            println!(
+                "[DEBUG] make_authenticated_request: Authorization = {}",
+                auth_header
+            );
             if let Some(ref json_body) = body {
                 println!("[DEBUG] make_authenticated_request: body = {}", json_body);
             }
@@ -548,7 +588,12 @@ impl TwitterClient {
         let mut request_builder = match method {
             "GET" => self.client.get(url),
             "POST" => self.client.post(url),
-            _ => return Err(TwitterError::AuthError(format!("Unsupported HTTP method: {}", method))),
+            _ => {
+                return Err(TwitterError::AuthError(format!(
+                    "Unsupported HTTP method: {}",
+                    method
+                )))
+            }
         };
 
         request_builder = request_builder.header("Authorization", auth_header);
@@ -565,7 +610,10 @@ impl TwitterClient {
         if status.is_success() {
             Ok(response)
         } else {
-            let error_text = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
+            let error_text = response
+                .text()
+                .await
+                .unwrap_or_else(|_| "Unknown error".to_string());
             Err(TwitterError::ApiError {
                 status: status.as_u16(),
                 message: error_text,
@@ -653,7 +701,8 @@ impl TwitterClient {
         let mut mac = HmacSha1::new_from_slice(signing_key.as_bytes())
             .map_err(|e| TwitterError::AuthError(format!("HMAC key error: {}", e)))?;
         mac.update(base_string.as_bytes());
-        let signature = base64::engine::general_purpose::STANDARD.encode(mac.finalize().into_bytes());
+        let signature =
+            base64::engine::general_purpose::STANDARD.encode(mac.finalize().into_bytes());
 
         // Add signature to OAuth parameters
         oauth_params.insert("oauth_signature", &signature);

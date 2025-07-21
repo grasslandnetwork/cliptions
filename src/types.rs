@@ -1,11 +1,11 @@
 //! Core data types for Cliptions
-//! 
+//!
 //! This module defines the fundamental data structures used throughout the Cliptions system,
 //! including participants, guesses, scoring results, and round data.
 
-use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
 use ndarray::Array1;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// A participant's guess in the prediction market
@@ -33,7 +33,7 @@ impl Guess {
             metadata: HashMap::new(),
         }
     }
-    
+
     /// Create a guess with a specific timestamp
     pub fn with_timestamp(text: String, timestamp: DateTime<Utc>) -> Self {
         Self {
@@ -43,19 +43,19 @@ impl Guess {
             metadata: HashMap::new(),
         }
     }
-    
+
     /// Set the embedding for this guess
     pub fn with_embedding(mut self, embedding: Vec<f64>) -> Self {
         self.embedding = Some(embedding);
         self
     }
-    
+
     /// Add metadata to the guess
     pub fn with_metadata(mut self, key: String, value: String) -> Self {
         self.metadata.insert(key, value);
         self
     }
-    
+
     /// Get the embedding as an ndarray
     pub fn get_embedding_array(&self) -> Option<Array1<f64>> {
         self.embedding.as_ref().map(|e| Array1::from_vec(e.clone()))
@@ -93,13 +93,13 @@ impl Participant {
             verified: false,
         }
     }
-    
+
     /// Set the salt for commitment verification
     pub fn with_salt(mut self, salt: String) -> Self {
         self.salt = Some(salt);
         self
     }
-    
+
     /// Mark the participant as verified
     pub fn mark_verified(mut self) -> Self {
         self.verified = true;
@@ -133,25 +133,25 @@ impl ScoringResult {
             payout: None,
         }
     }
-    
+
     /// Set the adjusted score
     pub fn with_adjusted_score(mut self, adjusted_score: f64) -> Self {
         self.adjusted_score = Some(adjusted_score);
         self
     }
-    
+
     /// Set the rank
     pub fn with_rank(mut self, rank: usize) -> Self {
         self.rank = Some(rank);
         self
     }
-    
+
     /// Set the payout
     pub fn with_payout(mut self, payout: f64) -> Self {
         self.payout = Some(payout);
         self
     }
-    
+
     /// Get the effective score (adjusted if available, otherwise raw)
     pub fn effective_score(&self) -> f64 {
         self.adjusted_score.unwrap_or(self.raw_score)
@@ -244,36 +244,36 @@ impl RoundData {
             metadata: HashMap::new(),
         }
     }
-    
+
     /// Add a participant to the round
     pub fn add_participant(&mut self, participant: Participant) {
         self.participants.push(participant);
         self.updated_at = Utc::now();
     }
-    
+
     /// Update the round status
     pub fn set_status(&mut self, status: RoundStatus) {
         self.status = status;
         self.updated_at = Utc::now();
     }
-    
+
     /// Set the results for the round
     pub fn set_results(&mut self, results: Vec<ScoringResult>) {
         self.results = results;
         self.status = RoundStatus::Complete;
         self.updated_at = Utc::now();
     }
-    
+
     /// Get participants with verified commitments
     pub fn verified_participants(&self) -> Vec<&Participant> {
         self.participants.iter().filter(|p| p.verified).collect()
     }
-    
+
     /// Check if the round is open for submissions
     pub fn is_open(&self) -> bool {
         matches!(self.status, RoundStatus::Open)
     }
-    
+
     /// Check if the round is complete
     pub fn is_complete(&self) -> bool {
         matches!(self.status, RoundStatus::Complete)
