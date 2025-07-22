@@ -35,6 +35,7 @@ jobs:
         run: cargo build --locked --release --all-targets
 
       - name: Package binaries
+        shell: bash
         run: |
           mkdir -p dist
           case "${{ matrix.os }}" in
