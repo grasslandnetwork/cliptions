@@ -22,6 +22,7 @@
 // pub mod browser_integration;  // TODO: File missing, needs to be created or removed
 pub mod commitment;
 pub mod config;
+pub mod data_models;
 pub mod embedder;
 pub mod error;
 pub mod models;

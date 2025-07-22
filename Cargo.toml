@@ -8,7 +8,7 @@ resolver = "2"
 
 [package]
 name = "cliptions-core"
-version = "0.5.0"
+version = "0.6.0"
 edition = "2021"
 description = "Cliptions prediction market core functionality implemented in Rust with optional Python bindings"
 license = "MIT"
@@ -117,35 +117,39 @@ criterion = "0.5"
 name = "scoring_benchmark"
 harness = false
 
-[[bin]]
-name = "cliptions_calculate_scores"
-path = "src/bin/calculate_scores.rs"
+# [[bin]]
+# name = "cliptions_calculate_scores"
+# path = "src/bin/calculate_scores.rs"
+
+# [[bin]]
+# name = "cliptions_generate_commitment"
+# path = "src/bin/generate_commitment.rs"
+
+# [[bin]]
+# name = "cliptions_process_payouts"
+# path = "src/bin/process_payouts.rs"
+
+# [[bin]]
+# name = "cliptions_verify_commitments"
+# path = "src/bin/verify_commitments.rs"
+
+# [[bin]]
+# name = "cliptions_twitter_post"
+# path = "src/bin/twitter_post.rs"
+
+# [[bin]]
+# name = "cliptions_twitter_search_replies"
+# path = "src/bin/twitter_search_replies.rs"
+
+# [[bin]]
+# name = "cliptions_twitter_latest_tweet"
+# path = "src/bin/twitter_latest_tweet.rs"
+
+# [[bin]]
+# name = "cliptions_app"
+# path = "src/bin/cliptions_app.rs"
 
 [[bin]]
-name = "cliptions_generate_commitment"
-path = "src/bin/generate_commitment.rs"
-
-[[bin]]
-name = "cliptions_process_payouts"
-path = "src/bin/process_payouts.rs"
-
-[[bin]]
-name = "cliptions_verify_commitments"
-path = "src/bin/verify_commitments.rs"
-
-[[bin]]
-name = "cliptions_twitter_post"
-path = "src/bin/twitter_post.rs"
-
-[[bin]]
-name = "cliptions_twitter_search_replies"
-path = "src/bin/twitter_search_replies.rs"
-
-[[bin]]
-name = "cliptions_twitter_latest_tweet"
-path = "src/bin/twitter_latest_tweet.rs"
-
-[[bin]]
-name = "cliptions_app"
-path = "src/bin/cliptions_app.rs"
+name = "cliptions"
+path = "src/main.rs"
 

@@ -39,37 +39,13 @@ jobs:
           mkdir -p dist
           case "${{ matrix.os }}" in
             ubuntu-latest)
-              tar -czvf dist/cliptions-linux-v${{ github.ref_name }}.tar.gz -C target/release \
-                cliptions_app \
-                calculate_scores \
-                generate_commitment \
-                process_payouts \
-                twitter_latest_tweet \
-                twitter_post \
-                twitter_search_replies \
-                verify_commitments
+              tar -czvf dist/cliptions-linux-v${{ github.ref_name }}.tar.gz -C target/release cliptions
               ;;
             macos-latest)
-              tar -czvf dist/cliptions-macos-v${{ github.ref_name }}.tar.gz -C target/release \
-                cliptions_app \
-                calculate_scores \
-                generate_commitment \
-                process_payouts \
-                twitter_latest_tweet \
-                twitter_post \
-                twitter_search_replies \
-                verify_commitments
+              tar -czvf dist/cliptions-macos-v${{ github.ref_name }}.tar.gz -C target/release cliptions
               ;;
             windows-latest)
-              zip -j dist/cliptions-windows-v${{ github.ref_name }}.zip \
-                target/release/cliptions_app.exe \
-                target/release/calculate_scores.exe \
-                target/release/generate_commitment.exe \
-                target/release/process_payouts.exe \
-                target/release/twitter_latest_tweet.exe \
-                target/release/twitter_post.exe \
-                target/release/twitter_search_replies.exe \
-                target/release/verify_commitments.exe
+              zip -j dist/cliptions-windows-v${{ github.ref_name }}.zip target/release/cliptions.exe
               ;;
           esac
 
@@ -81,15 +57,16 @@ jobs:
           body: |
             ## Cliptions Core ${{ github.ref_name }}
             
-            ### Binaries Included:
-            - `cliptions_app` - Main application
-            - `calculate_scores` - Score calculation utility
-            - `generate_commitment` - Commitment generation
-            - `process_payouts` - Payout processing
-            - `twitter_latest_tweet` - Twitter utilities
-            - `twitter_post` - Twitter posting
-            - `twitter_search_replies` - Twitter reply search
-            - `verify_commitments` - Commitment verification
+            ### Single Binary Release:
+            - `cliptions` - Unified CLI tool with subcommands for all Cliptions functionality
+            
+            ### Available Subcommands:
+            - `generate-commitment` - Generate cryptographic commitments
+            - `collect-commitments` - Collect commitments from Twitter
+            - `reply-with-fees` - Reply with fee addresses
+            - `collect-reveals` - Collect reveals from Twitter
+            - `verify-commitments` - Verify commitment hashes
+            - `calculate-scores` - Calculate scores and payouts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
