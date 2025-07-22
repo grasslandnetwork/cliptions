@@ -55,19 +55,7 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
-          body: |
-            ## Cliptions Core ${{ github.ref_name }}
-            
-            ### Single Binary Release:
-            - `cliptions` - Unified CLI tool with subcommands for all Cliptions functionality
-            
-            ### Available Subcommands:
-            - `generate-commitment` - Generate cryptographic commitments
-            - `collect-commitments` - Collect commitments from Twitter
-            - `reply-with-fees` - Reply with fee addresses
-            - `collect-reveals` - Collect reveals from Twitter
-            - `verify-commitments` - Verify commitment hashes
-            - `calculate-scores` - Calculate scores and payouts
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
