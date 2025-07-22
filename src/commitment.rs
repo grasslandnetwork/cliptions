@@ -60,7 +60,7 @@ impl CommitmentGenerator {
     pub fn generate_salt(&self) -> String {
         use rand::Rng;
         let mut rng = rand::thread_rng();
-        let bytes: Vec<u8> = (0..self.salt_length).map(|_| rng.gen()).collect();
+        let bytes: Vec<u8> = (0..self.salt_length).map(|_| rng.gen::<u8>()).collect();
         hex::encode(bytes)
     }
 }
