@@ -6,18 +6,19 @@ This task list outlines the refactoring and implementation plan for the Cliption
 ---
 
 ### Foundational Setup (v0.6.0)
-**Status**: [ ] Not Started
+**Status**: [x] Completed
 **Priority**: Critical
 **Description**: Establish the new single-binary architecture and ensure the baseline compiles in CI.
 
 **Tasks**:
-- [ ] Create `src/main.rs` as the single entry point with `clap` for subcommand routing.
-- [ ] Create the `src/actions/` directory to house the vertical slices.
-- [ ] Modify `Cargo.toml`: comment out all existing `[[bin]]` targets and add a new one for `name = "cliptions", path = "src/main.rs"`.
-- [ ] Define the shared JSON data models for commitments and reveals.
-- [ ] Update `Cargo.toml` to version `0.6.0`.
-- [ ] Commit the changes and create a git tag `v0.6.0`.
-- [ ] **Verify that an empty `main` function compiles successfully in GitHub Actions.**
+- [x] Create `src/main.rs` as the single entry point with `clap` for subcommand routing.
+- [x] Create the `src/actions/` directory to house the vertical slices.
+- [x] Modify `Cargo.toml`: comment out all existing `[[bin]]` targets and add a new one for `name = "cliptions", path = "src/main.rs"`.
+- [x] Define the shared JSON data models for commitments and reveals.
+- [x] Update `Cargo.toml` to version `0.6.0`.
+- [x] Commit the changes and create a git tag `v0.6.0`.
+- [x] **Verify that an empty `main` function compiles successfully in GitHub Actions.**
+- [x] Update this task list to mark all tasks as completed.
 
 ---
 
@@ -33,6 +34,7 @@ This task list outlines the refactoring and implementation plan for the Cliption
 - [ ] Update `Cargo.toml` to version `0.6.1`.
 - [ ] Commit the changes and create a git tag `v0.6.1`.
 - [ ] **Verify the new tag triggers and passes all checks in GitHub Actions.**
+- [ ] Update this task list to mark all tasks as completed.
 
 ---
 
@@ -48,6 +50,7 @@ This task list outlines the refactoring and implementation plan for the Cliption
 - [ ] Update `Cargo.toml` to version `0.6.2`.
 - [ ] Commit the changes and create a git tag `v0.6.2`.
 - [ ] **Verify the new tag triggers and passes all checks in GitHub Actions.**
+- [ ] Update this task list to mark all tasks as completed.
 
 ---
 
@@ -63,6 +66,7 @@ This task list outlines the refactoring and implementation plan for the Cliption
 - [ ] Update `Cargo.toml` to version `0.6.3`.
 - [ ] Commit the changes and create a git tag `v0.6.3`.
 - [ ] **Verify the new tag triggers and passes all checks in GitHub Actions.**
+- [ ] Update this task list to mark all tasks as completed.
 
 ---
 
@@ -78,6 +82,7 @@ This task list outlines the refactoring and implementation plan for the Cliption
 - [ ] Update `Cargo.toml` to version `0.6.4`.
 - [ ] Commit the changes and create a git tag `v0.6.4`.
 - [ ] **Verify the new tag triggers and passes all checks in GitHub Actions.**
+- [ ] Update this task list to mark all tasks as completed.
 
 ---
 
@@ -93,6 +98,7 @@ This task list outlines the refactoring and implementation plan for the Cliption
 - [ ] Update `Cargo.toml` to version `0.6.5`.
 - [ ] Commit the changes and create a git tag `v0.6.5`.
 - [ ] **Verify the new tag triggers and passes all checks in GitHub Actions.**
+- [ ] Update this task list to mark all tasks as completed.
 
 ---
 
@@ -110,6 +116,7 @@ This task list outlines the refactoring and implementation plan for the Cliption
 - [ ] Update `Cargo.toml` to version `0.6.6`.
 - [ ] Commit the changes and create a git tag `v0.6.6`.
 - [ ] **Verify the new tag triggers and passes all checks in GitHub Actions.**
+- [ ] Update this task list to mark all tasks as completed.
 
 ---
 
@@ -122,3 +129,4 @@ This task list outlines the refactoring and implementation plan for the Cliption
 - [ ] Test the full, end-to-end user workflow using the single `cliptions` CLI tool.
 - [ ] Update `README.md` with detailed, platform-specific (Windows, macOS, Linux) instructions for compiling the application and using each subcommand.
 - [ ] **Post-MVP Refactoring**: Review the completed `actions` and identify shared logic. Consolidate business models/rules into a `src/domain/` directory and shared technical services (like the Twitter client) into a `src/infra/` directory to improve long-term maintainability.
+- [ ] Update this task list to mark all tasks as completed.
