@@ -7,11 +7,21 @@ on:
       - '[0-9]*'   # catch numeric-only tags like 0.4.1
 
 jobs:
-  build-and-release:
+  build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            asset_name: cliptions-linux-v${{ github.ref_name }}.tar.gz
+            binary_name: cliptions
+          - os: macos-latest
+            asset_name: cliptions-macos-v${{ github.ref_name }}.tar.gz
+            binary_name: cliptions
+          - os: windows-latest
+            asset_name: cliptions-windows-v${{ github.ref_name }}.zip
+            binary_name: cliptions.exe
 
     steps:
       - name: Checkout code
@@ -34,21 +44,30 @@ jobs:
       - name: Build (release)
         run: cargo build --locked --release --all-targets
 
-      - name: Package binaries
+      - name: Package binary
         shell: bash
         run: |
           mkdir -p dist
-          case "${{ matrix.os }}" in
-            ubuntu-latest)
-              tar -czvf dist/cliptions-linux-v${{ github.ref_name }}.tar.gz -C target/release cliptions
-              ;;
-            macos-latest)
-              tar -czvf dist/cliptions-macos-v${{ github.ref_name }}.tar.gz -C target/release cliptions
-              ;;
-            windows-latest)
-              zip -j dist/cliptions-windows-v${{ github.ref_name }}.zip target/release/cliptions.exe
-              ;;
-          esac
+          if [ "${{ matrix.os }}" == "windows-latest" ]; then
+            zip -j dist/${{ matrix.asset_name }} target/release/${{ matrix.binary_name }}
+          else
+            tar -czvf dist/${{ matrix.asset_name }} -C target/release ${{ matrix.binary_name }}
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-assets-${{ matrix.os }}
+          path: dist/*
+
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -56,12 +75,9 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Release Assets
-        uses: softprops/action-gh-release@v2
-        with:
-          files: dist/*
+          files: |
+            artifacts/release-assets-ubuntu-latest/*
+            artifacts/release-assets-macos-latest/*
+            artifacts/release-assets-windows-latest/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
