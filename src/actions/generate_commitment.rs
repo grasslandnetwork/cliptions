@@ -24,7 +24,7 @@ The commitment hash can be submitted publicly without revealing your actual pred
 ensuring fair gameplay in the prediction market.
 
 Examples:
-  # Basic commitment generation (saves to ~/.cliptions/commitments.json by default)
+  # Basic commitment generation (saves to ~/.cliptions/miner/commitments.json by default)
   cliptions generate-commitment \"Cat sanctuary with woman wearing snoopy sweater\" --salt \"random_secret_123\"
   
   # Save to custom location
@@ -51,7 +51,7 @@ pub struct GenerateCommitmentArgs {
     #[arg(long, short, default_value = "text", value_parser = ["text", "json", "csv"])]
     pub output: String,
 
-    /// Save commitment data to file (JSON format, defaults to ~/.cliptions/commitments.json)
+    /// Save commitment data to file (JSON format, defaults to ~/.cliptions/miner/commitments.json)
     #[arg(long)]
     pub save_to: Option<PathBuf>,
 
@@ -144,17 +144,21 @@ pub fn run(args: GenerateCommitmentArgs) -> Result<()> {
         let save_path = if let Some(custom_path) = &args.save_to {
             custom_path.clone()
         } else {
-            // Default to ~/.cliptions/commitments.json
+            // Default to ~/.cliptions/miner/commitments.json
             let home_dir = dirs::home_dir()
                 .ok_or_else(|| "Could not determine home directory".to_string())?;
             let cliptions_dir = home_dir.join(".cliptions");
+            let miner_dir = cliptions_dir.join("miner");
             
-            // Create directory if it doesn't exist
+            // Create directories if they don't exist
             if !cliptions_dir.exists() {
                 fs::create_dir_all(&cliptions_dir)?;
             }
+            if !miner_dir.exists() {
+                fs::create_dir_all(&miner_dir)?;
+            }
             
-            cliptions_dir.join("commitments.json")
+            miner_dir.join("commitments.json")
         };
 
         save_results(&results, &save_path)?;

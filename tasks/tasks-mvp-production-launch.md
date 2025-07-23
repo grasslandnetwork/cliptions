@@ -46,7 +46,7 @@ This task list outlines the refactoring and implementation plan for the Cliption
 ---
 
 ### Slice 2: Validator Collects Commitments (v0.6.2)
-**Status**: [x] Completed
+**Status**: [ ] Completed
 **Priority**: High
 **Description**: Implement the `collect-commitments` subcommand.
 
@@ -56,11 +56,14 @@ This task list outlines the refactoring and implementation plan for the Cliption
 - [x] Implement logic to extract commitment replies from a specific tweet, sourcing from `twitter_search_replies.rs`.
 - [x] Wire it up as the `collect-commitments` subcommand.
 - [x] **Create tests for the collect-commitments subcommand by moving appropriate tests from the old binary.**
-- [ ] Update `README.md` to document the new `cliptions collect-commitments` command.
-- [ ] Update `Cargo.toml` to version `0.6.2`.
-- [ ] Commit the changes and create a git tag `v0.6.2`.
-- [ ] **Verify the new tag triggers and passes all checks in GitHub Actions.**
-- [ ] Update this task list to mark all tasks as completed.
+- [x] **Added save functionality with role-based directory structure** (~/.cliptions/validator/collected_commitments.json)
+- [x] **Added multiple output formats** (text, json, csv)
+- [x] **Added commitment parsing** from Twitter reply text
+- [x] **Added append mode** to preserve existing collected commitments
+- [x] Update README.md with new subcommand documentation
+- [x] Update Cargo.toml version to 0.6.2
+- [ ] **Create integration tests for the complete validator workflow**
+- [x] **Test with real Twitter data and verify commitment parsing accuracy**
 
 ---
 
