@@ -53,6 +53,80 @@ Predict how an AI Agent will caption upcoming frames from live video streams. Pl
 4. Players are ranked by score
 5. Prize pool is distributed according to rankings
 
+## Getting Started
+
+### Download the CLI Tool
+
+Cliptions provides a unified CLI tool that works on Windows, macOS, and Linux. Download the appropriate version for your operating system:
+
+#### Option 1: Download from GitHub Releases (Recommended)
+
+1. Go to the [GitHub Releases page](https://github.com/grasslandnetwork/cliptions/releases)
+2. Find the latest release (e.g., `v0.6.0-patch5`)
+3. Download the appropriate file for your OS:
+   - **Windows**: `cliptions-windows-v0.6.0-patch5.zip`
+   - **macOS**: `cliptions-macos-v0.6.0-patch5.tar.gz`
+   - **Linux**: `cliptions-linux-v0.6.0-patch5.tar.gz`
+
+#### Option 2: Build from Source
+
+If you prefer to build from source:
+
+```bash
+# Clone the repository
+git clone https://github.com/grasslandnetwork/cliptions.git
+cd cliptions
+
+# Install Rust (if not already installed)
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# Build the CLI tool
+cargo build --release
+
+# The binary will be available at target/release/cliptions
+```
+
+### Installation
+
+#### Windows
+1. Extract the downloaded `cliptions-windows-v0.6.0-patch5.zip`
+2. Move `cliptions.exe` to a directory in your PATH (e.g., `C:\Windows\System32\` or create a new directory and add it to PATH)
+3. Open Command Prompt or PowerShell and test: `cliptions --help`
+
+#### macOS
+```bash
+# Extract the archive
+tar -xzf cliptions-macos-v0.6.0-patch5.tar.gz
+
+# Move to a directory in your PATH
+sudo mv cliptions /usr/local/bin/
+
+# Test the installation
+cliptions --help
+```
+
+#### Linux
+```bash
+# Extract the archive
+tar -xzf cliptions-linux-v0.6.0-patch5.tar.gz
+
+# Move to a directory in your PATH
+sudo mv cliptions /usr/local/bin/
+
+# Test the installation
+cliptions --help
+```
+
+### Verify Installation
+
+After installation, verify that the CLI tool is working:
+
+```bash
+cliptions --help
+```
+
+You should see output showing the available subcommands and options.
+
 ## CLI Tools
 
 Cliptions provides a complete suite of Rust-based CLI tools for all game operations. All tools use real CLIP models by default for accurate similarity calculations.
