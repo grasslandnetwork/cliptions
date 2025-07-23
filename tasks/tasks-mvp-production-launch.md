@@ -35,6 +35,7 @@ This task list outlines the refactoring and implementation plan for the Cliption
 - [x] Update `Cargo.toml` to version `0.6.1`.
 - [x] Commit the changes and create a git tag `v0.6.1`.
 - [x] **Verify the new tag triggers and passes all checks in GitHub Actions.**
+- [x] **Create tests for the generate-commitment subcommand by moving appropriate tests from the old binary.**
 - [x] Update this task list to mark all tasks as completed.
 
 ---
@@ -48,6 +49,7 @@ This task list outlines the refactoring and implementation plan for the Cliption
 - [ ] Create the `src/actions/collect_commitments.rs` module.
 - [ ] Implement logic to extract commitment replies from a specific tweet, sourcing from `twitter_search_replies.rs`.
 - [ ] Wire it up as the `collect-commitments` subcommand.
+- [ ] **Create tests for the collect-commitments subcommand by moving appropriate tests from the old binary.**
 - [ ] Update `README.md` to document the new `cliptions collect-commitments` command.
 - [ ] Update `Cargo.toml` to version `0.6.2`.
 - [ ] Commit the changes and create a git tag `v0.6.2`.
@@ -65,6 +67,7 @@ This task list outlines the refactoring and implementation plan for the Cliption
 - [ ] Create the `src/actions/reply_with_fees.rs` module.
 - [ ] Implement logic to reply to each commitment with a unique $TAO address, sourcing from `twitter_post.rs`.
 - [ ] Wire it up as the `reply-with-fees` subcommand.
+- [ ] **Create tests for the reply-with-fees subcommand by moving appropriate tests from the old binary.**
 - [ ] Update `README.md` to document the new `cliptions reply-with-fees` command.
 - [ ] Update `Cargo.toml` to version `0.6.3`.
 - [ ] Commit the changes and create a git tag `v0.6.3`.
@@ -82,6 +85,7 @@ This task list outlines the refactoring and implementation plan for the Cliption
 - [ ] Create the `src/actions/collect_reveals.rs` module.
 - [ ] Implement logic to extract reveal replies from a specific tweet.
 - [ ] Wire it up as the `collect-reveals` subcommand.
+- [ ] **Create tests for the collect-reveals subcommand by moving appropriate tests from the old binary.**
 - [ ] Update `README.md` to document the new `cliptions collect-reveals` command.
 - [ ] Update `Cargo.toml` to version `0.6.4`.
 - [ ] Commit the changes and create a git tag `v0.6.4`.
@@ -99,6 +103,7 @@ This task list outlines the refactoring and implementation plan for the Cliption
 - [ ] Create the `src/actions/verify_commitments.rs` module.
 - [ ] Move logic from the old `verify_commitments` binary.
 - [ ] Wire it up as the `verify-commitments` subcommand.
+- [ ] **Create tests for the verify-commitments subcommand by moving appropriate tests from the old binary.**
 - [ ] Update `README.md` to document the new `cliptions verify-commitments` command.
 - [ ] Update `Cargo.toml` to version `0.6.5`.
 - [ ] Commit the changes and create a git tag `v0.6.5`.
@@ -118,6 +123,7 @@ This task list outlines the refactoring and implementation plan for the Cliption
 - [ ] For each participant, calculate their similarity score and determine their final payout amount.
 - [ ] Ensure the total payout distributed does not exceed the prize pool.
 - [ ] Wire it up as the `calculate-scores` subcommand, which should output a clear list of participants and their corresponding payouts.
+- [ ] **Create tests for the calculate-scores subcommand by moving appropriate tests from the old binary.**
 - [ ] Update `README.md` to document the new `cliptions calculate-scores` command.
 - [ ] Update `Cargo.toml` to version `0.6.6`.
 - [ ] Commit the changes and create a git tag `v0.6.6`.
