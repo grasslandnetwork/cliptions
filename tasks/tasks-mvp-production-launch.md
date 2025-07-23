@@ -28,11 +28,11 @@ This task list outlines the refactoring and implementation plan for the Cliption
 **Description**: Implement the `generate-commitment` subcommand.
 
 **Tasks**:
-- [ ] Create the `src/actions/generate_commitment.rs` module.
-- [ ] Move logic from the old `generate_commitment` binary, including saving the guess/salt locally.
-- [ ] Wire it up as the `generate-commitment` subcommand in `main.rs`.
-- [ ] Update `README.md` to document the new `cliptions generate-commitment` command.
-- [ ] Update `Cargo.toml` to version `0.6.1`.
+- [x] Create the `src/actions/generate_commitment.rs` module.
+- [x] Move logic from the old `generate_commitment` binary, including saving the guess/salt locally.
+- [x] Wire it up as the `generate-commitment` subcommand in `main.rs`.
+- [x] Update `README.md` to document the new `cliptions generate-commitment` command.
+- [x] Update `Cargo.toml` to version `0.6.1`.
 - [ ] Commit the changes and create a git tag `v0.6.1`.
 - [ ] **Verify the new tag triggers and passes all checks in GitHub Actions.**
 - [ ] Update this task list to mark all tasks as completed.

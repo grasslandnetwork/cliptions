@@ -133,7 +133,7 @@ You should see output showing the available subcommands and options.
 
 ## CLI Tools
 
-Cliptions provides a complete suite of Rust-based CLI tools for all game operations. All tools use real CLIP models by default for accurate similarity calculations.
+Cliptions provides a unified CLI tool with subcommands for all game operations. All tools use real CLIP models by default for accurate similarity calculations.
 
 ### Commitment Generation
 
@@ -141,16 +141,29 @@ Generate secure commitment hashes for your predictions:
 
 ```bash
 # Basic commitment generation
-./target/release/generate_commitment "Cat sanctuary with woman wearing snoopy sweater" --salt "random_secret_123"
+cliptions generate-commitment "Cat sanctuary with woman wearing snoopy sweater" --salt "random_secret_123"
 
 # Verbose output with details
-./target/release/generate_commitment "My prediction" --salt "mysalt" --verbose
+cliptions generate-commitment "My prediction" --salt "mysalt" --verbose
+
+# Save to custom location
+cliptions generate-commitment "My prediction" --salt "mysalt" --save-to /path/to/commitments.json
+
+# Don't save locally (for scripts)
+cliptions generate-commitment "My prediction" --salt "mysalt" --no-save
 ```
 
 **Example Output:**
 ```
 Commitment: b30bc27636a63a2c9ce07b9b24e39161e64e975399df2c773c4240b924735ed4
+Success: Commitment data saved to /Users/username/.cliptions/commitments.json
 ```
+
+**Features:**
+- **Automatic saving**: By default, commitments are saved to `~/.cliptions/commitments.json`
+- **Append mode**: New commitments are added to existing ones, not overwritten
+- **Multiple formats**: Output in text, JSON, or CSV format
+- **Batch processing**: Process multiple commitments from a JSON file
 
 ### Score Calculation
 
