@@ -77,6 +77,9 @@ This task list outlines the refactoring and implementation plan for the Cliption
 - [ ] **Check `binaries_architecture.md` for existing `twitter_post` function signatures before implementing.**
 - [ ] Implement logic to reply to each commitment with a unique $TAO address, sourcing from `twitter_post.rs`.
 - [ ] Wire it up as the `reply-with-fees` subcommand.
+- [ ] Implement Twitter posting functionality for fee replies (real API)
+- [ ] Test posting fee replies to real commitments on Twitter
+- [ ] Ensure config file can be swapped for different Twitter accounts/roles
 - [ ] **Create tests for the reply-with-fees subcommand by moving appropriate tests from the old binary.**
 - [ ] Update `README.md` to document the new `cliptions reply-with-fees` command.
 - [ ] Update `Cargo.toml` to version `0.6.3`.
@@ -96,6 +99,9 @@ This task list outlines the refactoring and implementation plan for the Cliption
 - [ ] **Check `binaries_architecture.md` for existing `twitter_search_replies` function signatures before implementing.**
 - [ ] Implement logic to extract reveal replies from a specific tweet.
 - [ ] Wire it up as the `collect-reveals` subcommand.
+- [ ] Implement Twitter reading for reveal collection (real API)
+- [ ] Test reveal collection with real Twitter data
+- [ ] Ensure config file can be swapped for different Twitter accounts/roles
 - [ ] **Create tests for the collect-reveals subcommand by moving appropriate tests from the old binary.**
 - [ ] Update `README.md` to document the new `cliptions collect-reveals` command.
 - [ ] Update `Cargo.toml` to version `0.6.4`.
@@ -115,6 +121,9 @@ This task list outlines the refactoring and implementation plan for the Cliption
 - [ ] **Check `binaries_architecture.md` for existing `verify_commitments` function signatures before implementing.**
 - [ ] Move logic from the old `verify_commitments` binary.
 - [ ] Wire it up as the `verify-commitments` subcommand.
+- [ ] Add verification logic using real collected data
+- [ ] Test verification with real Twitter data
+- [ ] Ensure config file can be swapped for different Twitter accounts/roles
 - [ ] **Create tests for the verify-commitments subcommand by moving appropriate tests from the old binary.**
 - [ ] Update `README.md` to document the new `cliptions verify-commitments` command.
 - [ ] Update `Cargo.toml` to version `0.6.5`.
@@ -136,6 +145,9 @@ This task list outlines the refactoring and implementation plan for the Cliption
 - [ ] For each participant, calculate their similarity score and determine their final payout amount.
 - [ ] Ensure the total payout distributed does not exceed the prize pool.
 - [ ] Wire it up as the `calculate-scores` subcommand, which should output a clear list of participants and their corresponding payouts.
+- [ ] Calculate scores and payouts using real participant data from Twitter
+- [ ] Test payout calculation with real-world data
+- [ ] Ensure config file can be swapped for different Twitter accounts/roles
 - [ ] **Create tests for the calculate-scores subcommand by moving appropriate tests from the old binary.**
 - [ ] Update `README.md` to document the new `cliptions calculate-scores` command.
 - [ ] Update `Cargo.toml` to version `0.6.6`.
@@ -144,8 +156,25 @@ This task list outlines the refactoring and implementation plan for the Cliption
 - [ ] Update this task list to mark all tasks as completed.
 
 ---
+### Slice 7: End-to-End Testing & Validation (v0.7.0)
+**Status**: [ ] Not Started
+**Priority**: Critical
+**Description**: Conduct comprehensive end-to-end testing of the full round lifecycle with live Twitter interactions.
 
-### Finalization
+**Tasks**:
+- [ ] Configure Twitter API credentials for live testing (support multiple config files for different roles/slices)
+- [ ] Start a real round and document the process
+- [ ] Test each slice with actual Twitter API calls (post, read, reply, etc.)
+- [ ] Integration test: Ensure all slices work together in a real round
+- [ ] Monitor round progress (commitments, fees, reveals, verification, payouts)
+- [ ] Complete a round and verify all data is correct
+- [ ] Monitor, debug, and document any issues found during live testing
+- [ ] Document the full round lifecycle with real data
+- [ ] Update documentation to reflect real-world usage and troubleshooting
+
+---
+
+### Finalization (v0.7.1)
 **Status**: [ ] Not Started
 **Priority**: Medium
 **Description**: Finalize the project for release.
