@@ -7,6 +7,10 @@ Predict how an AI Agent will caption upcoming frames from live video streams. Pl
 - [Key Rules](#key-rules)
 - [Key Features](#key-features)
 - [Example Round](#example-round)
+- [Getting Started](#getting-started)
+  - [Download the CLI Tool](#download-the-cli-tool)
+  - [Installation](#installation)
+  - [Verify Installation](#verify-installation)
 - [CLI Tools](#cli-tools)
   - [Commitment Generation](#commitment-generation)
   - [Score Calculation](#score-calculation)
@@ -62,11 +66,11 @@ Cliptions provides a unified CLI tool that works on Windows, macOS, and Linux. D
 #### Option 1: Download from GitHub Releases (Recommended)
 
 1. Go to the [GitHub Releases page](https://github.com/grasslandnetwork/cliptions/releases)
-2. Find the latest release (e.g., `v0.6.0-patch5`)
+2. Find the latest release (the version number will be different, e.g., `v1.2.3`)
 3. Download the appropriate file for your OS:
-   - **Windows**: `cliptions-windows-v0.6.0-patch5.zip`
-   - **macOS**: `cliptions-macos-v0.6.0-patch5.tar.gz`
-   - **Linux**: `cliptions-linux-v0.6.0-patch5.tar.gz`
+   - **Windows**: `cliptions-windows-v1.2.3.zip`
+   - **macOS**: `cliptions-macos-v1.2.3.tar.gz`
+   - **Linux**: `cliptions-linux-v1.2.3.tar.gz`
 
 #### Option 2: Build from Source
 
@@ -89,14 +93,14 @@ cargo build --release
 ### Installation
 
 #### Windows
-1. Extract the downloaded `cliptions-windows-v0.6.0-patch5.zip`
+1. Extract the downloaded `cliptions-windows-v1.2.3.zip`
 2. Move `cliptions.exe` to a directory in your PATH (e.g., `C:\Windows\System32\` or create a new directory and add it to PATH)
 3. Open Command Prompt or PowerShell and test: `cliptions --help`
 
 #### macOS
 ```bash
 # Extract the archive
-tar -xzf cliptions-macos-v0.6.0-patch5.tar.gz
+tar -xzf cliptions-macos-v1.2.3.tar.gz
 
 # Move to a directory in your PATH
 sudo mv cliptions /usr/local/bin/
@@ -108,7 +112,7 @@ cliptions --help
 #### Linux
 ```bash
 # Extract the archive
-tar -xzf cliptions-linux-v0.6.0-patch5.tar.gz
+tar -xzf cliptions-linux-v1.2.3.tar.gz
 
 # Move to a directory in your PATH
 sudo mv cliptions /usr/local/bin/
