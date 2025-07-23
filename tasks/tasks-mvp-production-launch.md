@@ -3,6 +3,11 @@
 ## Overview
 This task list outlines the refactoring and implementation plan for the Cliptions MVP, following a Vertical Slice architecture. Each task represents a self-contained, testable feature that must pass CI before moving to the next.
 
+**Important Notes:**
+- **Rust 2021**: No `mod.rs` files needed - modules are automatically discovered from directory structure
+- **Code Reuse**: Always check `binaries_architecture.md` for existing function signatures before implementing new code
+- **Vertical Slices**: Each subcommand should be a complete, testable feature slice
+
 ---
 
 ### Foundational Setup (v0.6.0)
@@ -41,15 +46,16 @@ This task list outlines the refactoring and implementation plan for the Cliption
 ---
 
 ### Slice 2: Validator Collects Commitments (v0.6.2)
-**Status**: [ ] Not Started
+**Status**: [x] Completed
 **Priority**: High
 **Description**: Implement the `collect-commitments` subcommand.
 
 **Tasks**:
-- [ ] Create the `src/actions/collect_commitments.rs` module.
-- [ ] Implement logic to extract commitment replies from a specific tweet, sourcing from `twitter_search_replies.rs`.
-- [ ] Wire it up as the `collect-commitments` subcommand.
-- [ ] **Create tests for the collect-commitments subcommand by moving appropriate tests from the old binary.**
+- [x] Create the `src/actions/collect_commitments.rs` module.
+- [x] **Check `binaries_architecture.md` for existing `twitter_search_replies` function signatures before implementing.**
+- [x] Implement logic to extract commitment replies from a specific tweet, sourcing from `twitter_search_replies.rs`.
+- [x] Wire it up as the `collect-commitments` subcommand.
+- [x] **Create tests for the collect-commitments subcommand by moving appropriate tests from the old binary.**
 - [ ] Update `README.md` to document the new `cliptions collect-commitments` command.
 - [ ] Update `Cargo.toml` to version `0.6.2`.
 - [ ] Commit the changes and create a git tag `v0.6.2`.
@@ -65,6 +71,7 @@ This task list outlines the refactoring and implementation plan for the Cliption
 
 **Tasks**:
 - [ ] Create the `src/actions/reply_with_fees.rs` module.
+- [ ] **Check `binaries_architecture.md` for existing `twitter_post` function signatures before implementing.**
 - [ ] Implement logic to reply to each commitment with a unique $TAO address, sourcing from `twitter_post.rs`.
 - [ ] Wire it up as the `reply-with-fees` subcommand.
 - [ ] **Create tests for the reply-with-fees subcommand by moving appropriate tests from the old binary.**
@@ -83,6 +90,7 @@ This task list outlines the refactoring and implementation plan for the Cliption
 
 **Tasks**:
 - [ ] Create the `src/actions/collect_reveals.rs` module.
+- [ ] **Check `binaries_architecture.md` for existing `twitter_search_replies` function signatures before implementing.**
 - [ ] Implement logic to extract reveal replies from a specific tweet.
 - [ ] Wire it up as the `collect-reveals` subcommand.
 - [ ] **Create tests for the collect-reveals subcommand by moving appropriate tests from the old binary.**
@@ -101,6 +109,7 @@ This task list outlines the refactoring and implementation plan for the Cliption
 
 **Tasks**:
 - [ ] Create the `src/actions/verify_commitments.rs` module.
+- [ ] **Check `binaries_architecture.md` for existing `verify_commitments` function signatures before implementing.**
 - [ ] Move logic from the old `verify_commitments` binary.
 - [ ] Wire it up as the `verify-commitments` subcommand.
 - [ ] **Create tests for the verify-commitments subcommand by moving appropriate tests from the old binary.**
@@ -119,6 +128,7 @@ This task list outlines the refactoring and implementation plan for the Cliption
 
 **Tasks**:
 - [ ] Create the `src/actions/calculate_scores.rs` module.
+- [ ] **Check `binaries_architecture.md` for existing `calculate_scores` function signatures before implementing.**
 - [ ] Implement logic to take a list of **verified** participants as input.
 - [ ] For each participant, calculate their similarity score and determine their final payout amount.
 - [ ] Ensure the total payout distributed does not exceed the prize pool.
