@@ -24,7 +24,7 @@ The commitment hash can be submitted publicly without revealing your actual pred
 ensuring fair gameplay in the prediction market.
 
 Examples:
-  # Basic commitment generation (saves to ~/.cliptions/commitments.json by default)
+  # Basic commitment generation (saves to ~/.cliptions/miner/commitments.json by default)
   cliptions generate-commitment \"Cat sanctuary with woman wearing snoopy sweater\" --salt \"random_secret_123\"
   
   # Save to custom location
@@ -51,7 +51,7 @@ pub struct GenerateCommitmentArgs {
     #[arg(long, short, default_value = "text", value_parser = ["text", "json", "csv"])]
     pub output: String,
 
-    /// Save commitment data to file (JSON format, defaults to ~/.cliptions/commitments.json)
+    /// Save commitment data to file (JSON format, defaults to ~/.cliptions/miner/commitments.json)
     #[arg(long)]
     pub save_to: Option<PathBuf>,
 
@@ -144,17 +144,21 @@ pub fn run(args: GenerateCommitmentArgs) -> Result<()> {
         let save_path = if let Some(custom_path) = &args.save_to {
             custom_path.clone()
         } else {
-            // Default to ~/.cliptions/commitments.json
+            // Default to ~/.cliptions/miner/commitments.json
             let home_dir = dirs::home_dir()
                 .ok_or_else(|| "Could not determine home directory".to_string())?;
             let cliptions_dir = home_dir.join(".cliptions");
+            let miner_dir = cliptions_dir.join("miner");
             
-            // Create directory if it doesn't exist
+            // Create directories if they don't exist
             if !cliptions_dir.exists() {
                 fs::create_dir_all(&cliptions_dir)?;
             }
+            if !miner_dir.exists() {
+                fs::create_dir_all(&miner_dir)?;
+            }
             
-            cliptions_dir.join("commitments.json")
+            miner_dir.join("commitments.json")
         };
 
         save_results(&results, &save_path)?;
@@ -567,5 +571,117 @@ mod tests {
         assert_eq!(csv_escape("with,comma"), "\"with,comma\"");
         assert_eq!(csv_escape("with\"quote"), "\"with\"\"quote\"");
         assert_eq!(csv_escape("with\nline"), "\"with\nline\"");
+    }
+
+    #[test]
+    fn test_save_results_to_file() {
+        use std::fs;
+        use tempfile::tempdir;
+
+        // Create a temporary directory for testing
+        let temp_dir = tempdir().unwrap();
+        let test_file = temp_dir.path().join("test_commitments.json");
+
+        // Create test commitment results
+        let results = CommitmentResults {
+            commitments: vec![
+                CommitmentData {
+                    message: "Test prediction 1".to_string(),
+                    salt: "salt1".to_string(),
+                    commitment: "abc123def456".to_string(),
+                    timestamp: Some("2024-01-01T12:00:00Z".to_string()),
+                },
+                CommitmentData {
+                    message: "Test prediction 2".to_string(),
+                    salt: "salt2".to_string(),
+                    commitment: "def456ghi789".to_string(),
+                    timestamp: Some("2024-01-01T13:00:00Z".to_string()),
+                },
+            ],
+            total_generated: 2,
+        };
+
+        // Test saving to a new file
+        let save_result = save_results(&results, &test_file);
+        assert!(save_result.is_ok(), "Failed to save results: {:?}", save_result);
+
+        // Verify file exists
+        assert!(test_file.exists(), "Commitment file was not created");
+
+        // Read and verify the saved content
+        let file_content = fs::read_to_string(&test_file).unwrap();
+        let saved_results: CommitmentResults = serde_json::from_str(&file_content).unwrap();
+
+        assert_eq!(saved_results.total_generated, 2);
+        assert_eq!(saved_results.commitments.len(), 2);
+        assert_eq!(saved_results.commitments[0].message, "Test prediction 1");
+        assert_eq!(saved_results.commitments[0].salt, "salt1");
+        assert_eq!(saved_results.commitments[0].commitment, "abc123def456");
+        assert_eq!(saved_results.commitments[1].message, "Test prediction 2");
+        assert_eq!(saved_results.commitments[1].salt, "salt2");
+        assert_eq!(saved_results.commitments[1].commitment, "def456ghi789");
+
+        // Test appending to existing file
+        let additional_results = CommitmentResults {
+            commitments: vec![
+                CommitmentData {
+                    message: "Test prediction 3".to_string(),
+                    salt: "salt3".to_string(),
+                    commitment: "ghi789jkl012".to_string(),
+                    timestamp: Some("2024-01-01T14:00:00Z".to_string()),
+                },
+            ],
+            total_generated: 1,
+        };
+
+        let append_result = save_results(&additional_results, &test_file);
+        assert!(append_result.is_ok(), "Failed to append results: {:?}", append_result);
+
+        // Verify the file now contains all 3 commitments
+        let updated_content = fs::read_to_string(&test_file).unwrap();
+        let updated_results: CommitmentResults = serde_json::from_str(&updated_content).unwrap();
+
+        assert_eq!(updated_results.total_generated, 3);
+        assert_eq!(updated_results.commitments.len(), 3);
+        assert_eq!(updated_results.commitments[2].message, "Test prediction 3");
+        assert_eq!(updated_results.commitments[2].salt, "salt3");
+        assert_eq!(updated_results.commitments[2].commitment, "ghi789jkl012");
+
+        // Clean up
+        temp_dir.close().unwrap();
+    }
+
+    #[test]
+    fn test_save_results_with_no_save_flag() {
+        use tempfile::tempdir;
+
+        // Create a temporary directory for testing
+        let temp_dir = tempdir().unwrap();
+        let test_file = temp_dir.path().join("test_commitments.json");
+
+        // Test that file is not created when no_save is true
+        let args = GenerateCommitmentArgs {
+            message: Some("test message".to_string()),
+            salt: Some("test_salt".to_string()),
+            output: "text".to_string(),
+            save_to: Some(test_file.clone()),
+            no_save: true, // This should prevent saving
+            batch_file: None,
+            verbose: false,
+            no_color: false,
+            quiet: false,
+            config: None,
+            timestamp: false,
+        };
+
+        // Run the function
+        let result = run(args);
+        
+        // The function should succeed but not create the file
+        assert!(result.is_ok(), "Function should succeed even with no_save");
+        assert!(!test_file.exists(), "File should not be created when no_save is true");
+
+        // Clean up
+        temp_dir.close().unwrap();
     }
 } 

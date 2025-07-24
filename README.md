@@ -165,6 +165,44 @@ Success: Commitment data saved to /Users/username/.cliptions/commitments.json
 - **Multiple formats**: Output in text, JSON, or CSV format
 - **Batch processing**: Process multiple commitments from a JSON file
 
+### Commitment Collection
+
+Collect commitment replies from a specific tweet:
+
+```bash
+# Basic commitment collection
+cliptions collect-commitments --tweet-id "1234567890123456789"
+
+# Verbose output with detailed information
+cliptions collect-commitments --tweet-id "1234567890123456789" --verbose
+
+# Limit results per page
+cliptions collect-commitments --tweet-id "1234567890123456789" --max-results 50
+
+# Use custom config file
+cliptions collect-commitments --tweet-id "1234567890123456789" --config config/custom.yaml
+```
+
+**Example Output:**
+```
+✅ Loaded config from: config/llm.yaml
+✅ Search complete!
+Total replies found: 3
+
+--- Reply 1 ---
+🐦 Tweet ID: 1234567890123456789
+👤 Author ID: 9876543210987654321
+📅 Created: 2024-01-15 14:30:00 UTC
+💬 Text: My commitment hash: abc123def456...
+🔗 URL: https://twitter.com/user/status/1234567890123456789
+```
+
+**Features:**
+- **Twitter API integration**: Uses Twitter API v2 for reliable data collection
+- **Configurable limits**: Control maximum results per page
+- **Verbose mode**: Detailed output with metrics and conversation IDs
+- **Error handling**: Comprehensive error messages for API issues
+
 ### Score Calculation
 
 Calculate similarity scores and rankings for a round:
