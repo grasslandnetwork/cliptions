@@ -27,6 +27,27 @@ This task list outlines the refactoring and implementation plan for the Cliption
 
 ---
 
+### Slice 0: Validator Opens Round (v0.6.0)
+**Status**: [ ] Not Started
+**Priority**: Critical
+**Description**: Implement the `open-round` subcommand.
+
+**Tasks**:
+- [ ] Create the `src/actions/open_round.rs` module.
+- [ ] **Check `binaries_architecture.md` for existing `twitter_post` function signatures before implementing.**
+- [ ] Implement logic to post the #commitmentsopen tweet with round hashtag (e.g., #round8).
+- [ ] Generate tweet text with round instructions and appropriate hashtags.
+- [ ] Wire it up as the `open-round` subcommand.
+- [ ] Implement Twitter posting functionality for round opening (real API)
+- [ ] Test posting #commitmentsopen tweet to Twitter
+- [ ] Save the posted tweet ID for later use in collect-commitments
+- [ ] Ensure config file can be swapped for different Twitter accounts/roles
+- [ ] **Create tests for the open-round subcommand by moving appropriate tests from the old binary.**
+- [ ] Update `README.md` to document the new `cliptions open-round` command.
+- [ ] Update this task list to mark all tasks as completed.
+
+---
+
 ### Slice 1: Miner Generates Commitment (v0.6.1)
 **Status**: [x] Completed
 **Priority**: High
