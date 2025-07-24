@@ -67,21 +67,23 @@ This task list outlines the refactoring and implementation plan for the Cliption
 
 ---
 
-### Slice 3: Validator Replies with Fees (v0.6.3)
+### Slice 3: Validator Posts Target Frame (v0.6.3)
 **Status**: [ ] Not Started
 **Priority**: High
-**Description**: Implement the `reply-with-fees` subcommand.
+**Description**: Implement the `post-target-frame` subcommand.
 
 **Tasks**:
-- [ ] Create the `src/actions/reply_with_fees.rs` module.
+- [ ] Create the `src/actions/post_target_frame.rs` module.
 - [ ] **Check `binaries_architecture.md` for existing `twitter_post` function signatures before implementing.**
-- [ ] Implement logic to reply to each commitment with a unique $TAO address, sourcing from `twitter_post.rs`.
-- [ ] Wire it up as the `reply-with-fees` subcommand.
-- [ ] Implement Twitter posting functionality for fee replies (real API)
-- [ ] Test posting fee replies to real commitments on Twitter
+- [ ] Implement logic to post target frame image as a reply to the #commitmentsopen tweet.
+- [ ] Generate tweet text with #revealsopen hashtag and reveal instructions.
+- [ ] Wire it up as the `post-target-frame` subcommand.
+- [ ] Implement Twitter posting functionality for target frame (real API)
+- [ ] Test posting target frame as reply to #commitmentsopen tweet
+- [ ] Save the posted tweet ID for later use in collect-reveals
 - [ ] Ensure config file can be swapped for different Twitter accounts/roles
-- [ ] **Create tests for the reply-with-fees subcommand by moving appropriate tests from the old binary.**
-- [ ] Update `README.md` to document the new `cliptions reply-with-fees` command.
+- [ ] **Create tests for the post-target-frame subcommand by moving appropriate tests from the old binary.**
+- [ ] Update `README.md` to document the new `cliptions post-target-frame` command.
 - [ ] Update `Cargo.toml` to version `0.6.3`.
 - [ ] Commit the changes and create a git tag `v0.6.3`.
 - [ ] **Verify the new tag triggers and passes all checks in GitHub Actions.**
