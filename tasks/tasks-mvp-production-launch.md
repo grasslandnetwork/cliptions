@@ -89,26 +89,26 @@ This task list outlines the refactoring and implementation plan for the Cliption
 ---
 
 ### Slice 3: Validator Posts Target Frame (v0.6.3)
-**Status**: [ ] Not Started
+**Status**: [x] Completed
 **Priority**: High
 **Description**: Implement the `post-target-frame` subcommand.
 
 **Tasks**:
-- [ ] Create the `src/actions/post_target_frame.rs` module.
-- [ ] **Check `binaries_architecture.md` for existing `twitter_post` function signatures before implementing.**
-- [ ] Implement logic to post target frame image as a reply to the #commitmentsopen tweet.
-- [ ] Generate tweet text with #revealsopen hashtag and reveal instructions.
-- [ ] Wire it up as the `post-target-frame` subcommand.
-- [ ] Implement Twitter posting functionality for target frame (real API)
-- [ ] Test posting target frame as reply to #commitmentsopen tweet
-- [ ] Save the posted tweet ID for later use in collect-reveals
-- [ ] Ensure config file can be swapped for different Twitter accounts/roles
-- [ ] **Create tests for the post-target-frame subcommand by moving appropriate tests from the old binary.**
-- [ ] Update `README.md` to document the new `cliptions post-target-frame` command.
-- [ ] Update `Cargo.toml` to version `0.6.3`.
-- [ ] Commit the changes and create a git tag `v0.6.3`.
+- [x] Create the `src/actions/post_target_frame.rs` module.
+- [x] **Check `binaries_architecture.md` for existing `twitter_post` function signatures before implementing.**
+- [x] Implement logic to post target frame image as a reply to the #commitmentsopen tweet.
+- [x] Generate tweet text with #revealsopen hashtag and reveal instructions.
+- [x] Wire it up as the `post-target-frame` subcommand.
+- [x] Implement Twitter posting functionality for target frame (real API)
+- [x] Test posting target frame as reply to #commitmentsopen tweet
+- [x] Save the posted tweet ID for later use in collect-reveals
+- [x] Ensure config file can be swapped for different Twitter accounts/roles
+- [x] **Create tests for the post-target-frame subcommand by moving appropriate tests from the old binary.**
+- [x] Update `README.md` to document the new `cliptions post-target-frame` command.
+- [x] Update `Cargo.toml` to version `0.6.3`.
+- [x] Commit the changes and create a git tag `v0.6.3`.
 - [ ] **Verify the new tag triggers and passes all checks in GitHub Actions.**
-- [ ] Update this task list to mark all tasks as completed.
+- [x] Update this task list to mark all tasks as completed.
 
 ---
 
