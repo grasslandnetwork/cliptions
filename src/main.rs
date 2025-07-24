@@ -7,16 +7,18 @@ use clap::{Parser, Subcommand};
 
 use cliptions_core::error::Result;
 use cliptions_core::actions::generate_commitment::{GenerateCommitmentArgs, run as generate_commitment_run};
+use cliptions_core::actions::collect_commitments::{CollectCommitmentsArgs, run as collect_commitments_run};
 
 #[derive(Parser)]
 #[command(name = "cliptions")]
 #[command(about = "Cliptions - A CLIP-based prediction market")]
-#[command(version = "0.6.1")]
+#[command(version = "0.6.2")]
 #[command(long_about = "
 Unified CLI tool for Cliptions prediction market operations.
 
 This tool provides all functionality through subcommands:
 - generate-commitment: Generate cryptographic commitments for predictions
+- collect-commitments: Collect commitment replies from a specific tweet
 
 Use 'cliptions <SUBCOMMAND> --help' for detailed help on each command.
 ")]
@@ -30,6 +32,10 @@ enum Commands {
     /// Generate cryptographic commitments for predictions
     #[command(name = "generate-commitment")]
     GenerateCommitment(GenerateCommitmentArgs),
+    
+    /// Collect commitment replies from a specific tweet
+    #[command(name = "collect-commitments")]
+    CollectCommitments(CollectCommitmentsArgs),
 }
 
 fn main() -> Result<()> {
@@ -37,5 +43,8 @@ fn main() -> Result<()> {
 
     match cli.command {
         Commands::GenerateCommitment(args) => generate_commitment_run(args),
+        Commands::CollectCommitments(args) => {
+            tokio::runtime::Runtime::new()?.block_on(collect_commitments_run(args))
+        }
     }
 } 
