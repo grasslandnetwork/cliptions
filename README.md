@@ -203,6 +203,39 @@ Total replies found: 3
 - **Verbose mode**: Detailed output with metrics and conversation IDs
 - **Error handling**: Comprehensive error messages for API issues
 
+### Target Frame Posting
+
+Post target frame images as replies to commitment tweets:
+
+```bash
+# Basic target frame posting
+cliptions post-target-frame --reply-to "1234567890123456789" --image "rounds/round2/target.jpg" --round 3 --target-time 2
+
+# Verbose output with detailed information
+cliptions post-target-frame --reply-to "1234567890123456789" --image "rounds/round2/target.jpg" --round 3 --target-time 2 --verbose
+
+# Use custom config file
+cliptions post-target-frame --reply-to "1234567890123456789" --image "rounds/round2/target.jpg" --round 3 --target-time 2 --config config/custom.yaml
+```
+
+**Example Output:**
+```
+✅ Loaded config from: config/llm.yaml
+✅ Target frame posted successfully!
+Tweet ID: 9876543210987654321
+URL: https://twitter.com/i/status/9876543210987654321
+Reply to: 1234567890123456789
+Round: 3
+Target time: 2025-04-01 | 16:30:57 | EST
+```
+
+**Features:**
+- **Image attachment**: Posts target frame images as replies to commitment tweets
+- **Automatic formatting**: Generates proper tweet text with #revealsopen hashtag
+- **Time calculation**: Automatically calculates target time from hours parameter
+- **Error handling**: Comprehensive error messages for API and file issues
+- **Configurable**: Support for different Twitter accounts via config files
+
 ### Score Calculation
 
 Calculate similarity scores and rankings for a round:
