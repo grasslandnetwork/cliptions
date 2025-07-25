@@ -9,11 +9,12 @@ use cliptions_core::error::Result;
 use cliptions_core::actions::generate_commitment::{GenerateCommitmentArgs, run as generate_commitment_run};
 use cliptions_core::actions::collect_commitments::{CollectCommitmentsArgs, run as collect_commitments_run};
 use cliptions_core::actions::post_target_frame::{PostTargetFrameArgs, run as post_target_frame_run};
+use cliptions_core::actions::collect_reveals::{CollectRevealsArgs, run as collect_reveals_run};
 
 #[derive(Parser)]
 #[command(name = "cliptions")]
 #[command(about = "Cliptions - A CLIP-based prediction market")]
-#[command(version = "0.6.3")]
+#[command(version = "0.6.4")]
 #[command(long_about = "
 Unified CLI tool for Cliptions prediction market operations.
 
@@ -21,6 +22,7 @@ This tool provides all functionality through subcommands:
 - generate-commitment: Generate cryptographic commitments for predictions
 - collect-commitments: Collect commitment replies from a specific tweet
 - post-target-frame: Post target frame image as reply to commitment tweet
+- collect-reveals: Collect reveal replies from target frame tweet
 
 Use 'cliptions <SUBCOMMAND> --help' for detailed help on each command.
 ")]
@@ -42,6 +44,10 @@ enum Commands {
     /// Post target frame image as reply to commitment tweet
     #[command(name = "post-target-frame")]
     PostTargetFrame(PostTargetFrameArgs),
+    
+    /// Collect reveal replies from target frame tweet
+    #[command(name = "collect-reveals")]
+    CollectReveals(CollectRevealsArgs),
 }
 
 fn main() -> Result<()> {
@@ -54,6 +60,9 @@ fn main() -> Result<()> {
         }
         Commands::PostTargetFrame(args) => {
             tokio::runtime::Runtime::new()?.block_on(post_target_frame_run(args))
+        }
+        Commands::CollectReveals(args) => {
+            tokio::runtime::Runtime::new()?.block_on(collect_reveals_run(args))
         }
     }
 } 

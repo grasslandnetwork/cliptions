@@ -118,16 +118,16 @@ This task list outlines the refactoring and implementation plan for the Cliption
 **Description**: Implement the `collect-reveals` subcommand.
 
 **Tasks**:
-- [ ] Create the `src/actions/collect_reveals.rs` module.
-- [ ] **Check `binaries_architecture.md` for existing `twitter_search_replies` function signatures before implementing.**
-- [ ] Implement logic to extract reveal replies from a specific tweet.
-- [ ] Wire it up as the `collect-reveals` subcommand.
-- [ ] Implement Twitter reading for reveal collection (real API)
+- [x] Create the `src/actions/collect_reveals.rs` module.
+- [x] **Check `binaries_architecture.md` for existing `twitter_search_replies` function signatures before implementing.**
+- [x] Implement logic to extract reveal replies from a specific tweet.
+- [x] Wire it up as the `collect-reveals` subcommand.
+- [x] Implement Twitter reading for reveal collection (real API)
 - [ ] Test reveal collection with real Twitter data
 - [ ] Ensure config file can be swapped for different Twitter accounts/roles
 - [ ] **Create tests for the collect-reveals subcommand by moving appropriate tests from the old binary.**
 - [ ] Update `README.md` to document the new `cliptions collect-reveals` command.
-- [ ] Update `Cargo.toml` to version `0.6.4`.
+- [x] Update `Cargo.toml` to version `0.6.4`.
 - [ ] Commit the changes and create a git tag `v0.6.4`.
 - [ ] **Verify the new tag triggers and passes all checks in GitHub Actions.**
 - [ ] Update this task list to mark all tasks as completed.
