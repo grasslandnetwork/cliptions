@@ -1,11 +1,12 @@
 use clap::Parser;
 use colored::Colorize;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fs;
 use std::path::PathBuf;
 use crate::config::ConfigManager;
 use crate::error::Result;
 use crate::commitment::CommitmentGenerator;
+use serde_json::json;
 
 #[derive(Parser)]
 pub struct VerifyCommitmentsArgs {
@@ -36,6 +37,14 @@ pub struct VerifyCommitmentsArgs {
     /// Config file path (default: config/llm.yaml)
     #[arg(long, default_value = "config/llm.yaml")]
     pub config: String,
+    
+    /// Path to rounds.json file (default: data/rounds.json)
+    #[arg(long, default_value = "data/rounds.json")]
+    pub rounds_file: PathBuf,
+    
+    /// Round ID to save results under (e.g., "round4")
+    #[arg(long)]
+    pub round_id: Option<String>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
@@ -141,10 +150,20 @@ pub async fn run(args: VerifyCommitmentsArgs) -> Result<()> {
     // Display results
     display_verification_results(&results, &args)?;
 
+    // Save to rounds.json if round_id is provided
+    if let Some(round_id) = &args.round_id {
+        save_to_rounds_json(&results, &args.rounds_file, round_id)?;
+        
+        if args.verbose {
+            println!("✅ Verification results saved to {} under round '{}'", 
+                args.rounds_file.display(), round_id);
+        }
+    }
+
     Ok(())
 }
 
-fn load_commitments(path: &PathBuf, round_tweet_id: &str) -> Result<HashMap<String, CollectedCommitmentData>> {
+fn load_commitments(path: &PathBuf, round_tweet_id: &str) -> Result<BTreeMap<String, CollectedCommitmentData>> {
     if !path.exists() {
         return Err("Commitments file not found".to_string().into());
     }
@@ -153,7 +172,7 @@ fn load_commitments(path: &PathBuf, round_tweet_id: &str) -> Result<HashMap<Stri
     let results: CollectedCommitmentsResults = serde_json::from_str(&content)?;
     
     // Filter by round
-    let mut commitments = HashMap::new();
+    let mut commitments = BTreeMap::new();
     for commitment in results.commitments {
         if commitment.conversation_id.as_deref() == Some(round_tweet_id) {
             commitments.insert(commitment.author_id.clone(), commitment);
@@ -163,7 +182,7 @@ fn load_commitments(path: &PathBuf, round_tweet_id: &str) -> Result<HashMap<Stri
     Ok(commitments)
 }
 
-fn load_reveals(path: &PathBuf, round_tweet_id: &str) -> Result<HashMap<String, CollectedRevealData>> {
+fn load_reveals(path: &PathBuf, round_tweet_id: &str) -> Result<BTreeMap<String, CollectedRevealData>> {
     if !path.exists() {
         return Err("Reveals file not found".to_string().into());
     }
@@ -172,7 +191,7 @@ fn load_reveals(path: &PathBuf, round_tweet_id: &str) -> Result<HashMap<String, 
     let results: CollectedRevealsResults = serde_json::from_str(&content)?;
     
     // Filter by round
-    let mut reveals = HashMap::new();
+    let mut reveals = BTreeMap::new();
     for reveal in results.reveals {
         if reveal.conversation_id.as_deref() == Some(round_tweet_id) {
             reveals.insert(reveal.author_id.clone(), reveal);
@@ -290,6 +309,57 @@ fn csv_escape(field: &str) -> String {
     } else {
         field.to_string()
     }
+}
+
+
+// Add new function to save to rounds.json
+fn save_to_rounds_json(
+    results: &VerificationResults,
+    rounds_file: &PathBuf,
+    round_id: &str,
+) -> Result<()> {
+    // Load existing rounds data
+    let mut rounds_data: BTreeMap<String, serde_json::Value> = if rounds_file.exists() {
+        let content = fs::read_to_string(rounds_file)?;
+        serde_json::from_str(&content)?
+    } else {
+        BTreeMap::new()
+    };
+
+    // Create participants array from verification results
+    let participants: Vec<serde_json::Value> = results.results.iter().map(|result| {
+        json!({
+            "username": result.username,
+            "wallet": result.wallet_address,
+            "commitment": result.commitment_hash,
+            "commitment_url": result.commitment_tweet_url,
+            "reveal": result.guess,
+            "reveal_url": result.reveal_tweet_url,
+            "salt": result.salt,
+            "valid": result.is_valid
+            // Note: score and payout will be added in Slice 6
+        })
+    }).collect();
+
+    // Create round data
+    let round_data = json!({
+        "participants": participants,
+        "verification_timestamp": results.verification_timestamp,
+        "total_participants": results.total_participants,
+        "valid_commitments": results.valid_commitments,
+        "invalid_commitments": results.invalid_commitments
+        // Note: target_image, target_time, round_commitment_url, round_reveal_url, 
+        // total_payout, prize_pool will be added in other slices
+    });
+
+    // Insert or update the round
+    rounds_data.insert(round_id.to_string(), round_data);
+
+    // Save back to file
+    let content = serde_json::to_string_pretty(&rounds_data)?;
+    fs::write(rounds_file, content)?;
+
+    Ok(())
 }
 
 // Import the data structures from other modules
