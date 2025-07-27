@@ -65,14 +65,24 @@ impl Guess {
 /// A participant in the prediction market
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Participant {
-    /// Unique identifier for the participant
-    pub user_id: String,
-    /// Display name or username
+    /// Twitter User ID for the participant
+    pub social_id: String,
+    /// Twitter User ID for the participant
     pub username: String,
-    /// The participant's guess
+    /// The participant's plaintext guess
     pub guess: Guess,
+    /// Guess URL for the participant
+    pub guess_url: String,
     /// Cryptographic commitment to the guess
     pub commitment: String,
+    /// Twitter URL ID for the commitment
+    pub commitment_url: String,
+    /// Wallet address for the participant
+    pub wallet: String,
+    /// Score for the participant
+    pub score: f64,
+    /// Payout for the participant
+    pub payout: Payout,
     /// Salt used for the commitment
     #[serde(skip_serializing_if = "Option::is_none")]
     pub salt: Option<String>,
@@ -83,12 +93,21 @@ pub struct Participant {
 
 impl Participant {
     /// Create a new participant
-    pub fn new(user_id: String, username: String, guess: Guess, commitment: String) -> Self {
+    pub fn new(social_id: String, username: String, guess: Guess, commitment: String) -> Self {
         Self {
-            user_id,
+            social_id,
             username,
             guess,
+            guess_url: String::new(), // Will be set later
             commitment,
+            commitment_url: String::new(), // Will be set later
+            wallet: String::new(), // Will be set later
+            score: 0.0, // Will be calculated later
+            payout: Payout {
+                amount: 0.0,
+                currency: "TAO".to_string(),
+                url: String::new(),
+            },
             salt: None,
             verified: false,
         }
@@ -105,6 +124,44 @@ impl Participant {
         self.verified = true;
         self
     }
+
+    /// Set the guess URL
+    pub fn with_guess_url(mut self, guess_url: String) -> Self {
+        self.guess_url = guess_url;
+        self
+    }
+
+    /// Set the commitment URL
+    pub fn with_commitment_url(mut self, commitment_url: String) -> Self {
+        self.commitment_url = commitment_url;
+        self
+    }
+
+    /// Set the wallet address
+    pub fn with_wallet(mut self, wallet: String) -> Self {
+        self.wallet = wallet;
+        self
+    }
+
+    /// Set the score
+    pub fn with_score(mut self, score: f64) -> Self {
+        self.score = score;
+        self
+    }
+
+    /// Set the payout
+    pub fn with_payout(mut self, payout: Payout) -> Self {
+        self.payout = payout;
+        self
+    }
+}
+
+/// Payout for a participant
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct Payout {
+    pub amount: f64,
+    pub currency: String,
+    pub url: String,
 }
 
 /// Result of scoring a participant's guess
@@ -195,18 +252,24 @@ pub enum RoundStatus {
 /// Complete data for a prediction round
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RoundData {
+    /// The round version number indicates which set of round validation rules to follow
+    pub round_version: i32,
     /// Unique identifier for the round
     pub round_id: String,
-    /// Human-readable title
-    pub title: String,
-    /// Description of the round
-    pub description: String,
     /// Path to the target image
     pub target_image_path: String,
     /// Current status of the round
     pub status: RoundStatus,
-    /// Configuration for the round
-    pub config: RoundConfig,
+    /// Prize pool for the round
+    pub prize_pool: f64,
+    /// Twitter Conversation URL ID for the round
+    pub social_id: String,
+    /// Commitment deadline for the round
+    pub commitment_deadline: DateTime<Utc>,
+    /// Reveal deadline for the round
+    pub reveal_deadline: DateTime<Utc>,
+    /// Total payout for the round
+    pub total_payout: f64,
     /// List of participants
     pub participants: Vec<Participant>,
     /// Scoring results (if processed)
@@ -216,32 +279,58 @@ pub struct RoundData {
     pub created_at: DateTime<Utc>,
     /// Timestamp when the round was last updated
     pub updated_at: DateTime<Utc>,
-    /// Optional metadata
-    #[serde(default)]
-    pub metadata: HashMap<String, String>,
 }
 
 impl RoundData {
     /// Create a new round
     pub fn new(
         round_id: String,
-        title: String,
-        description: String,
         target_image_path: String,
+        social_id: String,
+        prize_pool: f64,
     ) -> Self {
         let now = Utc::now();
         Self {
+            round_version: 1,
             round_id,
-            title,
-            description,
             target_image_path,
             status: RoundStatus::Open,
-            config: RoundConfig::default(),
+            prize_pool,
+            social_id,
+            commitment_deadline: now + chrono::Duration::hours(24), // Default 24 hours
+            reveal_deadline: now + chrono::Duration::hours(48), // Default 48 hours
+            total_payout: 0.0, // Will be calculated later
             participants: Vec::new(),
             results: Vec::new(),
             created_at: now,
             updated_at: now,
-            metadata: HashMap::new(),
+        }
+    }
+
+    /// Create a new round with custom deadlines
+    pub fn with_deadlines(
+        round_id: String,
+        target_image_path: String,
+        social_id: String,
+        prize_pool: f64,
+        commitment_deadline: DateTime<Utc>,
+        reveal_deadline: DateTime<Utc>,
+    ) -> Self {
+        let now = Utc::now();
+        Self {
+            round_version: 1,
+            round_id,
+            target_image_path,
+            status: RoundStatus::Open,
+            prize_pool,
+            social_id,
+            commitment_deadline,
+            reveal_deadline,
+            total_payout: 0.0, // Will be calculated later
+            participants: Vec::new(),
+            results: Vec::new(),
+            created_at: now,
+            updated_at: now,
         }
     }
 

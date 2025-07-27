@@ -7,13 +7,14 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
+use chrono::{DateTime, Utc};
 use serde_json;
 
 use crate::commitment::CommitmentVerifier;
 use crate::embedder::EmbedderTrait;
 use crate::error::{Result, RoundError};
 use crate::scoring::{process_participants, ScoreValidator, ScoringStrategy};
-use crate::types::{Participant, RoundConfig, RoundData, RoundStatus, ScoringResult};
+use crate::types::{Participant, RoundData, RoundStatus, ScoringResult};
 
 /// Round processor for managing prediction rounds
 pub struct RoundProcessor<E: EmbedderTrait, S: ScoringStrategy> {
@@ -100,10 +101,11 @@ impl<E: EmbedderTrait, S: ScoringStrategy> RoundProcessor<E, S> {
     pub fn create_round(
         &mut self,
         round_id: String,
-        title: String,
-        description: String,
         target_image_path: String,
-        config: Option<RoundConfig>,
+        social_id: String,
+        prize_pool: f64,
+        commitment_deadline: Option<DateTime<Utc>>,
+        reveal_deadline: Option<DateTime<Utc>>,
     ) -> Result<()> {
         if self.rounds_cache.is_empty() {
             self.load_rounds()?;
@@ -113,10 +115,23 @@ impl<E: EmbedderTrait, S: ScoringStrategy> RoundProcessor<E, S> {
             return Err(RoundError::AlreadyProcessed.into());
         }
 
-        let mut round = RoundData::new(round_id.clone(), title, description, target_image_path);
-        if let Some(config) = config {
-            round.config = config;
-        }
+        let round = if let (Some(commit_deadline), Some(reveal_deadline)) = (commitment_deadline, reveal_deadline) {
+            RoundData::with_deadlines(
+                round_id.clone(),
+                target_image_path,
+                social_id,
+                prize_pool,
+                commit_deadline,
+                reveal_deadline,
+            )
+        } else {
+            RoundData::new(
+                round_id.clone(),
+                target_image_path,
+                social_id,
+                prize_pool,
+            )
+        };
 
         self.rounds_cache.insert(round_id, round);
         self.save_rounds(&self.rounds_cache)?;
@@ -217,7 +232,7 @@ impl<E: EmbedderTrait, S: ScoringStrategy> RoundProcessor<E, S> {
 
             (
                 round.target_image_path.clone(),
-                round.config.prize_pool,
+                round.prize_pool,
                 verified_participants,
             )
         };
@@ -276,7 +291,7 @@ impl<E: EmbedderTrait, S: ScoringStrategy> RoundProcessor<E, S> {
 
         let total_participants = round.participants.len();
         let verified_participants = round.verified_participants().len();
-        let total_prize_pool = round.config.prize_pool;
+        let total_prize_pool = round.prize_pool;
         let is_complete = round.is_complete();
 
         let total_payout = if is_complete {
@@ -331,7 +346,7 @@ mod tests {
     fn create_test_participant(user_id: &str, guess_text: &str, commitment: &str) -> Participant {
         let guess = Guess::new(guess_text.to_string());
         Participant::new(
-            user_id.to_string(),
+            user_id.to_string(), // This is now social_id
             format!("user_{}", user_id),
             guess,
             commitment.to_string(),
@@ -356,16 +371,19 @@ mod tests {
         processor
             .create_round(
                 "test_round".to_string(),
-                "Test Round".to_string(),
-                "A test round".to_string(),
                 "test.jpg".to_string(),
-                None,
+                "test_social_id".to_string(),
+                100.0,
+                Some(Utc::now() + chrono::Duration::days(1)),
+                Some(Utc::now() + chrono::Duration::days(2)),
             )
             .unwrap();
 
         let round = processor.get_round("test_round").unwrap();
         assert_eq!(round.round_id, "test_round");
-        assert_eq!(round.title, "Test Round");
+        assert_eq!(round.target_image_path, "test.jpg");
+        assert_eq!(round.social_id, "test_social_id");
+        assert_eq!(round.prize_pool, 100.0);
         assert!(round.is_open());
     }
 
@@ -376,10 +394,11 @@ mod tests {
         processor
             .create_round(
                 "test_round".to_string(),
-                "Test Round".to_string(),
-                "A test round".to_string(),
                 "test.jpg".to_string(),
-                None,
+                "test_social_id".to_string(),
+                100.0,
+                Some(Utc::now() + chrono::Duration::days(1)),
+                Some(Utc::now() + chrono::Duration::days(2)),
             )
             .unwrap();
 
@@ -391,7 +410,7 @@ mod tests {
 
         let round = processor.get_round("test_round").unwrap();
         assert_eq!(round.participants.len(), 1);
-        assert_eq!(round.participants[0].user_id, "user1");
+        assert_eq!(round.participants[0].social_id, "user1");
     }
 
     #[test]
@@ -401,10 +420,11 @@ mod tests {
         processor
             .create_round(
                 "test_round".to_string(),
-                "Test Round".to_string(),
-                "A test round".to_string(),
                 "test.jpg".to_string(),
-                None,
+                "test_social_id".to_string(),
+                100.0,
+                Some(Utc::now() + chrono::Duration::days(1)),
+                Some(Utc::now() + chrono::Duration::days(2)),
             )
             .unwrap();
 
@@ -441,10 +461,11 @@ mod tests {
         processor
             .create_round(
                 "test_round".to_string(),
-                "Test Round".to_string(),
-                "A test round".to_string(),
                 "test.jpg".to_string(),
-                None,
+                "test_social_id".to_string(),
+                100.0,
+                Some(Utc::now() + chrono::Duration::days(1)),
+                Some(Utc::now() + chrono::Duration::days(2)),
             )
             .unwrap();
 

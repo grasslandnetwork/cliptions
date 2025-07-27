@@ -5,3 +5,4 @@ pub mod collect_commitments;
 pub mod post_target_frame;
 pub mod collect_reveals;
 pub mod verify_commitments;
+pub mod calculate_scores;
