@@ -40,25 +40,29 @@ pub struct CollectRevealsArgs {
     #[arg(short, long)]
     pub quiet: bool,
 
+    /// Show raw Twitter API responses without parsing
+    #[arg(long)]
+    pub raw: bool,
+
     /// Config file path (default: config/llm.yaml)
     #[arg(long, default_value = "config/llm.yaml")]
     pub config: String,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
-struct CollectedRevealData {
-    username: String,
-    guess: String,
-    salt: String,
-    tweet_url: String,
-    timestamp: String,
-    author_id: String,
-    conversation_id: Option<String>,
+pub struct CollectedRevealData {
+    pub username: String,
+    pub guess: String,
+    pub salt: String,
+    pub tweet_url: String,
+    pub timestamp: String,
+    pub author_id: String,
+    pub conversation_id: Option<String>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
-struct CollectedRevealsResults {
-    reveals: Vec<CollectedRevealData>,
+pub struct CollectedRevealsResults {
+    pub reveals: Vec<CollectedRevealData>,
     total_collected: usize,
     original_tweet_id: String,
     collection_timestamp: String,
@@ -104,6 +108,29 @@ pub async fn run(args: CollectRevealsArgs) -> Result<()> {
             if !args.quiet {
                 println!("✅ Search complete!");
                 println!("Total replies found: {}", replies.len());
+            }
+
+            // If raw mode is enabled, just show all raw results
+            if args.raw {
+                println!("\n=== RAW TWITTER API RESPONSES ===");
+                for (i, reply) in replies.iter().enumerate() {
+                    println!("\n--- Raw Reply {} ---", i + 1);
+                    println!("ID: {}", reply.id);
+                    println!("Author ID: {}", reply.author_id);
+                    println!("Text: {}", reply.text);
+                    println!("URL: {}", reply.url);
+                    if let Some(created_at) = reply.created_at {
+                        println!("Created: {}", created_at);
+                    }
+                    if let Some(conversation_id) = &reply.conversation_id {
+                        println!("Conversation ID: {}", conversation_id);
+                    }
+                    if let Some(metrics) = &reply.public_metrics {
+                        println!("Metrics: {:?}", metrics);
+                    }
+                    println!("--- End Raw Reply {} ---", i + 1);
+                }
+                return Ok(());
             }
 
             // Parse and collect reveal data
@@ -466,6 +493,7 @@ mod tests {
             verbose: true,
             no_color: false,
             quiet: false,
+            raw: false,
             config: "test_config.yaml".to_string(),
         };
 
@@ -489,6 +517,7 @@ mod tests {
             verbose: false,
             no_color: false,
             quiet: false,
+            raw: false,
             config: "config/llm.yaml".to_string(),
         };
 

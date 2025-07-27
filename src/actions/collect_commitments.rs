@@ -46,19 +46,19 @@ pub struct CollectCommitmentsArgs {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
-struct CollectedCommitmentData {
-    username: String,
-    commitment_hash: String,
-    wallet_address: String,
-    tweet_url: String,
-    timestamp: String,
-    author_id: String,
-    conversation_id: Option<String>,
+pub struct CollectedCommitmentData {
+    pub username: String,
+    pub commitment_hash: String,
+    pub wallet_address: String,
+    pub tweet_url: String,
+    pub timestamp: String,
+    pub author_id: String,
+    pub conversation_id: Option<String>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
-struct CollectedCommitmentsResults {
-    commitments: Vec<CollectedCommitmentData>,
+pub struct CollectedCommitmentsResults {
+    pub commitments: Vec<CollectedCommitmentData>,
     total_collected: usize,
     original_tweet_id: String,
     collection_timestamp: String,

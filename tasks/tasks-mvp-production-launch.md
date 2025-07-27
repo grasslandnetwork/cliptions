@@ -140,16 +140,16 @@ This task list outlines the refactoring and implementation plan for the Cliption
 **Description**: Implement the `verify-commitments` subcommand.
 
 **Tasks**:
-- [ ] Create the `src/actions/verify_commitments.rs` module.
-- [ ] **Check `binaries_architecture.md` for existing `verify_commitments` function signatures before implementing.**
+- [x] Create the `src/actions/verify_commitments.rs` module.
+- [x] **Check `binaries_architecture.md` for existing `verify_commitments` function signatures before implementing.**
 - [ ] Move logic from the old `verify_commitments` binary.
-- [ ] Wire it up as the `verify-commitments` subcommand.
-- [ ] Add verification logic using real collected data
-- [ ] Test verification with real Twitter data
+- [x] Wire it up as the `verify-commitments` subcommand.
+- [x] Add verification logic using real collected data
+- [x] Test verification with real Twitter data
 - [ ] Ensure config file can be swapped for different Twitter accounts/roles
 - [ ] **Create tests for the verify-commitments subcommand by moving appropriate tests from the old binary.**
-- [ ] Update `README.md` to document the new `cliptions verify-commitments` command.
-- [ ] Update `Cargo.toml` to version `0.6.5`.
+- [x] Update `README.md` to document the new `cliptions verify-commitments` command.
+- [x] Update `Cargo.toml` to version `0.6.5`.
 - [ ] Commit the changes and create a git tag `v0.6.5`.
 - [ ] **Verify the new tag triggers and passes all checks in GitHub Actions.**
 - [ ] Update this task list to mark all tasks as completed.
