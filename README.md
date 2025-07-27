@@ -242,13 +242,13 @@ Calculate similarity scores and rankings for a round:
 
 ```bash
 # Basic score calculation with CLIP
-./target/release/calculate_scores target.jpg 100.0 "ocean waves" "mountain sunset" "city skyline"
+cliptions calculate-scores target.jpg 100.0 "ocean waves" "mountain sunset" "city skyline"
 
 # Save results to JSON file
-./target/release/calculate_scores --output json --output-file results.json target.jpg 100.0 "guess1" "guess2"
+cliptions calculate-scores --output json --output-file results.json target.jpg 100.0 "guess1" "guess2"
 
 # Detailed similarity breakdown
-./target/release/calculate_scores --detailed --verbose target.jpg 100.0 "prediction1" "prediction2"
+cliptions calculate-scores --detailed --verbose target.jpg 100.0 "prediction1" "prediction2"
 ```
 
 ### Payout Processing
@@ -257,29 +257,66 @@ Process payouts for completed rounds:
 
 ```bash
 # Process single round
-./target/release/process_payouts round1 --prize-pool 100.0
+cliptions process-payouts round1 --prize-pool 100.0
 
 # Process all rounds with batch mode
-./target/release/process_payouts --all
+cliptions process-payouts --all
 
 # Save payout results with error handling
-./target/release/process_payouts --all --continue-on-error --output csv --output-file payouts.csv
+cliptions process-payouts --all --continue-on-error --output csv --output-file payouts.csv
 ```
 
 ### Commitment Verification
 
-Verify the integrity of player commitments:
+Verify the integrity of player commitments and save results to rounds.json:
 
 ```bash
-# Verify single round
-./target/release/verify_commitments round1
+# Basic commitment verification
+cliptions verify-commitments --round-tweet-id "1234567890123456789" --round-id "round4"
 
-# Batch verify all rounds
-./target/release/verify_commitments --all --verbose
+# Verbose output with detailed verification process
+cliptions verify-commitments --round-tweet-id "1234567890123456789" --round-id "round4" --verbose
 
-# Strict mode - fail on any invalid commitment
-./target/release/verify_commitments --all --strict --output json --output-file verification.json
+# Use custom file paths for commitments and reveals
+cliptions verify-commitments --round-tweet-id "1234567890123456789" --round-id "round4" \
+  --commitments-file /path/to/commitments.json \
+  --reveals-file /path/to/reveals.json
+
+# Different output formats
+cliptions verify-commitments --round-tweet-id "1234567890123456789" --round-id "round4" --output json
+cliptions verify-commitments --round-tweet-id "1234567890123456789" --round-id "round4" --output csv
+
+# Use custom config file
+cliptions verify-commitments --round-tweet-id "1234567890123456789" --round-id "round4" --config config/custom.yaml
 ```
+
+**Example Output:**
+```
+Commitment Verification Results
+Round Tweet ID: 1234567890123456789
+Total Participants: 3
+Valid Commitments: 3
+Invalid Commitments: 0
+
+Participant 1: 9876543210987654321
+  Username: davidynamic
+  Wallet: 5Co2unDtZKZDzYNZHT2fUMkEnpVWnassfbuabvZmGTrYKgtD
+  Commitment Hash: b30bc27636a63a2c9ce07b9b24e39161e64e975399df2c773c4240b924735ed4
+  Guess: Cat sanctuary with woman wearing snoopy sweater
+  Salt: random_secret_123
+  Valid: ✅
+
+✅ Verification results saved to data/rounds.json under round 'round4'
+```
+
+**Features:**
+- **Hash verification**: Validates commitment hashes against revealed guesses and salts
+- **Automatic saving**: Saves verification results to rounds.json with proper ordering
+- **Multiple formats**: Output in text, JSON, or CSV format
+- **Flexible file paths**: Use custom paths for commitments and reveals files
+- **Round tracking**: Associate verification results with specific round IDs
+- **Error handling**: Comprehensive error messages for invalid commitments
+- **Colored output**: Visual indicators for valid/invalid commitments (can be disabled)
 
 ### Advanced Usage
 
@@ -287,21 +324,21 @@ All CLI tools support advanced features for production use:
 
 ```bash
 # Use custom CLIP model
-./target/release/calculate_scores --clip-model models/custom-clip target.jpg 100.0 "guess1"
+cliptions calculate-scores --clip-model models/custom-clip target.jpg 100.0 "guess1"
 
 # Load configuration from YAML
-./target/release/process_payouts --config config.yaml --all
+cliptions process-payouts --config config.yaml --all
 
 # Testing mode with MockEmbedder
-./target/release/calculate_scores --use-mock target.jpg 100.0 "test1" "test2"
+cliptions calculate-scores --use-mock target.jpg 100.0 "test1" "test2"
 
 # Multiple output formats
-./target/release/verify_commitments round1 --output table  # Default
-./target/release/verify_commitments round1 --output json
-./target/release/verify_commitments round1 --output csv
+cliptions verify-commitments --round-tweet-id "1234567890123456789" --round-id "round1" --output text  # Default
+cliptions verify-commitments --round-tweet-id "1234567890123456789" --round-id "round1" --output json
+cliptions verify-commitments --round-tweet-id "1234567890123456789" --round-id "round1" --output csv
 
 # Quiet mode for scripts
-./target/release/generate_commitment "My prediction" --salt "mysalt" --quiet
+cliptions generate-commitment "My prediction" --salt "mysalt" --no-save
 ```
 
 **Common Options:**
@@ -317,10 +354,10 @@ Each CLI tool provides comprehensive built-in documentation with examples and de
 
 ```bash
 # Get help for any command
-./target/release/generate_commitment --help
-./target/release/calculate_scores --help
-./target/release/process_payouts --help
-./target/release/verify_commitments --help
+cliptions generate-commitment --help
+cliptions collect-commitments --help
+cliptions post-target-frame --help
+cliptions verify-commitments --help
 ```
 
 The built-in help includes:
