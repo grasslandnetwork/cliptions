@@ -1,152 +1,190 @@
 {
-    "round0": {
-        "participants": [
-            {
-                "username": "davidynamic",
-                "wallet": "5Co2unDtZKZDzYNZHT2fUMkEnpVWnassfbuabvZmGTrYKgtD",
-                "commitment": "c5aa575c17247359c59f6d126785250bcb756f4349d8f30155543515a43b146e",
-                "commitment_url": "https://x.com/davidynamic/status/1893728841866051936",
-                "reveal": "Cat sanctuary with woman wearing snoopy sweater",
-                "reveal_url": "https://x.com/davidynamic/status/1893782512406581462",
-                "salt": "your-salt-value-here",
-                "valid": true,
-                "score": 0.278243,
-                "payout": {
-                    "amount": 0.001646,
-                    "currency": "TAO",
-                    "url": "https://x.com/cliptions_test/status/1894191294789964005"
-                }
-            },
-            {
-                "username": "track_data_",
-                "wallet": "5EFfNQedRehT16SDHG84HKwTcEDcf9sX76CHFLBVPY1Jkytt",
-                "commitment": "f7b7889b520e01e8a2e915e8e9124bc299c6f584c0e0dd255a7e38fe8ec35747",
-                "commitment_url": "https://x.com/track_data_/status/1893791539282784549",
-                "reveal": "[-h]",
-                "reveal_url": "https://x.com/track_data_/status/1893789569406935170",
-                "salt": "cats",
-                "valid": true,
-                "score": 0.180474,
-                "payout": {
-                    "amount": 0.000823,
-                    "currency": "TAO",
-                    "url": "https://x.com/cliptions_test/status/1894192211392086315"
-                }
-            }
-        ],
-        "target_image": "round0/target20250223_133057EST.jpg",
-        "target_time": "20250223_133057EST",
-        "round_commitment_url": "https://x.com/cliptions_test/status/1893681256736452856",
-        "round_reveal_url": "https://x.com/cliptions_test/status/1893788927930085755",
-        "total_payout": 0.002469,
-        "prize_pool": 0.002469
-    },
-    "round1": {
-        "participants": [
-            {
-                "username": "davidynamic",
-                "wallet": "5Co2unDtZKZDzYNZHT2fUMkEnpVWnassfbuabvZmGTrYKgtD",
-                "commitment": "78d429be9b83d14807d9f3ce412c009a461e08f20efb480907becc5769f2f40f",
-                "commitment_url": "https://x.com/davidynamic/status/1907135879786742010",
-                "reveal": "live stream, video, cat, kitten, animal rescue, shelter, FFRC, Friends of Felines, Defiance Ohio, cage-free, no-kill, adoption, pet cam, live chat, animal welfare",
-                "reveal_url": "https://x.com/davidynamic/status/1907177276606644490",
-                "salt": "1sdaf4aoifr",
-                "valid": true,
-                "score": 0.059538,
-                "payout": {
-                    "amount": 0.001,
-                    "currency": "TAO",
-                    "url": "https://x.com/cliptions_test/status/1918708643513430177"
-                }
-            }
-        ],
-        "target_image": "round1/target20250401_153057EST.jpg",
-        "target_time": "20250401_153057EST",
-        "round_commitment_url": "https://x.com/cliptions_test/status/1907130714241315148",
-        "round_reveal_url": "https://x.com/cliptions_test/status/1907171976684187882",
-        "total_payout": 0.001,
-        "prize_pool": 0.001
-    },
-    "round2": {
-        "participants": [
-            {
-                "username": "davidynamic",
-                "wallet": "5Co2unDtZKZDzYNZHT2fUMkEnpVWnassfbuabvZmGTrYKgtD",
-                "commitment": "bc64a7b517b4e0a23c61300bb2e0601641fac6b387c76a1a9abb3d425c230235",
-                "commitment_url": "https://x.com/davidynamic/status/1907165981706760445",
-                "reveal": "live stream, video, cat, kitten, animal rescue, shelter, FFRC, Friends of Felines, Defiance Ohio, cage-free, no-kill, adoption, pet cam, live chat, animal welfare",
-                "reveal_url": "https://x.com/davidynamic/status/1907177805583974538",
-                "salt": "iojoiuior",
-                "valid": true,
-                "score": 0.051624,
-                "payout": {
-                    "amount": 0.001646,
-                    "currency": "TAO",
-                    "url": "https://x.com/cliptions_test/status/1918709304942580182"
-                }
-            },
-            {
-                "username": "track_data_",
-                "wallet": "5EFfNQedRehT16SDHG84HKwTcEDcf9sX76CHFLBVPY1Jkytt",
-                "commitment": "c4bd4f6ed4fbdd80a94d6842700bde38a28f2ebb5dc764454c0df209ccb3a87c",
-                "commitment_url": "https://x.com/track_data_/status/1907160947845710103",
-                "reveal": "Cat shelter with some cats walking around, others lying around curled up and some perched up on top, attended by two ladies talking with each other and petting a cat",
-                "reveal_url": "https://x.com/track_data_/status/1907173284099084297",
-                "salt": "cat-salt",
-                "valid": true,
-                "score": 0.011867,
-                "payout": {
-                    "amount": 0.000823,
-                    "currency": "TAO",
-                    "url": "https://x.com/cliptions_test/status/1918709304942580182"
-                }
-            }
-        ],
-        "target_image": "round2/target20250401_163057EST.jpg",
-        "target_time": "20250401_163057EST",
-        "round_commitment_url": "https://x.com/cliptions_test/status/1907159517013422578",
-        "round_reveal_url": "https://x.com/cliptions_test/status/1907172528659034344",
-        "total_payout": 0.002469,
-        "prize_pool": 0.002469,
-        "raw_commitment_replies": {
-            "original_tweet_url": "https://x.com/cliptions_test/status/1907159517013422578",
-            "total_replies_found": 2,
-            "replies": [
-                {
-                    "url": "https://x.com/davidynamic/status/1907165981706760445",
-                    "author": "@davidynamic",
-                    "text_preview": "Commit: bc64a7b517b4e0a23c61300bb2e0601641fac6b387c76a1a9abb3d425c230235 Wallet: 5Co2unDtZKZDzYNZHT2fUMkEnpVWnassfbuabvZmGTrYKgtD",
-                    "was_spam_flagged": false
-                },
-                {
-                    "url": "https://x.com/track_data_/status/1907160947845710103",
-                    "author": "@track_data_",
-                    "text_preview": "Commit: c4bd4f6ed4fbdd80a94d6842700bde38a28f2ebb5dc764454c0df209ccb3a87c Wallet: 5EFfNQedRehT16SDHG84HKwTcEDcf9sX76CHFLBVPY1Jkytt1",
-                    "was_spam_flagged": false
-                }
-            ]
+  "round0": {
+    "participants": [
+      {
+        "commitment": "c5aa575c17247359c59f6d126785250bcb756f4349d8f30155543515a43b146e",
+        "commitment_url": "https://x.com/davidynamic/status/1893728841866051936",
+        "payout": {
+          "amount": 0.001646,
+          "currency": "TAO",
+          "url": "https://x.com/cliptions_test/status/1894191294789964005"
         },
-        "collected_commitments": {
-            "success": true,
-            "commitments": [
-                {
-                    "username": "davidynamic",
-                    "commitment_hash": "bc64a7b517b4e0a23c61300bb2e0601641fac6b387c76a1a9abb3d425c230235",
-                    "wallet_address": "5Co2unDtZKZDzYNZHT2fUMkEnpVWnassfbuabvZmGTrYKgtD",
-                    "tweet_url": "https://x.com/davidynamic/status/1907165981706760445",
-                    "timestamp": "2025-06-14 12:42:07.464279"
-                },
-                {
-                    "username": "track_data_",
-                    "commitment_hash": "c4bd4f6ed4fbdd80a94d6842700bde38a28f2ebb5dc764454c0df209ccb3a87c",
-                    "wallet_address": "5EFfNQedRehT16SDHG84HKwTcEDcf9sX76CHFLBVPY1Jkytt1",
-                    "tweet_url": "https://x.com/track_data_/status/1907160947845710103",
-                    "timestamp": "2025-06-14 12:42:07.464371"
-                }
-            ],
-            "announcement_url": "https://x.com/cliptions_test/status/1907159517013422578",
-            "total_commitments_found": 2,
-            "error_message": null
+        "reveal": "Cat sanctuary with woman wearing snoopy sweater",
+        "reveal_url": "https://x.com/davidynamic/status/1893782512406581462",
+        "salt": "your-salt-value-here",
+        "score": 0.278243,
+        "username": "davidynamic",
+        "valid": true,
+        "wallet": "5Co2unDtZKZDzYNZHT2fUMkEnpVWnassfbuabvZmGTrYKgtD"
+      },
+      {
+        "commitment": "f7b7889b520e01e8a2e915e8e9124bc299c6f584c0e0dd255a7e38fe8ec35747",
+        "commitment_url": "https://x.com/track_data_/status/1893791539282784549",
+        "payout": {
+          "amount": 0.000823,
+          "currency": "TAO",
+          "url": "https://x.com/cliptions_test/status/1894192211392086315"
+        },
+        "reveal": "[-h]",
+        "reveal_url": "https://x.com/track_data_/status/1893789569406935170",
+        "salt": "cats",
+        "score": 0.180474,
+        "username": "track_data_",
+        "valid": true,
+        "wallet": "5EFfNQedRehT16SDHG84HKwTcEDcf9sX76CHFLBVPY1Jkytt"
+      }
+    ],
+    "prize_pool": 0.002469,
+    "round_commitment_url": "https://x.com/cliptions_test/status/1893681256736452856",
+    "round_reveal_url": "https://x.com/cliptions_test/status/1893788927930085755",
+    "target_image": "round0/target20250223_133057EST.jpg",
+    "target_time": "20250223_133057EST",
+    "total_payout": 0.002469
+  },
+  "round1": {
+    "participants": [
+      {
+        "commitment": "78d429be9b83d14807d9f3ce412c009a461e08f20efb480907becc5769f2f40f",
+        "commitment_url": "https://x.com/davidynamic/status/1907135879786742010",
+        "payout": {
+          "amount": 0.001,
+          "currency": "TAO",
+          "url": "https://x.com/cliptions_test/status/1918708643513430177"
+        },
+        "reveal": "live stream, video, cat, kitten, animal rescue, shelter, FFRC, Friends of Felines, Defiance Ohio, cage-free, no-kill, adoption, pet cam, live chat, animal welfare",
+        "reveal_url": "https://x.com/davidynamic/status/1907177276606644490",
+        "salt": "1sdaf4aoifr",
+        "score": 0.059538,
+        "username": "davidynamic",
+        "valid": true,
+        "wallet": "5Co2unDtZKZDzYNZHT2fUMkEnpVWnassfbuabvZmGTrYKgtD"
+      }
+    ],
+    "prize_pool": 0.001,
+    "round_commitment_url": "https://x.com/cliptions_test/status/1907130714241315148",
+    "round_reveal_url": "https://x.com/cliptions_test/status/1907171976684187882",
+    "target_image": "round1/target20250401_153057EST.jpg",
+    "target_time": "20250401_153057EST",
+    "total_payout": 0.001
+  },
+  "round2": {
+    "collected_commitments": {
+      "announcement_url": "https://x.com/cliptions_test/status/1907159517013422578",
+      "commitments": [
+        {
+          "commitment_hash": "bc64a7b517b4e0a23c61300bb2e0601641fac6b387c76a1a9abb3d425c230235",
+          "timestamp": "2025-06-14 12:42:07.464279",
+          "tweet_url": "https://x.com/davidynamic/status/1907165981706760445",
+          "username": "davidynamic",
+          "wallet_address": "5Co2unDtZKZDzYNZHT2fUMkEnpVWnassfbuabvZmGTrYKgtD"
+        },
+        {
+          "commitment_hash": "c4bd4f6ed4fbdd80a94d6842700bde38a28f2ebb5dc764454c0df209ccb3a87c",
+          "timestamp": "2025-06-14 12:42:07.464371",
+          "tweet_url": "https://x.com/track_data_/status/1907160947845710103",
+          "username": "track_data_",
+          "wallet_address": "5EFfNQedRehT16SDHG84HKwTcEDcf9sX76CHFLBVPY1Jkytt1"
         }
-    }
-} 
+      ],
+      "error_message": null,
+      "success": true,
+      "total_commitments_found": 2
+    },
+    "participants": [
+      {
+        "commitment": "bc64a7b517b4e0a23c61300bb2e0601641fac6b387c76a1a9abb3d425c230235",
+        "commitment_url": "https://x.com/davidynamic/status/1907165981706760445",
+        "payout": {
+          "amount": 0.001646,
+          "currency": "TAO",
+          "url": "https://x.com/cliptions_test/status/1918709304942580182"
+        },
+        "reveal": "live stream, video, cat, kitten, animal rescue, shelter, FFRC, Friends of Felines, Defiance Ohio, cage-free, no-kill, adoption, pet cam, live chat, animal welfare",
+        "reveal_url": "https://x.com/davidynamic/status/1907177805583974538",
+        "salt": "iojoiuior",
+        "score": 0.051624,
+        "username": "davidynamic",
+        "valid": true,
+        "wallet": "5Co2unDtZKZDzYNZHT2fUMkEnpVWnassfbuabvZmGTrYKgtD"
+      },
+      {
+        "commitment": "c4bd4f6ed4fbdd80a94d6842700bde38a28f2ebb5dc764454c0df209ccb3a87c",
+        "commitment_url": "https://x.com/track_data_/status/1907160947845710103",
+        "payout": {
+          "amount": 0.000823,
+          "currency": "TAO",
+          "url": "https://x.com/cliptions_test/status/1918709304942580182"
+        },
+        "reveal": "Cat shelter with some cats walking around, others lying around curled up and some perched up on top, attended by two ladies talking with each other and petting a cat",
+        "reveal_url": "https://x.com/track_data_/status/1907173284099084297",
+        "salt": "cat-salt",
+        "score": 0.011867,
+        "username": "track_data_",
+        "valid": true,
+        "wallet": "5EFfNQedRehT16SDHG84HKwTcEDcf9sX76CHFLBVPY1Jkytt"
+      }
+    ],
+    "prize_pool": 0.002469,
+    "raw_commitment_replies": {
+      "original_tweet_url": "https://x.com/cliptions_test/status/1907159517013422578",
+      "replies": [
+        {
+          "author": "@davidynamic",
+          "text_preview": "Commit: bc64a7b517b4e0a23c61300bb2e0601641fac6b387c76a1a9abb3d425c230235 Wallet: 5Co2unDtZKZDzYNZHT2fUMkEnpVWnassfbuabvZmGTrYKgtD",
+          "url": "https://x.com/davidynamic/status/1907165981706760445",
+          "was_spam_flagged": false
+        },
+        {
+          "author": "@track_data_",
+          "text_preview": "Commit: c4bd4f6ed4fbdd80a94d6842700bde38a28f2ebb5dc764454c0df209ccb3a87c Wallet: 5EFfNQedRehT16SDHG84HKwTcEDcf9sX76CHFLBVPY1Jkytt1",
+          "url": "https://x.com/track_data_/status/1907160947845710103",
+          "was_spam_flagged": false
+        }
+      ],
+      "total_replies_found": 2
+    },
+    "round_commitment_url": "https://x.com/cliptions_test/status/1907159517013422578",
+    "round_reveal_url": "https://x.com/cliptions_test/status/1907172528659034344",
+    "target_image": "round2/target20250401_163057EST.jpg",
+    "target_time": "20250401_163057EST",
+    "total_payout": 0.002469
+  },
+  "round4": {
+    "invalid_commitments": 0,
+    "participants": [
+      {
+        "commitment": "b30bc27636a63a2c9ce07b9b24e39161e64e975399df2c773c4240b924735ed4",
+        "commitment_url": "https://twitter.com/i/status/1948100315489644625",
+        "reveal": "Cat sanctuary with woman wearing snoopy sweater",
+        "reveal_url": "https://twitter.com/i/status/1948549370908971053",
+        "salt": "random_secret_123",
+        "username": "user_1932127192638533632",
+        "valid": true,
+        "wallet": "yyyyyyyyyyyyyyyyyyyyy"
+      },
+      {
+        "commitment": "406b4d03147281138c34077d0a13f775a455a9b16f5f0dd1fa903088681d8e46",
+        "commitment_url": "https://twitter.com/i/status/1948182207660466267",
+        "reveal": "Cats running around and a woman looking after them",
+        "reveal_url": "https://twitter.com/i/status/1948548726949380451",
+        "salt": "mysalt",
+        "username": "user_1932171202879016960",
+        "valid": true,
+        "wallet": "yyyyyyyyyyyyyyyyyyy"
+      },
+      {
+        "commitment": "8bd719ec2718c1f54432e28441951ca56c96153ae702cfd1c42d041aca90835f",
+        "commitment_url": "https://twitter.com/i/status/1948177840098209983",
+        "reveal": "A cat in a windowsill",
+        "reveal_url": "https://twitter.com/i/status/1948549072257966442",
+        "salt": "fffff",
+        "username": "user_1932174994676830208",
+        "valid": true,
+        "wallet": "qqqqqqqqqqqqq"
+      }
+    ],
+    "total_participants": 3,
+    "valid_commitments": 3,
+    "verification_timestamp": "2025-07-27T00:38:54.199234+00:00"
+  }
+}
