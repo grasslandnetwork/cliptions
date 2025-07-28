@@ -445,10 +445,10 @@ impl Default for ClipEmbedder {
         // Create minimal structures - these won't work for actual inference
         // but allow the struct to be instantiated for testing
         let vb = VarBuilder::zeros(DType::F32, &device);
-        let model = ClipModel::new(vb, &config).unwrap_or_else(|_| {
+        let model = ClipModel::new(vb, &config).unwrap_or_else(|e| {
             // This is a fallback for cases where model creation fails
             // In practice, this would be very rare
-            panic!("Failed to create minimal ClipModel for testing")
+            panic!("CRITICAL: Failed to create minimal ClipModel for testing: {}. This indicates a serious configuration issue.", e)
         });
 
         // Create a minimal tokenizer - this is a simplified approach for testing

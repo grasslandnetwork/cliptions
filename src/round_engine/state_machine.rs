@@ -164,7 +164,7 @@ impl Round<Pending> {
     ) -> Result<Round<CommitmentsOpen>> {
         let formatter = AnnouncementFormatter::new();
         let announcement_data = AnnouncementData {
-            round_id: self.id.parse().unwrap_or(0),
+            round_id: self.id.parse().expect(&format!("CRITICAL: Invalid round ID '{}' - cannot proceed with round announcements", self.id)),
             state_name: "CommitmentsOpen".to_string(),
             target_time: commitment_deadline.to_rfc3339(),
             hashtags: vec![],       // The formatter will add standard hashtags
@@ -204,7 +204,7 @@ impl Round<CommitmentsOpen> {
     ) -> Result<Round<CommitmentsClosed>> {
         let formatter = AnnouncementFormatter::new();
         let announcement_data = AnnouncementData {
-            round_id: self.id.parse().unwrap_or(0),
+            round_id: self.id.parse().expect(&format!("CRITICAL: Invalid round ID '{}' - cannot proceed with round announcements", self.id)),
             state_name: "CommitmentsClosed".to_string(),
             target_time: self.target_timestamp.to_rfc3339(),
             hashtags: vec![],
@@ -273,7 +273,7 @@ impl Round<FrameCaptured> {
     ) -> Result<Round<RevealsOpen>> {
         let formatter = AnnouncementFormatter::new();
         let announcement_data = AnnouncementData {
-            round_id: self.id.parse().unwrap_or(0),
+            round_id: self.id.parse().expect(&format!("CRITICAL: Invalid round ID '{}' - cannot proceed with round announcements", self.id)),
             state_name: "RevealsOpen".to_string(),
             target_time: reveals_deadline.to_rfc3339(),
             hashtags: vec![],

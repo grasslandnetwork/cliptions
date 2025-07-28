@@ -276,7 +276,7 @@ impl<E: EmbedderTrait, S: ScoringStrategy> RoundProcessor<E, S> {
                         all_results.insert(round_id, results);
                     }
                     Err(e) => {
-                        eprintln!("Failed to process round {}: {}", round_id, e);
+                        panic!("CRITICAL: Failed to process round {}: {}. Cannot continue batch processing with incomplete results as this could lead to missing payouts.", round_id, e);
                     }
                 }
             }

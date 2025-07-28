@@ -843,9 +843,9 @@ mod tests {
         // Create test round data
         let mut round = RoundData::new(
             "test_round".to_string(),
-            "Test Round".to_string(),
-            "A test round".to_string(),
             "test.jpg".to_string(),
+            "test_social_id".to_string(),
+            1000.0,
         );
 
         // Add a test participant with valid commitment
