@@ -179,25 +179,83 @@ This task list outlines the refactoring and implementation plan for the Cliption
 - [ ] Update this task list to mark all tasks as completed.
 
 ---
-### Slice 7: End-to-End Testing & Validation (v0.7.0)
+### Slice 7: Terminology Update - Round to Block (v0.7.0)
+**Status**: [ ] In Progress
+**Priority**: Critical
+**Description**: Replace all "round" terminology with "block" throughout the codebase to align with blockchain concepts for future development.
+
+**Tasks**:
+
+**Phase 1: Directory and File Structure**
+- [ ] Rename `rounds/` directory to `blocks/`
+- [ ] Rename subdirectories: `round0/` → `block0/`, `round1/` → `block1/`, `round2/` → `block2/`
+- [ ] Rename data files: `rounds.json` → `blocks.json`, `test_round.json` → `test_block.json`, `test_rounds.json` → `test_blocks.json`
+
+**Phase 2: Module and File Names**
+- [ ] Rename `src/round_engine/` → `src/block_engine/`
+- [ ] Rename `src/round_processor.rs` → `src/block_processor.rs`
+- [ ] Rename `tests/round_engine_integration.rs` → `tests/block_engine_integration.rs`
+- [ ] Update all module imports and references
+
+**Phase 3: Rust Types and Structures**
+- [ ] Replace `Round<T>` struct → `Block<T>`
+- [ ] Replace `RoundData` → `BlockData`
+- [ ] Replace `RoundConfig` → `BlockConfig` 
+- [ ] Replace `RoundStatus` → `BlockStatus`
+- [ ] Replace `RoundError` → `BlockError`
+- [ ] Replace `RoundProcessor` → `BlockProcessor`
+
+**Phase 4: Variables and Identifiers**
+- [ ] Replace `round_id` → `block_id`
+- [ ] Replace `round_tweet_id` → `block_tweet_id`
+- [ ] Replace `round_number` → `block_number`
+- [ ] Replace `round_version` → `block_version`
+- [ ] Update CLI argument names and help text
+
+**Phase 5: CLI Subcommands**
+- [ ] Rename `open-round` → `open-block` (when implemented)
+- [ ] Update all CLI help text and documentation
+
+**Phase 6: Social Media and User-Facing Text**
+- [ ] Update hashtags: `#round8` → `#block8`
+- [ ] Update tweet templates: "Round X is now live" → "Block X is now live"
+- [ ] Update all user-facing messages and prompts
+
+**Phase 7: Documentation and Comments**
+- [ ] Update README.md with new terminology
+- [ ] Update all code comments referencing "round"
+- [ ] Update task documentation and PRD files
+- [ ] Update CONTRIBUTING.md and other docs
+
+**Phase 8: Testing and Validation**
+- [ ] Update all test cases with new terminology
+- [ ] Verify all tests pass after terminology changes
+- [ ] Update `Cargo.toml` to version `0.7.0`
+- [ ] Commit changes and create git tag `v0.7.0`
+- [ ] **Verify the new tag triggers and passes all checks in GitHub Actions**
+- [ ] Update this task list to mark all tasks as completed
+
+---
+
+### Slice 8: End-to-End Testing & Validation (v0.7.1)
 **Status**: [ ] Not Started
 **Priority**: Critical
-**Description**: Conduct comprehensive end-to-end testing of the full round lifecycle with live Twitter interactions.
+**Description**: Conduct comprehensive end-to-end testing of the full block lifecycle with live Twitter interactions.
 
 **Tasks**:
 - [ ] Configure Twitter API credentials for live testing (support multiple config files for different roles/slices)
-- [ ] Start a real round and document the process
+- [ ] Start a real block and document the process
 - [ ] Test each slice with actual Twitter API calls (post, read, reply, etc.)
-- [ ] Integration test: Ensure all slices work together in a real round
-- [ ] Monitor round progress (commitments, fees, reveals, verification, payouts)
-- [ ] Complete a round and verify all data is correct
+- [ ] Integration test: Ensure all slices work together in a real block
+- [ ] Monitor block progress (commitments, fees, reveals, verification, payouts)
+- [ ] Complete a block and verify all data is correct
 - [ ] Monitor, debug, and document any issues found during live testing
-- [ ] Document the full round lifecycle with real data
+- [ ] Document the full block lifecycle with real data
 - [ ] Update documentation to reflect real-world usage and troubleshooting
 
 ---
 
-### Finalization (v0.7.1)
+### Finalization (v0.7.2)
 **Status**: [ ] Not Started
 **Priority**: Medium
 **Description**: Finalize the project for release.
