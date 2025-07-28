@@ -209,7 +209,12 @@ pub fn calculate_rankings<E: EmbedderTrait, S: ScoringStrategy>(
         .collect();
 
     // Sort by similarity score (highest to lowest)
-    paired_results.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+    paired_results.sort_by(|a, b| {
+        b.1.partial_cmp(&a.1).unwrap_or_else(|| {
+            panic!("CRITICAL: Invalid similarity scores detected (NaN/Inf) for guesses '{}' (score: {}) and '{}' (score: {}). Cannot rank participants reliably.", 
+                   a.0, a.1, b.0, b.1);
+        })
+    });
 
     Ok(paired_results)
 }
