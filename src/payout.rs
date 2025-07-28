@@ -148,7 +148,12 @@ impl PayoutCalculator {
         }
 
         // Sort by score (highest first)
-        ranked_results.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+        ranked_results.sort_by(|a, b| {
+            b.1.partial_cmp(&a.1).unwrap_or_else(|| {
+                panic!("CRITICAL: Invalid scores detected (NaN/Inf) for participants '{}' (score: {}) and '{}' (score: {}). Cannot calculate payouts reliably.", 
+                       a.0, a.1, b.0, b.1);
+            })
+        });
 
         // Calculate payouts
         let payouts = self.calculate_payouts(&ranked_results)?;
