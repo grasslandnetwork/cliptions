@@ -1,25 +1,25 @@
 {
   "round4": {
-    "commitment_deadline": "2025-07-27T16:52:12.544217+00:00",
-    "created_at": "2025-07-27T16:52:12.544325+00:00",
+    "commitment_deadline": "2025-07-27T16:52:12.544217Z",
+    "created_at": "2025-07-27T16:52:12.544325Z",
     "participants": [
       {
         "commitment": "b30bc27636a63a2c9ce07b9b24e39161e64e975399df2c773c4240b924735ed4",
         "commitment_url": "https://twitter.com/i/status/1948100315489644625",
         "guess": {
-          "embedding": null,
           "metadata": {},
           "text": "Cat sanctuary with woman wearing snoopy sweater",
-          "timestamp": "2025-07-27T16:52:12.544141+00:00"
+          "timestamp": "2025-07-27T16:52:12.544141Z"
         },
         "guess_url": "https://twitter.com/i/status/1948549370908971053",
         "payout": {
-          "amount": 0.0,
+          "amount": 333.3333333333333,
           "currency": "TAO",
           "url": ""
         },
+        "rank": 2,
         "salt": "random_secret_123",
-        "score": 0.0,
+        "score": 33.75969060291546,
         "social_id": "1932127192638533632",
         "username": "user_1932127192638533632",
         "verified": true,
@@ -29,19 +29,19 @@
         "commitment": "406b4d03147281138c34077d0a13f775a455a9b16f5f0dd1fa903088681d8e46",
         "commitment_url": "https://twitter.com/i/status/1948182207660466267",
         "guess": {
-          "embedding": null,
           "metadata": {},
           "text": "Cats running around and a woman looking after them",
-          "timestamp": "2025-07-27T16:52:12.544182+00:00"
+          "timestamp": "2025-07-27T16:52:12.544182Z"
         },
         "guess_url": "https://twitter.com/i/status/1948548726949380451",
         "payout": {
-          "amount": 0.0,
+          "amount": 500.0,
           "currency": "TAO",
           "url": ""
         },
+        "rank": 1,
         "salt": "mysalt",
-        "score": 0.0,
+        "score": 34.537119678139824,
         "social_id": "1932171202879016960",
         "username": "user_1932171202879016960",
         "verified": true,
@@ -51,34 +51,34 @@
         "commitment": "8bd719ec2718c1f54432e28441951ca56c96153ae702cfd1c42d041aca90835f",
         "commitment_url": "https://twitter.com/i/status/1948177840098209983",
         "guess": {
-          "embedding": null,
           "metadata": {},
           "text": "A cat in a windowsill",
-          "timestamp": "2025-07-27T16:52:12.544199+00:00"
+          "timestamp": "2025-07-27T16:52:12.544199Z"
         },
         "guess_url": "https://twitter.com/i/status/1948549072257966442",
         "payout": {
-          "amount": 0.0,
+          "amount": 166.66666666666666,
           "currency": "TAO",
           "url": ""
         },
+        "rank": 3,
         "salt": "fffff",
-        "score": 0.0,
+        "score": 31.703189718944714,
         "social_id": "1932174994676830208",
         "username": "user_1932174994676830208",
         "verified": true,
         "wallet": "qqqqqqqqqqqqq"
       }
     ],
-    "prize_pool": 0.0,
+    "prize_pool": 1000.0,
     "results": [],
-    "reveal_deadline": "2025-07-27T16:52:12.544219+00:00",
+    "reveal_deadline": "2025-07-27T16:52:12.544219Z",
     "round_id": "round4",
     "round_version": 1,
     "social_id": "",
-    "status": "Open",
-    "target_image_path": "",
-    "total_payout": 0.0,
-    "updated_at": "2025-07-27T16:52:12.544330+00:00"
+    "status": "Complete",
+    "target_image_path": "rounds/round0/target20250223_133057EST.jpg",
+    "total_payout": 999.9999999999999,
+    "updated_at": "2025-07-28T02:54:23.967773+00:00"
   }
 }

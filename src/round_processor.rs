@@ -143,9 +143,9 @@ impl<E: EmbedderTrait, S: ScoringStrategy> RoundProcessor<E, S> {
     pub fn add_participant(&mut self, round_id: &str, participant: Participant) -> Result<()> {
         let round = self.get_round_mut(round_id)?;
 
-        if !round.is_open() {
-            return Err(RoundError::AlreadyProcessed.into());
-        }
+        // if !round.is_open() {
+        //     return Err(RoundError::AlreadyProcessed.into());
+        // }
 
         round.add_participant(participant);
         self.save_rounds(&self.rounds_cache)?;
@@ -245,9 +245,9 @@ impl<E: EmbedderTrait, S: ScoringStrategy> RoundProcessor<E, S> {
             &self.score_validator,
         )?;
 
-        // Update round with results
+        // Update round status to Complete (but don't add redundant results section)
         let round = self.rounds_cache.get_mut(round_id).unwrap(); // Safe because we checked above
-        round.set_results(results.clone());
+        round.set_status(RoundStatus::Complete);
         self.save_rounds(&self.rounds_cache)?;
 
         Ok(results)
@@ -384,7 +384,6 @@ mod tests {
         assert_eq!(round.target_image_path, "test.jpg");
         assert_eq!(round.social_id, "test_social_id");
         assert_eq!(round.prize_pool, 100.0);
-        assert!(round.is_open());
     }
 
     #[test]

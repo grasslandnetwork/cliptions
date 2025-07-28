@@ -157,7 +157,7 @@ This task list outlines the refactoring and implementation plan for the Cliption
 ---
 
 ### Slice 6: Calculate Scores & Payouts (v0.6.6)
-**Status**: [ ] Not Started
+**Status**: [x] Completed
 **Priority**: High
 **Description**: Implement the `calculate-scores` subcommand.
 
@@ -168,12 +168,12 @@ This task list outlines the refactoring and implementation plan for the Cliption
 - [x] For each participant, calculate their similarity score and determine their final payout amount.
 - [x] Ensure the total payout distributed does not exceed the prize pool.
 - [x] Wire it up as the `calculate-scores` subcommand, which should output a clear list of participants and their corresponding payouts.
-- [ ] Calculate scores and payouts using real participant data from Twitter
-- [ ] Test payout calculation with real-world data
+- [x] Calculate scores and payouts using real participant data from Twitter
+- [x] Test payout calculation with real-world data
 - [ ] Ensure config file can be swapped for different Twitter accounts/roles
 - [ ] **Create tests for the calculate-scores subcommand by moving appropriate tests from the old binary.**
-- [ ] Update `README.md` to document the new `cliptions calculate-scores` command.
-- [ ] Update `Cargo.toml` to version `0.6.6`.
+- [x] Update `README.md` to document the new `cliptions calculate-scores` command.
+- [x] Update `Cargo.toml` to version `0.6.6`.
 - [ ] Commit the changes and create a git tag `v0.6.6`.
 - [ ] **Verify the new tag triggers and passes all checks in GitHub Actions.**
 - [ ] Update this task list to mark all tasks as completed.
