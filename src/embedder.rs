@@ -230,16 +230,15 @@ impl ClipEmbedder {
         // Create directory if it doesn't exist
         fs::create_dir_all(download_path).map_err(|_| EmbeddingError::ModelLoadFailed)?;
 
-        // Use HF Hub API like the working version
+        // Use HF Hub API to download from main branch (not a specific PR)
         let api = hf_hub::api::sync::Api::new().map_err(|_| EmbeddingError::ModelLoadFailed)?;
-        let api = api.repo(hf_hub::Repo::with_revision(
+        let api = api.repo(hf_hub::Repo::new(
             "openai/clip-vit-base-patch32".to_string(),
             hf_hub::RepoType::Model,
-            "refs/pr/15".to_string(),
         ));
 
-        // Files to download
-        let files_to_download = ["tokenizer.json", "model.safetensors"];
+        // Files to download - use pytorch_model.bin instead of model.safetensors
+        let files_to_download = ["tokenizer.json", "pytorch_model.bin"];
 
         for filename in &files_to_download {
             println!("Downloading {}...", filename);
