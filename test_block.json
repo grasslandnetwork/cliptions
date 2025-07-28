@@ -1,0 +1,46 @@
+{
+  "test_round": {
+    "round_id": "test_round",
+    "title": "Test Round",
+    "description": "A test round for calculate-scores",
+    "target_image_path": "blocks/test_target.jpg",
+    "status": "Open",
+    "config": {
+      "prize_pool": 1000.0,
+      "max_guess_length": 300,
+      "scoring_version": "v0.3"
+    },
+    "participants": [
+      {
+        "user_id": "user1",
+        "username": "test_user1",
+        "guess": {
+          "text": "A cat sitting in a sunny window",
+          "embedding": null,
+          "timestamp": "2025-01-27T00:00:00Z",
+          "metadata": {}
+        },
+        "commitment": "test_commitment_1",
+        "salt": "test_salt_1",
+        "verified": true
+      },
+      {
+        "user_id": "user2", 
+        "username": "test_user2",
+        "guess": {
+          "text": "A cat sanctuary with people caring for cats",
+          "embedding": null,
+          "timestamp": "2025-01-27T00:00:00Z",
+          "metadata": {}
+        },
+        "commitment": "test_commitment_2",
+        "salt": "test_salt_2",
+        "verified": true
+      }
+    ],
+    "results": [],
+    "created_at": "2025-01-27T00:00:00Z",
+    "updated_at": "2025-01-27T00:00:00Z",
+    "metadata": {}
+  }
+} 

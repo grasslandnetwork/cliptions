@@ -186,10 +186,12 @@ This task list outlines the refactoring and implementation plan for the Cliption
 
 **Tasks**:
 
+**Note**: All Python (*.py) files are being ignored during this terminology update as they will be deleted as part of the migration to the new Rust-only architecture.
+
 **Phase 1: Directory and File Structure**
-- [ ] Rename `rounds/` directory to `blocks/`
-- [ ] Rename subdirectories: `round0/` → `block0/`, `round1/` → `block1/`, `round2/` → `block2/`
-- [ ] Rename data files: `rounds.json` → `blocks.json`, `test_round.json` → `test_block.json`, `test_rounds.json` → `test_blocks.json`
+- [x] Rename `rounds/` directory to `blocks/`
+- [x] Rename subdirectories: `round0/` → `block0/`, `round1/` → `block1/`, `round2/` → `block2/`
+- [x] Rename data files: `rounds.json` → `blocks.json`, `test_round.json` → `test_block.json`, `test_rounds.json` → `test_blocks.json`
 
 **Phase 2: Module and File Names**
 - [ ] Rename `src/round_engine/` → `src/block_engine/`

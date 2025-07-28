@@ -209,13 +209,13 @@ Post target frame images as replies to commitment tweets:
 
 ```bash
 # Basic target frame posting
-cliptions post-target-frame --reply-to "1234567890123456789" --image "rounds/round2/target.jpg" --round 3 --target-time 2
+cliptions post-target-frame --reply-to "1234567890123456789" --image "blocks/block2/target.jpg" --round 3 --target-time 2
 
 # Verbose output with detailed information
-cliptions post-target-frame --reply-to "1234567890123456789" --image "rounds/round2/target.jpg" --round 3 --target-time 2 --verbose
+cliptions post-target-frame --reply-to "1234567890123456789" --image "blocks/block2/target.jpg" --round 3 --target-time 2 --verbose
 
 # Use custom config file
-cliptions post-target-frame --reply-to "1234567890123456789" --image "rounds/round2/target.jpg" --round 3 --target-time 2 --config config/custom.yaml
+cliptions post-target-frame --reply-to "1234567890123456789" --image "blocks/block2/target.jpg" --round 3 --target-time 2 --config config/custom.yaml
 ```
 
 **Example Output:**

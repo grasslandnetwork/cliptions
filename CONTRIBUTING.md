@@ -525,7 +525,7 @@ Example round data structure:
 {
   "round_id": "round4",
   "scoring_version": "v0.3",
-  "target_image_path": "rounds/round4/target.jpg",
+          "target_image_path": "blocks/block4/target.jpg",
   "participants": [...],
   "results": [...]
 }
