@@ -253,13 +253,13 @@ cliptions calculate-scores --detailed --verbose target.jpg 100.0 "prediction1" "
 
 ### Payout Processing
 
-Process payouts for completed rounds:
+Process payouts for completed blocks:
 
 ```bash
-# Process single round
+# Process single block
 cliptions process-payouts round1 --prize-pool 100.0
 
-# Process all rounds with batch mode
+# Process all blocks with batch mode
 cliptions process-payouts --all
 
 # Save payout results with error handling
@@ -293,7 +293,7 @@ cliptions verify-commitments --round-tweet-id "1234567890123456789" --round-id "
 **Example Output:**
 ```
 Commitment Verification Results
-Round Tweet ID: 1234567890123456789
+Block Tweet ID: 1234567890123456789
 Total Participants: 3
 Valid Commitments: 3
 Invalid Commitments: 0

@@ -253,9 +253,9 @@ pub enum BlockStatus {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BlockData {
     /// The round version number indicates which set of round validation rules to follow
-    pub round_version: i32,
+    pub block_version: i32,
     /// Unique identifier for the round
-    pub round_id: String,
+    pub block_num: String,
     /// Path to the target image
     pub target_image_path: String,
     /// Current status of the round
@@ -284,15 +284,15 @@ pub struct BlockData {
 impl BlockData {
     /// Create a new round
     pub fn new(
-        round_id: String,
+        block_num: String,
         target_image_path: String,
         social_id: String,
         prize_pool: f64,
     ) -> Self {
         let now = Utc::now();
         Self {
-            round_version: 1,
-            round_id,
+            block_version: 1,
+            block_num,
             target_image_path,
             status: BlockStatus::Open,
             prize_pool,
@@ -309,7 +309,7 @@ impl BlockData {
 
     /// Create a new round with custom deadlines
     pub fn with_deadlines(
-        round_id: String,
+        block_num: String,
         target_image_path: String,
         social_id: String,
         prize_pool: f64,
@@ -318,8 +318,8 @@ impl BlockData {
     ) -> Self {
         let now = Utc::now();
         Self {
-            round_version: 1,
-            round_id,
+            block_version: 1,
+            block_num,
             target_image_path,
             status: BlockStatus::Open,
             prize_pool,

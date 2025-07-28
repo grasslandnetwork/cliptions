@@ -96,7 +96,7 @@ The existing binaries will be refactored into a single application following a *
 ### 6.2 Data Storage Format
 ```json
 {
-  "round_id": "3",
+  "block_num": "3",
   "commitments": [
     {
       "tweet_id": "123456789",

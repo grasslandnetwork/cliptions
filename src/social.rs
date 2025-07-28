@@ -13,7 +13,7 @@ pub type TweetId = String;
 /// Represents announcement data for social media
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnnouncementData {
-    pub round_id: u64,
+    pub block_num: u64,
     pub state_name: String,
     pub target_time: String,
     pub hashtags: Vec<String>,
@@ -120,13 +120,13 @@ impl HashtagManager {
     /// Generate hashtags for a round with state information
     pub fn generate_hashtags(
         &self,
-        round_id: &str,
+        block_num: &str,
         custom_hashtags: Option<Vec<String>>,
     ) -> Vec<String> {
         let mut hashtags = self.standard_hashtags.clone();
 
         // Add round-specific hashtag
-        hashtags.push(format!("#round{}", round_id));
+        hashtags.push(format!("#round{}", block_num));
 
         // Add custom hashtags if provided
         if let Some(custom) = custom_hashtags {
@@ -139,14 +139,14 @@ impl HashtagManager {
     /// Generate hashtags for a round with state information
     pub fn generate_hashtags_with_state(
         &self,
-        round_id: u64,
+        block_num: u64,
         state_name: &str,
         custom_hashtags: Option<Vec<String>>,
     ) -> Vec<String> {
         let mut hashtags = self.standard_hashtags.clone();
 
         // Add round-specific hashtag
-        hashtags.push(format!("#round{}", round_id));
+        hashtags.push(format!("#round{}", block_num));
 
         // Add state-specific hashtag (lowercase, no prefix)
         let state_hashtag = format!("#{}", state_name.to_lowercase());
@@ -208,7 +208,7 @@ impl AnnouncementFormatter {
     /// Create a standard round announcement
     pub fn create_standard_announcement(&self, data: &AnnouncementData) -> String {
         let hashtags = self.hashtag_manager.generate_hashtags_with_state(
-            data.round_id,
+            data.block_num,
             &data.state_name,
             None,
         );
@@ -222,7 +222,7 @@ impl AnnouncementFormatter {
 
         format!(
             "🎯 Round {} is now live! Target frame reveal at {}.{} Submit your predictions below! {}",
-            data.round_id,
+            data.block_num,
             data.target_time,
             prize_info,
             hashtag_string
@@ -232,7 +232,7 @@ impl AnnouncementFormatter {
     /// Create a custom announcement with provided message
     pub fn create_custom_announcement(&self, data: &AnnouncementData) -> String {
         let hashtags = self.hashtag_manager.generate_hashtags_with_state(
-            data.round_id,
+            data.block_num,
             &data.state_name,
             Some(data.hashtags.clone()),
         );
@@ -257,7 +257,7 @@ impl AnnouncementFormatter {
             "#cliptions".to_string(),
             "#ai".to_string(),
             "#CLIP".to_string(),
-            format!("#round{}", data.round_id),
+            format!("#round{}", data.block_num),
             format!("#{}", data.state_name.to_lowercase()),
         ];
 
@@ -273,7 +273,7 @@ impl AnnouncementFormatter {
             1. Generate commitment hash\n\
             2. Reply BEFORE: {}\n\n\
             Reply format ->\nCommit: [hash]\nWallet: [address]",
-            data.round_id,
+            data.block_num,
             data.livestream_url.as_deref().unwrap_or(""),
             data.target_time
         );
@@ -288,7 +288,7 @@ impl AnnouncementFormatter {
             "#cliptions".to_string(),
             "#ai".to_string(),
             "#CLIP".to_string(),
-            format!("#round{}", data.round_id),
+            format!("#round{}", data.block_num),
             format!("#{}", data.state_name.to_lowercase()),
         ];
 
@@ -305,8 +305,8 @@ impl AnnouncementFormatter {
             Guess: [your-guess]\n\
             Salt: [your-salt]\n\n\
             ",
-            data.round_id,
-            data.round_id,
+            data.block_num,
+            data.block_num,
             data.target_time
         );
 
@@ -655,7 +655,7 @@ mod tests {
 
         // Test CommitmentsOpen state
         let data = AnnouncementData {
-            round_id: 42,
+            block_num: 42,
             state_name: "CommitmentsOpen".to_string(),
             target_time: "2024-01-01 12:00:00".to_string(),
             hashtags: vec![],
@@ -691,7 +691,7 @@ mod tests {
 
         // Test RevealsOpen state with different round
         let data2 = AnnouncementData {
-            round_id: 7,
+            block_num: 7,
             state_name: "RevealsOpen".to_string(),
             target_time: "2024-01-01 18:00:00".to_string(),
             hashtags: vec![],
@@ -753,7 +753,7 @@ mod tests {
     fn test_create_standard_round_announcement() {
         let formatter = AnnouncementFormatter::new();
         let data = AnnouncementData {
-            round_id: 1,
+            block_num: 1,
             state_name: "CommitmentsOpen".to_string(),
             target_time: "2024-01-01 12:00:00".to_string(),
             hashtags: vec![],
@@ -775,7 +775,7 @@ mod tests {
     fn test_create_custom_round_announcement() {
         let formatter = AnnouncementFormatter::new();
         let data = AnnouncementData {
-            round_id: 2,
+            block_num: 2,
             state_name: "RevealsOpen".to_string(),
             target_time: "2024-01-01 12:00:00".to_string(),
             hashtags: vec!["#custom".to_string()],
@@ -795,7 +795,7 @@ mod tests {
     fn test_full_announcement_flow() {
         let formatter = AnnouncementFormatter::new();
         let data = AnnouncementData {
-            round_id: 3,
+            block_num: 3,
             state_name: "Payouts".to_string(),
             target_time: "2024-01-01 12:00:00".to_string(),
             hashtags: vec![],
@@ -888,7 +888,7 @@ mod tests {
     #[test]
     fn test_announcement_data_validation() {
         let data = AnnouncementData {
-            round_id: 1,
+            block_num: 1,
             state_name: "Finished".to_string(),
             target_time: "2024-01-01 12:00:00".to_string(),
             hashtags: vec!["#test".to_string()],
@@ -897,7 +897,7 @@ mod tests {
             livestream_url: None,
         };
 
-        assert_eq!(data.round_id, 1);
+        assert_eq!(data.block_num, 1);
         assert_eq!(data.target_time, "2024-01-01 12:00:00");
         assert_eq!(data.hashtags, vec!["#test"]);
         assert_eq!(data.message, "Test message");

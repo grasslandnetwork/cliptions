@@ -1,6 +1,6 @@
 {
   "test_round": {
-    "round_id": "test_round",
+    "block_num": "test_round",
     "title": "Test Round",
     "description": "A test round for calculate-scores",
     "target_image_path": "blocks/test_target.jpg",

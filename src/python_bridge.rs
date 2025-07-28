@@ -192,19 +192,19 @@ impl PyBlockProcessor {
         self.inner.load_rounds().map_err(|e| e.into())
     }
 
-    pub fn verify_commitments(&mut self, round_id: &str) -> PyResult<Vec<bool>> {
+    pub fn verify_commitments(&mut self, block_num: &str) -> PyResult<Vec<bool>> {
         self.inner
-            .verify_commitments(round_id)
+            .verify_commitments(block_num)
             .map_err(|e| e.into())
     }
 
     pub fn process_round_payouts(
         &mut self,
-        round_id: &str,
+        block_num: &str,
     ) -> PyResult<Vec<(String, String, f64, usize, f64)>> {
         let results = self
             .inner
-            .process_round_payouts(round_id)
+            .process_round_payouts(block_num)
             .map_err(|e| PyErr::from(e))?;
 
         // Convert to Python-friendly format
@@ -224,17 +224,17 @@ impl PyBlockProcessor {
         Ok(py_results)
     }
 
-    pub fn get_round_ids(&mut self) -> PyResult<Vec<String>> {
-        self.inner.get_round_ids().map_err(|e| e.into())
+    pub fn get_block_nums(&mut self) -> PyResult<Vec<String>> {
+        self.inner.get_block_nums().map_err(|e| e.into())
     }
 }
 
 /// Python function for processing round payouts
 #[pyfunction]
-#[pyo3(signature = (rounds_file, round_id, use_mock = false))]
+#[pyo3(signature = (rounds_file, block_num, use_mock = false))]
 pub fn py_process_round_payouts(
     rounds_file: String,
-    round_id: String,
+    block_num: String,
     use_mock: bool,
 ) -> PyResult<Vec<(String, String, f64, usize, f64)>> {
     let strategy = ClipBatchStrategy::new();
@@ -253,7 +253,7 @@ pub fn py_process_round_payouts(
     };
 
     let results = processor
-        .process_round_payouts(&round_id)
+        .process_round_payouts(&block_num)
         .map_err(|e| PyErr::from(e))?;
 
     // Convert to Python-friendly format
@@ -275,10 +275,10 @@ pub fn py_process_round_payouts(
 
 /// Python function for verifying round commitments
 #[pyfunction]
-#[pyo3(signature = (rounds_file, round_id, use_mock = false))]
+#[pyo3(signature = (rounds_file, block_num, use_mock = false))]
 pub fn py_verify_round_commitments(
     rounds_file: String,
-    round_id: String,
+    block_num: String,
     use_mock: bool,
 ) -> PyResult<Vec<bool>> {
     let strategy = ClipBatchStrategy::new();
@@ -297,7 +297,7 @@ pub fn py_verify_round_commitments(
     };
 
     processor
-        .verify_commitments(&round_id)
+        .verify_commitments(&block_num)
         .map_err(|e| e.into())
 }
 

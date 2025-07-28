@@ -121,11 +121,11 @@ pub enum EmbeddingError {
 /// Round processing errors
 #[derive(Error, Debug)]
 pub enum BlockError {
-    #[error("Round {round_id} not found")]
-    RoundNotFound { round_id: String },
+    #[error("Round {block_num} not found")]
+    RoundNotFound { block_num: String },
 
-    #[error("No participants in round {round_id}")]
-    NoParticipants { round_id: String },
+    #[error("No participants in round {block_num}")]
+    NoParticipants { block_num: String },
 
     #[error("Target image not found: {path}")]
     TargetImageNotFound { path: String },

@@ -523,7 +523,7 @@ used for that round's scoring calculations. This ensures:
 Example round data structure:
 ```json
 {
-  "round_id": "round4",
+  "block_num": "round4",
   "scoring_version": "v0.3",
           "target_image_path": "blocks/block4/target.jpg",
   "participants": [...],

@@ -108,7 +108,7 @@ async fn main() {
 
         // Create announcement data
         let announcement_data = cliptions_core::social::AnnouncementData {
-            round_id: round,
+            block_num: round,
             state_name: state.to_string(),
             target_time: formatted_target_time.clone(),
             hashtags: vec![],       // The formatter will add standard hashtags

@@ -31,7 +31,7 @@ async def demo_round_announcement():
     # Create a standard round announcement
     print("\n1. Creating a standard round announcement:")
     standard_data = create_standard_round_announcement(
-        round_id="demo_round_1",
+        block_num="demo_round_1",
         entry_fee=0.001,
         prize_pool=0.005
     )
@@ -50,7 +50,7 @@ async def demo_round_announcement():
     print("\n2. Creating a custom round announcement:")
     now = datetime.now()
     custom_data = create_custom_round_announcement(
-        round_id="demo_round_2",
+        block_num="demo_round_2",
         entry_fee=0.002,
         commitment_deadline=now + timedelta(hours=12),
         reveal_deadline=now + timedelta(hours=36),

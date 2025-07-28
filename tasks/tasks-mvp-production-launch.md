@@ -207,12 +207,12 @@ This task list outlines the refactoring and implementation plan for the Cliption
 - [x] Replace `RoundError` → `BlockError`
 - [x] Replace `RoundProcessor` → `BlockProcessor`
 
-**Phase 4: Variables and Identifiers**
-- [ ] Replace `round_id` → `block_num`
-- [ ] Replace `round_tweet_id` → `block_tweet_id`
-- [ ] Replace `round_number` → `block_num`
-- [ ] Replace `round_version` → `block_version`
-- [ ] Update CLI argument names and help text
+**Phase 4: Variables and Identifiers** ✅ **COMPLETED**
+- [x] Replace `round_id` → `block_num`
+- [x] Replace `round_tweet_id` → `block_tweet_id`
+- [x] Replace `round_number` → `block_num`
+- [x] Replace `round_version` → `block_version`
+- [x] Update CLI argument names and help text
 
 **Phase 5: CLI Subcommands**
 - [ ] Rename `open-round` → `open-block` (when implemented)

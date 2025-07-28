@@ -25,10 +25,10 @@ fn test_complete_round_lifecycle() {
     let mut processor = BlockProcessor::new(file_path.clone(), embedder, strategy);
 
     // 1. Create a new round
-    let round_id = "integration_test_round";
+    let block_num = "integration_test_round";
     processor
         .create_round(
-            round_id.to_string(),
+            block_num.to_string(),
             "test_image.jpg".to_string(),
             "test_social_id".to_string(),
             1000.0,
@@ -56,16 +56,16 @@ fn test_complete_round_lifecycle() {
         )
         .with_salt(salt.to_string());
 
-        processor.add_participant(round_id, participant).unwrap();
+        processor.add_participant(block_num, participant).unwrap();
     }
 
     // 3. Verify commitments
-    let verification_results = processor.verify_commitments(round_id).unwrap();
+    let verification_results = processor.verify_commitments(block_num).unwrap();
     assert_eq!(verification_results.len(), 4);
     assert!(verification_results.iter().all(|&r| r)); // All should be valid
 
     // 4. Check round status before processing
-    let round = processor.get_round(round_id).unwrap();
+    let round = processor.get_round(block_num).unwrap();
     assert_eq!(round.status, BlockStatus::Open);
     assert_eq!(round.verified_participants().len(), 4);
 
@@ -73,8 +73,8 @@ fn test_complete_round_lifecycle() {
     // But we can test all the other components
 
     // 5. Test round statistics
-    let stats = processor.get_round_stats(round_id).unwrap();
-    assert_eq!(stats.round_id, round_id);
+    let stats = processor.get_round_stats(block_num).unwrap();
+    assert_eq!(stats.block_num, block_num);
     assert_eq!(stats.total_participants, 4);
     assert_eq!(stats.verified_participants, 4);
     assert_eq!(stats.total_prize_pool, 1000.0);
@@ -288,7 +288,7 @@ fn test_round_data_serialization() {
     let deserialized_round: BlockData = serde_json::from_str(&json_str).unwrap();
 
     // Should be identical
-    assert_eq!(round.round_id, deserialized_round.round_id);
+    assert_eq!(round.block_num, deserialized_round.block_num);
     assert_eq!(round.target_image_path, deserialized_round.target_image_path);
     assert_eq!(
         round.participants.len(),

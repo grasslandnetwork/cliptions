@@ -17,10 +17,10 @@ use cliptions_core::scoring::ClipBatchStrategy;
 
 #[derive(Parser)]
 #[command(name = "process_payouts")]
-#[command(about = "Process payouts for Cliptions prediction rounds")]
+#[command(about = "Process payouts for Cliptions prediction blocks")]
 #[command(version = "2.0")]
 #[command(long_about = "
-Process payouts for Cliptions prediction market rounds with comprehensive error handling
+Process payouts for Cliptions prediction market blocks with comprehensive error handling
 and multiple output formats.
 
 This tool calculates and processes payouts for prediction rounds, supporting both 
@@ -201,7 +201,7 @@ fn main() {
 fn validate_inputs(args: &Args) -> Result<(), String> {
     // Validate mutual exclusivity
     if !args.all && args.round.is_none() {
-        return Err("Must specify either --all or --round <round_id>".to_string());
+        return Err("Must specify either --all or --round <block_num>".to_string());
     }
 
     if args.all && args.round.is_some() {
@@ -320,10 +320,10 @@ fn process_with_processor<E: EmbedderTrait>(
 ) -> Result<ProcessingResults, Box<dyn std::error::Error>> {
     if args.all {
         process_all_rounds(processor, args)
-    } else if let Some(round_id) = &args.round {
-        process_single_round(processor, round_id, args)
+    } else if let Some(block_num) = &args.round {
+        process_single_round(processor, block_num, args)
     } else {
-        Err("Must specify either --all or --round <round_id>".into())
+        Err("Must specify either --all or --round <block_num>".into())
     }
 }
 
@@ -355,7 +355,7 @@ fn process_all_rounds(
 
     let mut processed_count = 0;
 
-    for (round_id, round_results) in all_results {
+    for (block_num, round_results) in all_results {
         // Check max rounds limit
         if args.max_rounds > 0 && processed_count >= args.max_rounds {
             if args.verbose {
@@ -374,7 +374,7 @@ fn process_all_rounds(
                 println!(
                     "{} Skipping round {} (only {} participants, minimum {})",
                     "Info:".blue().bold(),
-                    round_id,
+                    block_num,
                     round_results.len(),
                     args.min_participants
                 );
@@ -386,7 +386,7 @@ fn process_all_rounds(
 
         results
             .rounds
-            .push((round_id.clone(), round_results.clone()));
+            .push((block_num.clone(), round_results.clone()));
         results.total_rounds_processed += 1;
         results.total_participants += round_results.len();
         results.total_payout += round_payout;
@@ -396,7 +396,7 @@ fn process_all_rounds(
             println!(
                 "{} Processed round {} ({} participants, {:.9} TAO)",
                 "Info:".blue().bold(),
-                round_id,
+                block_num,
                 round_results.len(),
                 round_payout
             );
@@ -408,20 +408,20 @@ fn process_all_rounds(
 
 fn process_single_round(
     mut processor: BlockProcessor<impl EmbedderTrait, ClipBatchStrategy>,
-    round_id: &str,
+    block_num: &str,
     args: &Args,
 ) -> Result<ProcessingResults, Box<dyn std::error::Error>> {
     if args.verbose {
-        println!("{} Processing round: {}", "Info:".blue().bold(), round_id);
+        println!("{} Processing round: {}", "Info:".blue().bold(), block_num);
     }
 
-    let round_results = processor.process_round_payouts(round_id)?;
+    let round_results = processor.process_round_payouts(block_num)?;
 
     // Check minimum participants requirement
     if round_results.len() < args.min_participants {
         return Err(format!(
             "Round {} has only {} participants, minimum {} required",
-            round_id,
+            block_num,
             round_results.len(),
             args.min_participants
         )
@@ -431,7 +431,7 @@ fn process_single_round(
     let round_payout: f64 = round_results.iter().filter_map(|r| r.payout).sum();
 
     let results = ProcessingResults {
-        rounds: vec![(round_id.to_string(), round_results.clone())],
+        rounds: vec![(block_num.to_string(), round_results.clone())],
         total_rounds_processed: 1,
         total_participants: round_results.len(),
         total_payout: round_payout,
@@ -442,7 +442,7 @@ fn process_single_round(
         println!(
             "{} Processed round {} ({} participants, {:.9} TAO)",
             "Info:".blue().bold(),
-            round_id,
+            block_num,
             round_results.len(),
             round_payout
         );
@@ -475,8 +475,8 @@ fn display_table_format(
         return Ok(());
     }
 
-    for (round_id, round_results) in &results.rounds {
-        println!("\n{} {}", "Round:".bold().blue(), round_id.bright_white());
+    for (block_num, round_results) in &results.rounds {
+        println!("\n{} {}", "Block:".bold().blue(), block_num.bright_white());
         println!("Participants: {}", round_results.len());
 
         if args.detailed && !round_results.is_empty() {
@@ -514,12 +514,12 @@ fn display_table_format(
 
         let round_payout: f64 = round_results.iter().filter_map(|r| r.payout).sum();
 
-        println!("Round Total: {:.9} TAO", round_payout);
+                    println!("Block Total: {:.9} TAO", round_payout);
     }
 
     println!("\n{}", "=".repeat(80));
     println!("{} {}", "Summary:".bold(), "");
-    println!("Rounds Processed: {}", results.total_rounds_processed);
+    println!("Blocks Processed: {}", results.total_rounds_processed);
     println!("Total Participants: {}", results.total_participants);
     println!("Total Payouts: {:.9} TAO", results.total_payout);
 
@@ -543,7 +543,7 @@ fn display_json_format(results: &ProcessingResults) -> Result<(), Box<dyn std::e
     let rounds_data: Vec<serde_json::Value> = results
         .rounds
         .iter()
-        .map(|(round_id, round_results)| {
+        .map(|(block_num, round_results)| {
             let participants: Vec<serde_json::Value> = round_results
                 .iter()
                 .map(|result| {
@@ -561,7 +561,7 @@ fn display_json_format(results: &ProcessingResults) -> Result<(), Box<dyn std::e
             let round_payout: f64 = round_results.iter().filter_map(|r| r.payout).sum();
 
             serde_json::json!({
-                "round_id": round_id,
+                "block_num": block_num,
                 "participants": participants,
                 "participant_count": round_results.len(),
                 "total_payout": round_payout
@@ -591,9 +591,9 @@ fn display_json_format(results: &ProcessingResults) -> Result<(), Box<dyn std::e
 }
 
 fn display_csv_format(results: &ProcessingResults) -> Result<(), Box<dyn std::error::Error>> {
-    println!("round_id,username,user_id,guess,score,rank,payout");
+    println!("block_num,username,user_id,guess,score,rank,payout");
 
-    for (round_id, round_results) in &results.rounds {
+    for (block_num, round_results) in &results.rounds {
         for result in round_results {
             let escaped_guess = result.participant.guess.text.replace("\"", "\"\"");
             let rank_str = result.rank.map_or("".to_string(), |r| r.to_string());
@@ -603,7 +603,7 @@ fn display_csv_format(results: &ProcessingResults) -> Result<(), Box<dyn std::er
 
             println!(
                 "{},\"{}\",\"{}\",\"{}\",{:.6},{},{}",
-                round_id,
+                block_num,
                 result.participant.username,
                 result.participant.social_id,
                 escaped_guess,
@@ -629,7 +629,7 @@ fn save_results(
             let rounds_data: Vec<serde_json::Value> = results
                 .rounds
                 .iter()
-                .map(|(round_id, round_results)| {
+                .map(|(block_num, round_results)| {
                     let participants: Vec<serde_json::Value> = round_results
                         .iter()
                         .map(|result| {
@@ -647,7 +647,7 @@ fn save_results(
                     let round_payout: f64 = round_results.iter().filter_map(|r| r.payout).sum();
 
                     serde_json::json!({
-                        "round_id": round_id,
+                        "block_num": block_num,
                         "participants": participants,
                         "participant_count": round_results.len(),
                         "total_payout": round_payout
@@ -673,9 +673,9 @@ fn save_results(
             serde_json::to_string_pretty(&output)?
         }
         "csv" => {
-            let mut content = String::from("round_id,username,user_id,guess,score,rank,payout\n");
+            let mut content = String::from("block_num,username,user_id,guess,score,rank,payout\n");
 
-            for (round_id, round_results) in &results.rounds {
+            for (block_num, round_results) in &results.rounds {
                 for result in round_results {
                     let escaped_guess = result.participant.guess.text.replace("\"", "\"\"");
                     let rank_str = result.rank.map_or("".to_string(), |r| r.to_string());
@@ -685,7 +685,7 @@ fn save_results(
 
                     content.push_str(&format!(
                         "{},\"{}\",\"{}\",\"{}\",{:.6},{},{}\n",
-                        round_id,
+                        block_num,
                         result.participant.username,
                         result.participant.social_id,
                         escaped_guess,
@@ -703,8 +703,8 @@ fn save_results(
             content.push_str(&"=".repeat(50));
             content.push('\n');
 
-            for (round_id, round_results) in &results.rounds {
-                content.push_str(&format!("\nRound: {}\n", round_id));
+            for (block_num, round_results) in &results.rounds {
+                content.push_str(&format!("\nRound: {}\n", block_num));
                 content.push_str(&format!("Participants: {}\n", round_results.len()));
 
                 for (i, result) in round_results.iter().enumerate() {

@@ -12,7 +12,7 @@ use serde_json::json;
 pub struct VerifyCommitmentsArgs {
     /// Round tweet ID from Twitter URL (the original #commitmentsopen tweet)
     #[arg(short, long)]
-    pub round_tweet_id: String,
+    pub block_tweet_id: String,
 
     /// Path to collected commitments file (default: ~/.cliptions/validator/collected_commitments.json)
     #[arg(long)]
@@ -44,7 +44,7 @@ pub struct VerifyCommitmentsArgs {
     
     /// Round ID to save results under (e.g., "round4")
     #[arg(long)]
-    pub round_id: Option<String>,
+    pub block_num: Option<String>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
@@ -63,7 +63,7 @@ struct VerificationResult {
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
 struct VerificationResults {
-    round_tweet_id: String,
+    block_tweet_id: String,
     total_participants: usize,
     valid_commitments: usize,
     invalid_commitments: usize,
@@ -78,7 +78,7 @@ pub async fn run(args: VerifyCommitmentsArgs) -> Result<()> {
     }
 
     if args.verbose {
-        println!("Starting commitment verification for round: {}", args.round_tweet_id);
+        println!("Starting commitment verification for round: {}", args.block_tweet_id);
     }
 
     // Load config
@@ -96,12 +96,12 @@ pub async fn run(args: VerifyCommitmentsArgs) -> Result<()> {
         cliptions_dir.join("collected_reveals.json"));
 
     // Load commitments and reveals
-    let commitments = load_commitments(&commitments_path, &args.round_tweet_id)?;
-    let reveals = load_reveals(&reveals_path, &args.round_tweet_id)?;
+    let commitments = load_commitments(&commitments_path, &args.block_tweet_id)?;
+    let reveals = load_reveals(&reveals_path, &args.block_tweet_id)?;
 
     if args.verbose {
-        println!("Loaded {} commitments for round {}", commitments.len(), args.round_tweet_id);
-        println!("Loaded {} reveals for round {}", reveals.len(), args.round_tweet_id);
+        println!("Loaded {} commitments for round {}", commitments.len(), args.block_tweet_id);
+        println!("Loaded {} reveals for round {}", reveals.len(), args.block_tweet_id);
     }
 
     // Loop through commitments and look for matching reveals
@@ -139,7 +139,7 @@ pub async fn run(args: VerifyCommitmentsArgs) -> Result<()> {
     }
 
     let results = VerificationResults {
-        round_tweet_id: args.round_tweet_id.clone(),
+        block_tweet_id: args.block_tweet_id.clone(),
         total_participants: verification_results.len(),
         valid_commitments: valid_count,
         invalid_commitments: invalid_count,
@@ -150,20 +150,20 @@ pub async fn run(args: VerifyCommitmentsArgs) -> Result<()> {
     // Display results
     display_verification_results(&results, &args)?;
 
-    // Save to rounds.json if round_id is provided
-    if let Some(round_id) = &args.round_id {
-        save_to_rounds_json(&results, &args.rounds_file, round_id)?;
+    // Save to rounds.json if block_num is provided
+    if let Some(block_num) = &args.block_num {
+        save_to_rounds_json(&results, &args.rounds_file, block_num)?;
         
         if args.verbose {
             println!("✅ Verification results saved to {} under round '{}'", 
-                args.rounds_file.display(), round_id);
+                args.rounds_file.display(), block_num);
         }
     }
 
     Ok(())
 }
 
-fn load_commitments(path: &PathBuf, round_tweet_id: &str) -> Result<BTreeMap<String, CollectedCommitmentData>> {
+fn load_commitments(path: &PathBuf, block_tweet_id: &str) -> Result<BTreeMap<String, CollectedCommitmentData>> {
     if !path.exists() {
         return Err("Commitments file not found".to_string().into());
     }
@@ -174,7 +174,7 @@ fn load_commitments(path: &PathBuf, round_tweet_id: &str) -> Result<BTreeMap<Str
     // Filter by round
     let mut commitments = BTreeMap::new();
     for commitment in results.commitments {
-        if commitment.conversation_id.as_deref() == Some(round_tweet_id) {
+        if commitment.conversation_id.as_deref() == Some(block_tweet_id) {
             commitments.insert(commitment.author_id.clone(), commitment);
         }
     }
@@ -182,7 +182,7 @@ fn load_commitments(path: &PathBuf, round_tweet_id: &str) -> Result<BTreeMap<Str
     Ok(commitments)
 }
 
-fn load_reveals(path: &PathBuf, round_tweet_id: &str) -> Result<BTreeMap<String, CollectedRevealData>> {
+fn load_reveals(path: &PathBuf, block_tweet_id: &str) -> Result<BTreeMap<String, CollectedRevealData>> {
     if !path.exists() {
         return Err("Reveals file not found".to_string().into());
     }
@@ -193,7 +193,7 @@ fn load_reveals(path: &PathBuf, round_tweet_id: &str) -> Result<BTreeMap<String,
     // Filter by round
     let mut reveals = BTreeMap::new();
     for reveal in results.reveals {
-        if reveal.conversation_id.as_deref() == Some(round_tweet_id) {
+        if reveal.conversation_id.as_deref() == Some(block_tweet_id) {
             reveals.insert(reveal.author_id.clone(), reveal);
         }
     }
@@ -245,14 +245,14 @@ fn display_verification_results(
     results: &VerificationResults,
     _args: &VerifyCommitmentsArgs,
 ) -> Result<()> {
-    match results.round_tweet_id.as_str() {
+    match results.block_tweet_id.as_str() {
         _ => display_text_format(results),
     }
 }
 
 fn display_text_format(results: &VerificationResults) -> Result<()> {
     println!("{}", "Commitment Verification Results".bold().underline());
-    println!("Round Tweet ID: {}", results.round_tweet_id);
+    println!("Block Tweet ID: {}", results.block_tweet_id);
     println!("Total Participants: {}", results.total_participants);
     println!("Valid Commitments: {}", results.valid_commitments.to_string().green());
     println!("Invalid Commitments: {}", results.invalid_commitments.to_string().red());
@@ -316,7 +316,7 @@ fn csv_escape(field: &str) -> String {
 fn save_to_rounds_json(
     results: &VerificationResults,
     rounds_file: &PathBuf,
-    round_id: &str,
+    block_num: &str,
 ) -> Result<()> {
     // Load existing rounds data
     let mut rounds_data: BTreeMap<String, serde_json::Value> = if rounds_file.exists() {
@@ -354,8 +354,8 @@ fn save_to_rounds_json(
 
             // Create round data that matches BlockData struct
     let round_data = json!({
-        "round_version": "1",
-        "round_id": round_id,
+        "block_version": "1",
+        "block_num": block_num,
         "target_image_path": "", // Will be set in other slices
         "status": "Open",
         "prize_pool": 0.0, // Will be set in other slices
@@ -370,7 +370,7 @@ fn save_to_rounds_json(
     });
 
     // Insert or update the round
-    rounds_data.insert(round_id.to_string(), round_data);
+    rounds_data.insert(block_num.to_string(), round_data);
 
     // Save back to file
     let content = serde_json::to_string_pretty(&rounds_data)?;

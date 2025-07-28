@@ -1,4 +1,4 @@
-//! Cliptions - State-Driven Round Engine
+//! Cliptions - State-Driven Block Engine
 //!
 //! Main application entry point that supports both validator and miner roles.
 //! Uses async/await for handling Twitter API calls and web server operations.
@@ -175,7 +175,7 @@ async fn run_validator_loop(
     }
 
     // --- Gather New Round Info ---
-    let round_id = prompt_user("Enter Round ID (e.g., '10'): ");
+    let block_num = prompt_user("Enter Round ID (e.g., '10'): ");
     let description = prompt_user("Enter Round Description/Theme: ");
     let livestream_url = prompt_user("Enter Livestream URL: ");
     let target_timestamp_str = prompt_user("Enter Target Timestamp (YYYY-MM-DD HH:MM:SS): ");
@@ -193,12 +193,12 @@ async fn run_validator_loop(
     let commitment_deadline = Utc::now() + chrono::Duration::hours(commitment_hours);
 
     // --- Create and Announce Round ---
-    let round = Block::<Pending>::new(round_id, description, livestream_url, target_timestamp);
+    let round = Block::<Pending>::new(block_num, description, livestream_url, target_timestamp);
     println!("📢 Announcing new round on Twitter...");
 
     match round.open_commitments(commitment_deadline, &client).await {
         Ok(_) => {
-            println!("✅ Round announced successfully!");
+            println!("✅ Block announced successfully!");
         }
         Err(e) => {
             eprintln!("🔥 Failed to announce round: {}", e);
@@ -283,7 +283,7 @@ async fn run_miner_loop(
                         .find(|w| w.to_lowercase().starts_with("#round"));
                     let round_str =
                         round.unwrap_or_else(|| panic!("No #roundX hashtag found in the tweet!"));
-                    println!("Round detected: {}", round_str);
+                    println!("Block detected: {}", round_str);
                     println!("\nInstructions:");
                     // Print lines containing 'How To Play' and after
                     let mut print_lines = false;

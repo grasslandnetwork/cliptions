@@ -17,7 +17,7 @@ pub struct Commitment {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(feature = "python", derive(FromPyObject))]
 pub struct Round {
-    pub round_id: String,
+    pub block_num: String,
     pub announcement_url: String,
     pub livestream_url: String,
     pub entry_fee: f64,

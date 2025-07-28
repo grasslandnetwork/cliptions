@@ -1,4 +1,4 @@
-//! Async State Machine for Cliptions Round Engine
+//! Async State Machine for Cliptions Block Engine
 //!
 //! This module implements the round lifecycle using the Rust typestate pattern.
 //! Each state is a marker type that ensures operations can only be performed
@@ -164,7 +164,7 @@ impl Block<Pending> {
     ) -> Result<Block<CommitmentsOpen>> {
         let formatter = AnnouncementFormatter::new();
         let announcement_data = AnnouncementData {
-            round_id: self.id.parse().expect(&format!("CRITICAL: Invalid round ID '{}' - cannot proceed with round announcements", self.id)),
+            block_num: self.id.parse().expect(&format!("CRITICAL: Invalid round ID '{}' - cannot proceed with round announcements", self.id)),
             state_name: "CommitmentsOpen".to_string(),
             target_time: commitment_deadline.to_rfc3339(),
             hashtags: vec![],       // The formatter will add standard hashtags
@@ -204,7 +204,7 @@ impl Block<CommitmentsOpen> {
     ) -> Result<Block<CommitmentsClosed>> {
         let formatter = AnnouncementFormatter::new();
         let announcement_data = AnnouncementData {
-            round_id: self.id.parse().expect(&format!("CRITICAL: Invalid round ID '{}' - cannot proceed with round announcements", self.id)),
+            block_num: self.id.parse().expect(&format!("CRITICAL: Invalid round ID '{}' - cannot proceed with round announcements", self.id)),
             state_name: "CommitmentsClosed".to_string(),
             target_time: self.target_timestamp.to_rfc3339(),
             hashtags: vec![],
@@ -273,7 +273,7 @@ impl Block<FrameCaptured> {
     ) -> Result<Block<RevealsOpen>> {
         let formatter = AnnouncementFormatter::new();
         let announcement_data = AnnouncementData {
-            round_id: self.id.parse().expect(&format!("CRITICAL: Invalid round ID '{}' - cannot proceed with round announcements", self.id)),
+            block_num: self.id.parse().expect(&format!("CRITICAL: Invalid round ID '{}' - cannot proceed with round announcements", self.id)),
             state_name: "RevealsOpen".to_string(),
             target_time: reveals_deadline.to_rfc3339(),
             hashtags: vec![],

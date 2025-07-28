@@ -25,7 +25,7 @@ except ImportError:
 
 class RoundAnnouncementData(BaseModel):
     """Data structure for round announcement content"""
-    round_id: str = Field(..., description="Unique identifier for the round")
+    block_num: str = Field(..., description="Unique identifier for the round")
     entry_fee: float = Field(..., description="Entry fee in TAO")
     commitment_deadline: datetime = Field(..., description="Deadline for commitment submissions")
     reveal_deadline: datetime = Field(..., description="Deadline for reveal submissions")
@@ -39,7 +39,7 @@ class RoundAnnouncementResult(BaseModel):
     success: bool = Field(..., description="Whether the announcement was posted successfully")
     tweet_url: Optional[str] = Field(None, description="URL of the posted tweet")
     tweet_id: Optional[str] = Field(None, description="ID of the posted tweet")
-    round_id: str = Field(..., description="The announced round ID")
+    block_num: str = Field(..., description="The announced round ID")
     timestamp: datetime = Field(default_factory=datetime.now, description="When the announcement was posted")
     error_message: Optional[str] = Field(None, description="Error message if posting failed")
 
@@ -75,7 +75,7 @@ class RoundAnnouncementTask(BaseTwitterTask):
             self.logger.error(f"Failed to post round announcement: {str(e)}")
             return RoundAnnouncementResult(
                 success=False,
-                round_id=kwargs.get('round_id', 'unknown'),
+                block_num=kwargs.get('block_num', 'unknown'),
                 error_message=str(e)
             )
     
@@ -98,7 +98,7 @@ class RoundAnnouncementTask(BaseTwitterTask):
         else:
             announcement_data = RoundAnnouncementData(**kwargs)
         
-        self.logger.info(f"Starting round announcement for round {announcement_data.round_id}")
+        self.logger.info(f"Starting round announcement for round {announcement_data.block_num}")
         
         # Format the announcement content
         content = self.format_content(announcement_data)
@@ -110,7 +110,7 @@ class RoundAnnouncementTask(BaseTwitterTask):
             success=True,
             tweet_url=result.get('tweet_url'),
             tweet_id=result.get('tweet_id'),
-            round_id=announcement_data.round_id,
+            block_num=announcement_data.block_num,
             timestamp=datetime.now()
         )
     
@@ -124,14 +124,14 @@ class RoundAnnouncementTask(BaseTwitterTask):
         Returns:
             Formatted tweet content
         """
-        # Extract round number from round_id (e.g., "TEST-ROUND-001" -> "TEST ROUND 001")
-        round_display = data.round_id.replace("-", " ").upper()
+        # Extract round number from block_num (e.g., "TEST-ROUND-001" -> "TEST ROUND 001")
+        round_display = data.block_num.replace("-", " ").upper()
         
         # Format commitment deadline as readable time (assume UTC if no timezone)
         commitment_time = data.commitment_deadline.strftime('%I:%M:%S %p UTC on %B %d, %Y')
         
         # Combine all hashtags at the top
-        round_hashtag = f"#{data.round_id.lower().replace('-', '')}"
+        round_hashtag = f"#{data.block_num.lower().replace('-', '')}"
         all_hashtags = [round_hashtag, "#roundannouncement"] + data.hashtags
         
         content_parts = [
@@ -249,7 +249,7 @@ class RoundAnnouncementTask(BaseTwitterTask):
         # If it's not already a RoundAnnouncementResult, something went wrong
         return RoundAnnouncementResult(
             success=False,
-            round_id="unknown",
+            block_num="unknown",
             error_message="Invalid result type returned from task execution"
         )
 
@@ -257,7 +257,7 @@ class RoundAnnouncementTask(BaseTwitterTask):
 # Utility functions for creating announcement data
 
 def create_standard_round_announcement(
-    round_id: str,
+    block_num: str,
     livestream_url: str = "https://www.youtube.com/watch?v=SMCRQj9Hbx8",
     entry_fee: float = 0.001,
     commitment_hours: int = 24,
@@ -267,7 +267,7 @@ def create_standard_round_announcement(
     Create a standard round announcement with default timing.
     
     Args:
-        round_id: Unique identifier for the round
+        block_num: Unique identifier for the round
         livestream_url: URL of the livestream players are predicting (defaults to sample URL)
         entry_fee: Entry fee in TAO (default: 0.001)
         commitment_hours: Hours from now until commitment deadline
@@ -281,7 +281,7 @@ def create_standard_round_announcement(
     reveal_deadline = now + timedelta(hours=reveal_hours)
     
     return RoundAnnouncementData(
-        round_id=round_id,
+        block_num=block_num,
         livestream_url=livestream_url,
         entry_fee=entry_fee,
         commitment_deadline=commitment_deadline,
@@ -290,7 +290,7 @@ def create_standard_round_announcement(
 
 
 def create_custom_round_announcement(
-    round_id: str,
+    block_num: str,
     livestream_url: str,
     entry_fee: float,
     commitment_deadline: datetime,
@@ -302,7 +302,7 @@ def create_custom_round_announcement(
     Create a custom round announcement with specific parameters.
     
     Args:
-        round_id: Unique identifier for the round
+        block_num: Unique identifier for the round
         livestream_url: URL of the livestream players are predicting
         entry_fee: Entry fee in TAO
         commitment_deadline: When commitments are due
@@ -314,7 +314,7 @@ def create_custom_round_announcement(
         RoundAnnouncementData instance
     """
     return RoundAnnouncementData(
-        round_id=round_id,
+        block_num=block_num,
         livestream_url=livestream_url,
         entry_fee=entry_fee,
         commitment_deadline=commitment_deadline,

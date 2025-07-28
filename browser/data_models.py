@@ -26,7 +26,7 @@ class Round(BaseModel):
     Represents a full prediction round.
     Mirrors the Rust `Round` struct.
     """
-    round_id: str = Field(..., description="Unique identifier for the round.")
+    block_num: str = Field(..., description="Unique identifier for the round.")
     announcement_url: str = Field(..., description="URL of the announcement tweet that was processed.")
     livestream_url: str = Field(..., description="URL of the livestream players are predicting.")
     entry_fee: float = Field(..., description="Entry fee in TAO.")

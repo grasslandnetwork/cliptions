@@ -1,4 +1,4 @@
-//! Calculate Scores & Payouts for Cliptions rounds
+//! Calculate Scores & Payouts for Cliptions blocks
 //!
 //! This module implements the `calculate-scores` subcommand, which processes verified participants,
 //! calculates CLIP similarity scores, determines payouts, and updates the round state.
@@ -21,10 +21,10 @@ use crate::error::Result;
 /// Command-line arguments for calculate-scores
 #[derive(Parser)]
 #[command(name = "calculate-scores")]
-#[command(about = "Calculate scores and payouts for verified participants in a round")]
+#[command(about = "Calculate scores and payouts for verified participants in a block")]
 #[command(version = "0.6.6")]
 #[command(long_about = "
-Calculate similarity scores and payout distribution for verified participants in a Cliptions round.
+Calculate similarity scores and payout distribution for verified participants in a Cliptions block.
 
 This subcommand processes verified participants from a round, calculates CLIP similarity scores
 against the target image, determines fair payouts based on rankings, and updates the round state.
@@ -42,7 +42,7 @@ Examples:
 pub struct CalculateScoresArgs {
     /// Round ID to calculate scores for
     #[arg(short, long)]
-    pub round_id: String,
+    pub block_num: String,
     
     /// Path to rounds data file
     #[arg(short = 'f', long, default_value = "data/rounds.json")]
@@ -70,7 +70,7 @@ pub struct CalculateScoresArgs {
 }
 
 /// Load verified participants from rounds data
-fn load_verified_participants(round_id: &str, rounds_file: &str) -> Result<Vec<Participant>> {
+fn load_verified_participants(block_num: &str, rounds_file: &str) -> Result<Vec<Participant>> {
     // Create embedder and processor
     let embedder = MockEmbedder::clip_like(); // We'll replace this with real embedder later
     let strategy = ClipBatchStrategy::new();
@@ -80,7 +80,7 @@ fn load_verified_participants(round_id: &str, rounds_file: &str) -> Result<Vec<P
     processor.load_rounds()?;
     
     // Get the round and extract verified participants
-    let round = processor.get_round(round_id)?;
+    let round = processor.get_round(block_num)?;
     let verified_participants: Vec<Participant> = round
         .participants
         .iter()
@@ -90,7 +90,7 @@ fn load_verified_participants(round_id: &str, rounds_file: &str) -> Result<Vec<P
     
     if verified_participants.is_empty() {
         return Err(crate::error::CliptionsError::ValidationError(
-            format!("No verified participants found for round {}", round_id)
+            format!("No verified participants found for round {}", block_num)
         ));
     }
     
@@ -100,7 +100,7 @@ fn load_verified_participants(round_id: &str, rounds_file: &str) -> Result<Vec<P
 /// Calculate scores and payouts for participants using the PayoutCalculator
 fn calculate_scores_and_payouts(
     participants: &[Participant],
-    round_id: &str,
+    block_num: &str,
     rounds_file: &str,
     prize_pool: f64,
     use_mock: bool,
@@ -120,7 +120,7 @@ fn calculate_scores_and_payouts(
         processor.load_rounds()?;
         
         // Get target image path from the round
-        let round = processor.get_round(round_id)?;
+        let round = processor.get_round(block_num)?;
         let target_image_path = round.target_image_path.clone();
         
         if verbose {
@@ -128,7 +128,7 @@ fn calculate_scores_and_payouts(
         }
         
         // Process round payouts using the existing BlockProcessor logic
-        let results = processor.process_round_payouts(round_id)?;
+        let results = processor.process_round_payouts(block_num)?;
         
         if verbose {
             println!("Successfully calculated scores and payouts for {} participants", results.len());
@@ -147,7 +147,7 @@ fn calculate_scores_and_payouts(
                 processor.load_rounds()?;
                 
                 // Get target image path from the round
-                let round = processor.get_round(round_id)?;
+                let round = processor.get_round(block_num)?;
                 let target_image_path = round.target_image_path.clone();
                 
                 if verbose {
@@ -155,7 +155,7 @@ fn calculate_scores_and_payouts(
                 }
                 
                 // Process round payouts using the existing BlockProcessor logic
-                let results = processor.process_round_payouts(round_id)?;
+                let results = processor.process_round_payouts(block_num)?;
                 
                 if verbose {
                     println!("Successfully calculated scores and payouts for {} participants", results.len());
@@ -172,7 +172,7 @@ fn calculate_scores_and_payouts(
 
 /// Update the rounds.json file with calculated scores, payouts, and prize pool
 fn update_rounds_file(
-    round_id: &str,
+    block_num: &str,
     rounds_file: &str,
     results: &[ScoringResult],
     prize_pool: f64,
@@ -186,9 +186,9 @@ fn update_rounds_file(
         .map_err(|e| crate::error::CliptionsError::Json(e))?;
     
     // Get the round object
-    let round = rounds.get_mut(round_id)
+    let round = rounds.get_mut(block_num)
         .ok_or_else(|| crate::error::CliptionsError::ValidationError(
-            format!("Round {} not found in rounds file", round_id)
+            format!("Round {} not found in rounds file", block_num)
         ))?;
     
     // Update prize pool
@@ -258,9 +258,9 @@ fn display_results(results: &[ScoringResult], args: &CalculateScoresArgs) -> Res
 
 /// Display results in table format
 fn display_table_format(results: &[ScoringResult], args: &CalculateScoresArgs) -> Result<()> {
-    println!("\n{}", "Round Results:".bold().underline());
+    println!("\n{}", "Block Results:".bold().underline());
     println!("{}", "=".repeat(80));
-    println!("Round ID: {}", args.round_id.bold().blue());
+    println!("Block ID: {}", args.block_num.bold().blue());
     println!("Prize Pool: {:.9} TAO", args.prize_pool);
     println!("{}", "=".repeat(80));
 
@@ -400,16 +400,16 @@ fn save_results(results: &[ScoringResult], output_file: &PathBuf, format: &str) 
 /// Entry point for the calculate-scores subcommand
 pub fn run(args: CalculateScoresArgs) -> Result<()> {
     // Load verified participants
-    let participants = load_verified_participants(&args.round_id, &args.rounds_file)?;
+    let participants = load_verified_participants(&args.block_num, &args.rounds_file)?;
     
     if args.verbose {
-        println!("Loaded {} verified participants for round {}", participants.len(), args.round_id);
+        println!("Loaded {} verified participants for round {}", participants.len(), args.block_num);
     }
     
     // Calculate scores and payouts
     let results = calculate_scores_and_payouts(
         &participants,
-        &args.round_id,
+        &args.block_num,
         &args.rounds_file,
         args.prize_pool,
         args.use_mock,
@@ -417,7 +417,7 @@ pub fn run(args: CalculateScoresArgs) -> Result<()> {
     )?;
     
     if args.verbose {
-        println!("Successfully processed round {} with {} results", args.round_id, results.len());
+        println!("Successfully processed round {} with {} results", args.block_num, results.len());
     }
     
     // Display results
@@ -433,7 +433,7 @@ pub fn run(args: CalculateScoresArgs) -> Result<()> {
     
     // Update rounds.json file
     update_rounds_file(
-        &args.round_id,
+        &args.block_num,
         &args.rounds_file,
         &results,
         args.prize_pool,

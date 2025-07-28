@@ -70,28 +70,28 @@ impl<E: EmbedderTrait, S: ScoringStrategy> BlockProcessor<E, S> {
     }
 
     /// Get a round by ID
-    pub fn get_round(&mut self, round_id: &str) -> Result<&BlockData> {
+    pub fn get_round(&mut self, block_num: &str) -> Result<&BlockData> {
         if self.rounds_cache.is_empty() {
             self.load_rounds()?;
         }
 
-        self.rounds_cache.get(round_id).ok_or_else(|| {
+        self.rounds_cache.get(block_num).ok_or_else(|| {
             BlockError::RoundNotFound {
-                round_id: round_id.to_string(),
+                block_num: block_num.to_string(),
             }
             .into()
         })
     }
 
     /// Get a mutable reference to a round
-    pub fn get_round_mut(&mut self, round_id: &str) -> Result<&mut BlockData> {
+    pub fn get_round_mut(&mut self, block_num: &str) -> Result<&mut BlockData> {
         if self.rounds_cache.is_empty() {
             self.load_rounds()?;
         }
 
-        self.rounds_cache.get_mut(round_id).ok_or_else(|| {
+        self.rounds_cache.get_mut(block_num).ok_or_else(|| {
             BlockError::RoundNotFound {
-                round_id: round_id.to_string(),
+                block_num: block_num.to_string(),
             }
             .into()
         })
@@ -100,7 +100,7 @@ impl<E: EmbedderTrait, S: ScoringStrategy> BlockProcessor<E, S> {
     /// Create a new round
     pub fn create_round(
         &mut self,
-        round_id: String,
+        block_num: String,
         target_image_path: String,
         social_id: String,
         prize_pool: f64,
@@ -111,13 +111,13 @@ impl<E: EmbedderTrait, S: ScoringStrategy> BlockProcessor<E, S> {
             self.load_rounds()?;
         }
 
-        if self.rounds_cache.contains_key(&round_id) {
+        if self.rounds_cache.contains_key(&block_num) {
             return Err(BlockError::AlreadyProcessed.into());
         }
 
         let round = if let (Some(commit_deadline), Some(reveal_deadline)) = (commitment_deadline, reveal_deadline) {
             BlockData::with_deadlines(
-                round_id.clone(),
+                block_num.clone(),
                 target_image_path,
                 social_id,
                 prize_pool,
@@ -126,22 +126,22 @@ impl<E: EmbedderTrait, S: ScoringStrategy> BlockProcessor<E, S> {
             )
         } else {
             BlockData::new(
-                round_id.clone(),
+                block_num.clone(),
                 target_image_path,
                 social_id,
                 prize_pool,
             )
         };
 
-        self.rounds_cache.insert(round_id, round);
+        self.rounds_cache.insert(block_num, round);
         self.save_rounds(&self.rounds_cache)?;
 
         Ok(())
     }
 
     /// Add a participant to a round
-    pub fn add_participant(&mut self, round_id: &str, participant: Participant) -> Result<()> {
-        let round = self.get_round_mut(round_id)?;
+    pub fn add_participant(&mut self, block_num: &str, participant: Participant) -> Result<()> {
+        let round = self.get_round_mut(block_num)?;
 
         // if !round.is_open() {
         //     return Err(BlockError::AlreadyProcessed.into());
@@ -154,7 +154,7 @@ impl<E: EmbedderTrait, S: ScoringStrategy> BlockProcessor<E, S> {
     }
 
     /// Verify commitments for a round
-    pub fn verify_commitments(&mut self, round_id: &str) -> Result<Vec<bool>> {
+    pub fn verify_commitments(&mut self, block_num: &str) -> Result<Vec<bool>> {
         // Load rounds if needed
         if self.rounds_cache.is_empty() {
             self.load_rounds()?;
@@ -162,9 +162,9 @@ impl<E: EmbedderTrait, S: ScoringStrategy> BlockProcessor<E, S> {
 
         let round =
             self.rounds_cache
-                .get_mut(round_id)
+                .get_mut(block_num)
                 .ok_or_else(|| BlockError::RoundNotFound {
-                    round_id: round_id.to_string(),
+                    block_num: block_num.to_string(),
                 })?;
 
         let mut results = Vec::new();
@@ -192,7 +192,7 @@ impl<E: EmbedderTrait, S: ScoringStrategy> BlockProcessor<E, S> {
     }
 
     /// Process round payouts
-    pub fn process_round_payouts(&mut self, round_id: &str) -> Result<Vec<ScoringResult>> {
+    pub fn process_round_payouts(&mut self, block_num: &str) -> Result<Vec<ScoringResult>> {
         // Load rounds if needed
         if self.rounds_cache.is_empty() {
             self.load_rounds()?;
@@ -202,9 +202,9 @@ impl<E: EmbedderTrait, S: ScoringStrategy> BlockProcessor<E, S> {
         let (target_image_path, prize_pool, verified_participants) = {
             let round =
                 self.rounds_cache
-                    .get(round_id)
+                    .get(block_num)
                     .ok_or_else(|| BlockError::RoundNotFound {
-                        round_id: round_id.to_string(),
+                        block_num: block_num.to_string(),
                     })?;
 
             // Verify target image exists
@@ -225,7 +225,7 @@ impl<E: EmbedderTrait, S: ScoringStrategy> BlockProcessor<E, S> {
 
             if verified_participants.is_empty() {
                 return Err(BlockError::NoParticipants {
-                    round_id: round_id.to_string(),
+                    block_num: block_num.to_string(),
                 }
                 .into());
             }
@@ -246,7 +246,7 @@ impl<E: EmbedderTrait, S: ScoringStrategy> BlockProcessor<E, S> {
         )?;
 
         // Update round status to Complete (but don't add redundant results section)
-        let round = self.rounds_cache.get_mut(round_id).unwrap(); // Safe because we checked above
+        let round = self.rounds_cache.get_mut(block_num).unwrap(); // Safe because we checked above
         round.set_status(BlockStatus::Complete);
         self.save_rounds(&self.rounds_cache)?;
 
@@ -254,7 +254,7 @@ impl<E: EmbedderTrait, S: ScoringStrategy> BlockProcessor<E, S> {
     }
 
     /// Get all round IDs
-    pub fn get_round_ids(&mut self) -> Result<Vec<String>> {
+    pub fn get_block_nums(&mut self) -> Result<Vec<String>> {
         if self.rounds_cache.is_empty() {
             self.load_rounds()?;
         }
@@ -264,19 +264,19 @@ impl<E: EmbedderTrait, S: ScoringStrategy> BlockProcessor<E, S> {
 
     /// Process all rounds
     pub fn process_all_rounds(&mut self) -> Result<HashMap<String, Vec<ScoringResult>>> {
-        let round_ids = self.get_round_ids()?;
+        let block_nums = self.get_block_nums()?;
         let mut all_results = HashMap::new();
 
-        for round_id in round_ids {
+        for block_num in block_nums {
             // Only process rounds that are open or processing
-            let round = self.get_round(&round_id)?;
+            let round = self.get_round(&block_num)?;
             if matches!(round.status, BlockStatus::Open | BlockStatus::Processing) {
-                match self.process_round_payouts(&round_id) {
+                match self.process_round_payouts(&block_num) {
                     Ok(results) => {
-                        all_results.insert(round_id, results);
+                        all_results.insert(block_num, results);
                     }
                     Err(e) => {
-                        panic!("CRITICAL: Failed to process round {}: {}. Cannot continue batch processing with incomplete results as this could lead to missing payouts.", round_id, e);
+                        panic!("CRITICAL: Failed to process round {}: {}. Cannot continue batch processing with incomplete results as this could lead to missing payouts.", block_num, e);
                     }
                 }
             }
@@ -286,8 +286,8 @@ impl<E: EmbedderTrait, S: ScoringStrategy> BlockProcessor<E, S> {
     }
 
     /// Get round statistics
-    pub fn get_round_stats(&mut self, round_id: &str) -> Result<RoundStats> {
-        let round = self.get_round(round_id)?;
+    pub fn get_round_stats(&mut self, block_num: &str) -> Result<RoundStats> {
+        let round = self.get_round(block_num)?;
 
         let total_participants = round.participants.len();
         let verified_participants = round.verified_participants().len();
@@ -301,7 +301,7 @@ impl<E: EmbedderTrait, S: ScoringStrategy> BlockProcessor<E, S> {
         };
 
         Ok(RoundStats {
-            round_id: round_id.to_string(),
+            block_num: block_num.to_string(),
             total_participants,
             verified_participants,
             total_prize_pool,
@@ -315,7 +315,7 @@ impl<E: EmbedderTrait, S: ScoringStrategy> BlockProcessor<E, S> {
 /// Statistics for a round
 #[derive(Debug, Clone)]
 pub struct RoundStats {
-    pub round_id: String,
+    pub block_num: String,
     pub total_participants: usize,
     pub verified_participants: usize,
     pub total_prize_pool: f64,
@@ -361,7 +361,7 @@ mod tests {
 
         // Should be able to load empty rounds
         processor.load_rounds().unwrap();
-        assert!(processor.get_round_ids().unwrap().is_empty());
+        assert!(processor.get_block_nums().unwrap().is_empty());
     }
 
     #[test]
@@ -380,7 +380,7 @@ mod tests {
             .unwrap();
 
         let round = processor.get_round("test_round").unwrap();
-        assert_eq!(round.round_id, "test_round");
+        assert_eq!(round.block_num, "test_round");
         assert_eq!(round.target_image_path, "test.jpg");
         assert_eq!(round.social_id, "test_social_id");
         assert_eq!(round.prize_pool, 100.0);
@@ -474,7 +474,7 @@ mod tests {
             .unwrap();
 
         let stats = processor.get_round_stats("test_round").unwrap();
-        assert_eq!(stats.round_id, "test_round");
+        assert_eq!(stats.block_num, "test_round");
         assert_eq!(stats.total_participants, 1);
         assert_eq!(stats.verified_participants, 1);
         assert!(!stats.is_complete);

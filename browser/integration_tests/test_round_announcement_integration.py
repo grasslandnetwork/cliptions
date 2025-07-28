@@ -22,7 +22,7 @@ async def main():
     try:
     # Create test announcement data
     announcement_data = create_standard_round_announcement(
-        round_id="TEST-ROUND-001",
+        block_num="TEST-ROUND-001",
         livestream_url="https://www.youtube.com/watch?v=SMCRQj9Hbx8",  # Using provided YouTube URL
         entry_fee=0.001,  # 0.001 TAO
         commitment_hours=24,  # 24 hours for commitments
