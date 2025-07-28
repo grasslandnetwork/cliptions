@@ -329,27 +329,44 @@ fn save_to_rounds_json(
     // Create participants array from verification results
     let participants: Vec<serde_json::Value> = results.results.iter().map(|result| {
         json!({
+            "social_id": result.author_id,
             "username": result.username,
-            "wallet": result.wallet_address,
+            "guess": {
+                "text": result.guess,
+                "embedding": null,
+                "timestamp": chrono::Utc::now().to_rfc3339(),
+                "metadata": {}
+            },
+            "guess_url": result.reveal_tweet_url,
             "commitment": result.commitment_hash,
             "commitment_url": result.commitment_tweet_url,
-            "reveal": result.guess,
-            "reveal_url": result.reveal_tweet_url,
+            "wallet": result.wallet_address,
+            "score": 0.0, // Will be calculated in Slice 6
+            "payout": {
+                "amount": 0.0,
+                "currency": "TAO",
+                "url": ""
+            },
             "salt": result.salt,
-            "valid": result.is_valid
-            // Note: score and payout will be added in Slice 6
+            "verified": result.is_valid
         })
     }).collect();
 
-    // Create round data
+    // Create round data that matches RoundData struct
     let round_data = json!({
+        "round_version": "1",
+        "round_id": round_id,
+        "target_image_path": "", // Will be set in other slices
+        "status": "Open",
+        "prize_pool": 0.0, // Will be set in other slices
+        "social_id": "", // Will be set in other slices
+        "commitment_deadline": chrono::Utc::now().to_rfc3339(), // Will be set in other slices
+        "reveal_deadline": chrono::Utc::now().to_rfc3339(), // Will be set in other slices
+        "total_payout": 0.0, // Will be calculated in Slice 6
         "participants": participants,
-        "verification_timestamp": results.verification_timestamp,
-        "total_participants": results.total_participants,
-        "valid_commitments": results.valid_commitments,
-        "invalid_commitments": results.invalid_commitments
-        // Note: target_image, target_time, round_commitment_url, round_reveal_url, 
-        // total_payout, prize_pool will be added in other slices
+        "results": [], // Will be populated in Slice 6
+        "created_at": chrono::Utc::now().to_rfc3339(),
+        "updated_at": chrono::Utc::now().to_rfc3339()
     });
 
     // Insert or update the round

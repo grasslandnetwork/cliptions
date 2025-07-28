@@ -510,7 +510,7 @@ fn display_table_format(
                     "  {}. {} ({})",
                     rank_display.bold().blue(),
                     result.participant.username,
-                    result.participant.user_id.dimmed()
+                    result.participant.social_id.dimmed()
                 );
                 println!("     Guess: \"{}\"", result.participant.guess.text);
                 println!("     Score: {:.4}", result.effective_score());
@@ -567,7 +567,7 @@ fn display_json_format(results: &ProcessingResults) -> Result<(), Box<dyn std::e
                 .map(|result| {
                     serde_json::json!({
                         "username": result.participant.username,
-                        "user_id": result.participant.user_id,
+                        "user_id": result.participant.social_id,
                         "guess": result.participant.guess.text,
                         "score": result.effective_score(),
                         "rank": result.rank,
@@ -623,7 +623,7 @@ fn display_csv_format(results: &ProcessingResults) -> Result<(), Box<dyn std::er
                 "{},\"{}\",\"{}\",\"{}\",{:.6},{},{}",
                 round_id,
                 result.participant.username,
-                result.participant.user_id,
+                result.participant.social_id,
                 escaped_guess,
                 result.effective_score(),
                 rank_str,
@@ -653,7 +653,7 @@ fn save_results(
                         .map(|result| {
                             serde_json::json!({
                                 "username": result.participant.username,
-                                "user_id": result.participant.user_id,
+                                "user_id": result.participant.social_id,
                                 "guess": result.participant.guess.text,
                                 "score": result.effective_score(),
                                 "rank": result.rank,
@@ -705,7 +705,7 @@ fn save_results(
                         "{},\"{}\",\"{}\",\"{}\",{:.6},{},{}\n",
                         round_id,
                         result.participant.username,
-                        result.participant.user_id,
+                        result.participant.social_id,
                         escaped_guess,
                         result.effective_score(),
                         rank_str,
@@ -730,7 +730,7 @@ fn save_results(
                         "  {}. {} ({})\n",
                         i + 1,
                         result.participant.username,
-                        result.participant.user_id
+                        result.participant.social_id
                     ));
                     content.push_str(&format!(
                         "     Guess: \"{}\"\n",

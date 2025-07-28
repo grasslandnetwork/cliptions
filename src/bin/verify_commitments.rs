@@ -502,7 +502,7 @@ fn process_round_verification<E: EmbedderTrait>(
         println!(
             "{} Round: {} - {} participants",
             "Info:".blue().bold(),
-            round.title,
+            round.round_id,
             round.participants.len()
         );
     }
@@ -589,7 +589,7 @@ fn display_table_format(
                     "  {}. {} ({}): {}",
                     i + 1,
                     participant.username,
-                    participant.user_id.dimmed(),
+                    participant.social_id.dimmed(),
                     status
                 );
 
@@ -673,7 +673,7 @@ fn display_json_format(results: &VerificationResults) -> Result<(), Box<dyn std:
                 .map(|(participant, &is_valid)| {
                     serde_json::json!({
                         "username": participant.username,
-                        "user_id": participant.user_id,
+                        "user_id": participant.social_id,
                         "guess": participant.guess.text,
                         "commitment": participant.commitment,
                         "salt": participant.salt,
@@ -737,7 +737,7 @@ fn display_csv_format(results: &VerificationResults) -> Result<(), Box<dyn std::
                 "{},\"{}\",\"{}\",\"{}\",\"{}\",\"{}\",{},{}",
                 round_id,
                 participant.username,
-                participant.user_id,
+                participant.social_id,
                 escaped_guess,
                 participant.commitment,
                 salt_str,
@@ -769,7 +769,7 @@ fn save_results(
                         .map(|(participant, &is_valid)| {
                             serde_json::json!({
                                 "username": participant.username,
-                                "user_id": participant.user_id,
+                                "user_id": participant.social_id,
                                 "guess": participant.guess.text,
                                 "commitment": participant.commitment,
                                 "salt": participant.salt,
@@ -832,7 +832,7 @@ fn save_results(
                         "{},\"{}\",\"{}\",\"{}\",\"{}\",\"{}\",{},{}\n",
                         round_id,
                         participant.username,
-                        participant.user_id,
+                        participant.social_id,
                         escaped_guess,
                         participant.commitment,
                         salt_str,
@@ -869,7 +869,7 @@ fn save_results(
                         "  {}. {} ({}): {}\n",
                         i + 1,
                         participant.username,
-                        participant.user_id,
+                        participant.social_id,
                         status
                     ));
                     content.push_str(&format!("     Guess: \"{}\"\n", participant.guess.text));
