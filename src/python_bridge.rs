@@ -145,17 +145,14 @@ pub fn py_calculate_rankings(
         let validator = ScoreValidator::new(embedder, strategy);
         calculate_rankings(target_image_path, &guesses, &validator).map_err(|e| e.into())
     } else {
-        // Try CLIP first, fall back to MockEmbedder
+        // Try CLIP - panic if it fails
         match ClipEmbedder::new() {
             Ok(embedder) => {
                 let validator = ScoreValidator::new(embedder, strategy);
                 calculate_rankings(target_image_path, &guesses, &validator).map_err(|e| e.into())
             }
-            Err(_) => {
-                // Fall back to MockEmbedder
-                let embedder = MockEmbedder::clip_like();
-                let validator = ScoreValidator::new(embedder, strategy);
-                calculate_rankings(target_image_path, &guesses, &validator).map_err(|e| e.into())
+            Err(e) => {
+                panic!("CRITICAL: Failed to load CLIP model: {}. Cannot proceed with invalid MockEmbedder fallback as this would produce unreliable scores.", e);
             }
         }
     }
@@ -246,12 +243,11 @@ pub fn py_process_round_payouts(
         let embedder = MockEmbedder::clip_like();
         RoundProcessor::new(rounds_file, embedder, strategy)
     } else {
-        // Try CLIP first, fall back to MockEmbedder
+        // Try CLIP - panic if it fails
         match ClipEmbedder::new() {
             Ok(embedder) => RoundProcessor::new(rounds_file, embedder, strategy),
-            Err(_) => {
-                let embedder = MockEmbedder::clip_like();
-                RoundProcessor::new(rounds_file, embedder, strategy)
+            Err(e) => {
+                panic!("CRITICAL: Failed to load CLIP model: {}. Cannot proceed with invalid MockEmbedder fallback as this would produce unreliable payout calculations.", e);
             }
         }
     };
@@ -291,12 +287,11 @@ pub fn py_verify_round_commitments(
         let embedder = MockEmbedder::clip_like();
         RoundProcessor::new(rounds_file, embedder, strategy)
     } else {
-        // Try CLIP first, fall back to MockEmbedder
+        // Try CLIP - panic if it fails
         match ClipEmbedder::new() {
             Ok(embedder) => RoundProcessor::new(rounds_file, embedder, strategy),
-            Err(_) => {
-                let embedder = MockEmbedder::clip_like();
-                RoundProcessor::new(rounds_file, embedder, strategy)
+            Err(e) => {
+                panic!("CRITICAL: Failed to load CLIP model: {}. Cannot proceed with invalid MockEmbedder fallback as this would produce unreliable verification results.", e);
             }
         }
     };
