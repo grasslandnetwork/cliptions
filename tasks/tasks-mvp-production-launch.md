@@ -188,16 +188,16 @@ This task list outlines the refactoring and implementation plan for the Cliption
 
 **Note**: All Python (*.py) files are being ignored during this terminology update as they will be deleted as part of the migration to the new Rust-only architecture.
 
-**Phase 1: Directory and File Structure**
+**Phase 1: Directory and File Structure** ✅ **COMPLETED**
 - [x] Rename `rounds/` directory to `blocks/`
 - [x] Rename subdirectories: `round0/` → `block0/`, `round1/` → `block1/`, `round2/` → `block2/`
 - [x] Rename data files: `rounds.json` → `blocks.json`, `test_round.json` → `test_block.json`, `test_rounds.json` → `test_blocks.json`
 
 **Phase 2: Module and File Names**
-- [ ] Rename `src/round_engine/` → `src/block_engine/`
-- [ ] Rename `src/round_processor.rs` → `src/block_processor.rs`
-- [ ] Rename `tests/round_engine_integration.rs` → `tests/block_engine_integration.rs`
-- [ ] Update all module imports and references
+- [x] Rename `src/round_engine/` → `src/block_engine/`
+- [x] Rename `src/round_processor.rs` → `src/block_processor.rs`
+- [x] Rename `tests/round_engine_integration.rs` → `tests/block_engine_integration.rs`
+- [x] Update all module imports and references
 
 **Phase 3: Rust Types and Structures**
 - [ ] Replace `Round<T>` struct → `Block<T>`

@@ -12,7 +12,7 @@ use serde_json;
 use crate::commitment::{CommitmentGenerator, CommitmentVerifier};
 use crate::embedder::{cosine_similarity, ClipEmbedder, MockEmbedder};
 use crate::error::CliptionsError;
-use crate::round_processor::RoundProcessor;
+use crate::block_processor::RoundProcessor;
 use crate::scoring::{
     calculate_payouts, calculate_rankings, ClipBatchStrategy, ScoreValidator, ScoringStrategy,
 };

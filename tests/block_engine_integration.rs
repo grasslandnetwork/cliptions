@@ -6,7 +6,7 @@
 
 use async_trait::async_trait;
 use chrono::{Duration, Utc};
-use cliptions_core::round_engine::state_machine::*;
+use cliptions_core::block_engine::state_machine::*;
 use mockall::mock;
 use std::path::Path;
 use twitter_api::{PostTweetResult, Tweet, TwitterApi, TwitterError};

@@ -12,7 +12,7 @@ use std::process;
 
 use cliptions_core::config::ConfigManager;
 use cliptions_core::embedder::{ClipEmbedder, EmbedderTrait, MockEmbedder};
-use cliptions_core::round_processor::RoundProcessor;
+use cliptions_core::block_processor::RoundProcessor;
 use cliptions_core::scoring::ClipBatchStrategy;
 
 #[derive(Parser)]

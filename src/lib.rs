@@ -28,14 +28,14 @@ pub mod embedder;
 pub mod error;
 pub mod models;
 pub mod payout;
-pub mod round_processor;
+pub mod block_processor;
 pub mod scoring;
 pub mod social;
 pub mod twitter_utils;
 pub mod types;
 
 // New async round engine
-pub mod round_engine;
+pub mod block_engine;
 
 // Python bindings module (conditional compilation)
 #[cfg(feature = "python")]
@@ -48,7 +48,7 @@ pub use config::{CliptionsConfig, ConfigManager, CostTracker, OpenAIConfig, Spen
 pub use embedder::{EmbedderTrait, MockEmbedder};
 pub use error::{CliptionsError, Result};
 pub use payout::{PayoutCalculator, PayoutConfig, PayoutInfo};
-pub use round_processor::RoundProcessor;
+pub use block_processor::RoundProcessor;
 pub use scoring::{ClipBatchStrategy, ScoreValidator, ScoringStrategy};
 pub use social::{
     AnnouncementData, AnnouncementFormatter, HashtagManager, SocialWorkflow, TweetId, UrlParser,

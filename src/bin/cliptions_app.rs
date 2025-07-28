@@ -7,7 +7,7 @@ use chrono::{DateTime, Utc};
 use clap::Parser;
 use cliptions_core::config::ConfigManager;
 use cliptions_core::error::Result;
-use cliptions_core::round_engine::state_machine::{Pending, Round};
+use cliptions_core::block_engine::state_machine::{Pending, Round};
 use cliptions_core::social::TweetCacheManager;
 use cliptions_core::twitter_utils::post_tweet_flexible;
 use std::io::{self, Write};

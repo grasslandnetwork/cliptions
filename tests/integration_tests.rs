@@ -7,7 +7,7 @@ use tempfile::NamedTempFile;
 
 use cliptions_core::commitment::{CommitmentGenerator, CommitmentVerifier};
 use cliptions_core::embedder::{EmbedderTrait, MockEmbedder};
-use cliptions_core::round_processor::RoundProcessor;
+use cliptions_core::block_processor::RoundProcessor;
 use cliptions_core::scoring::{
     calculate_payouts, calculate_rankings, ClipBatchStrategy, ScoreValidator,
 };

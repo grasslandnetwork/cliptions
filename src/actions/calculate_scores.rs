@@ -10,7 +10,7 @@ use clap::Parser;
 use colored::Colorize;
 
 use crate::embedder::{ClipEmbedder, MockEmbedder};
-use crate::round_processor::RoundProcessor;
+use crate::block_processor::RoundProcessor;
 use crate::scoring::ClipBatchStrategy;
 use crate::types::{Participant, ScoringResult};
 use crate::error::Result;
