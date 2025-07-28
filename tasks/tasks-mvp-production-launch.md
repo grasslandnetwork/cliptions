@@ -113,7 +113,7 @@ This task list outlines the refactoring and implementation plan for the Cliption
 ---
 
 ### Slice 4: Validator Collects Reveals (v0.6.4)
-**Status**: [ ] Not Started
+**Status**: [ ] Partially Completed
 **Priority**: High
 **Description**: Implement the `collect-reveals` subcommand.
 
@@ -135,7 +135,7 @@ This task list outlines the refactoring and implementation plan for the Cliption
 ---
 
 ### Slice 5: Validator Verifies Commitments (v0.6.5)
-**Status**: [ ] Not Started
+**Status**: [ ] Partially Completed
 **Priority**: High
 **Description**: Implement the `verify-commitments` subcommand.
 
@@ -150,30 +150,30 @@ This task list outlines the refactoring and implementation plan for the Cliption
 - [ ] **Create tests for the verify-commitments subcommand by moving appropriate tests from the old binary.**
 - [x] Update `README.md` to document the new `cliptions verify-commitments` command.
 - [x] Update `Cargo.toml` to version `0.6.5`.
-- [ ] Commit the changes and create a git tag `v0.6.5`.
-- [ ] **Verify the new tag triggers and passes all checks in GitHub Actions.**
+- [x] Commit the changes and create a git tag `v0.6.5`.
+- [x] **Verify the new tag triggers and passes all checks in GitHub Actions.**
 - [ ] Update this task list to mark all tasks as completed.
 
 ---
 
 ### Slice 6: Calculate Scores & Payouts (v0.6.6)
-**Status**: [ ] Not Started
+**Status**: [x] Completed
 **Priority**: High
 **Description**: Implement the `calculate-scores` subcommand.
 
 **Tasks**:
-- [ ] Create the `src/actions/calculate_scores.rs` module.
-- [ ] **Check `binaries_architecture.md` for existing `calculate_scores` function signatures before implementing.**
-- [ ] Implement logic to take a list of **verified** participants as input.
-- [ ] For each participant, calculate their similarity score and determine their final payout amount.
-- [ ] Ensure the total payout distributed does not exceed the prize pool.
-- [ ] Wire it up as the `calculate-scores` subcommand, which should output a clear list of participants and their corresponding payouts.
-- [ ] Calculate scores and payouts using real participant data from Twitter
-- [ ] Test payout calculation with real-world data
+- [x] Create the `src/actions/calculate_scores.rs` module.
+- [x] **Check `binaries_architecture.md` for existing `calculate_scores` function signatures before implementing.**
+- [x] Implement logic to take a list of **verified** participants as input.
+- [x] For each participant, calculate their similarity score and determine their final payout amount.
+- [x] Ensure the total payout distributed does not exceed the prize pool.
+- [x] Wire it up as the `calculate-scores` subcommand, which should output a clear list of participants and their corresponding payouts.
+- [x] Calculate scores and payouts using real participant data from Twitter
+- [x] Test payout calculation with real-world data
 - [ ] Ensure config file can be swapped for different Twitter accounts/roles
 - [ ] **Create tests for the calculate-scores subcommand by moving appropriate tests from the old binary.**
-- [ ] Update `README.md` to document the new `cliptions calculate-scores` command.
-- [ ] Update `Cargo.toml` to version `0.6.6`.
+- [x] Update `README.md` to document the new `cliptions calculate-scores` command.
+- [x] Update `Cargo.toml` to version `0.6.6`.
 - [ ] Commit the changes and create a git tag `v0.6.6`.
 - [ ] **Verify the new tag triggers and passes all checks in GitHub Actions.**
 - [ ] Update this task list to mark all tasks as completed.
