@@ -301,20 +301,11 @@ fn create_processor_and_verify(
                     verify_with_processor(processor, args)
                 }
                 Err(e) => {
-                    eprintln!(
-                        "{} Failed to load CLIP model from {}: {}",
-                        "Warning:".yellow().bold(),
+                    panic!(
+                        "CRITICAL: Failed to load CLIP model from {}: {}. Cannot proceed with invalid MockEmbedder fallback as this would produce unreliable verification results.",
                         model_path.display(),
                         e
                     );
-                    eprintln!("{} Falling back to MockEmbedder", "Info:".blue().bold());
-                    let embedder = MockEmbedder::clip_like();
-                    let processor = RoundProcessor::new(
-                        args.rounds_file.to_string_lossy().to_string(),
-                        embedder,
-                        strategy,
-                    );
-                    verify_with_processor(processor, args)
                 }
             }
         } else {
@@ -331,19 +322,10 @@ fn create_processor_and_verify(
                     verify_with_processor(processor, args)
                 }
                 Err(e) => {
-                    eprintln!(
-                        "{} Failed to load default CLIP model: {}",
-                        "Warning:".yellow().bold(),
+                    panic!(
+                        "CRITICAL: Failed to load default CLIP model: {}. Cannot proceed with invalid MockEmbedder fallback as this would produce unreliable verification results.",
                         e
                     );
-                    eprintln!("{} Falling back to MockEmbedder", "Info:".blue().bold());
-                    let embedder = MockEmbedder::clip_like();
-                    let processor = RoundProcessor::new(
-                        args.rounds_file.to_string_lossy().to_string(),
-                        embedder,
-                        strategy,
-                    );
-                    verify_with_processor(processor, args)
                 }
             }
         }

@@ -304,15 +304,11 @@ fn calculate_scores_with_embedder(
                     calculate_with_embedder(embedder, args, guesses)
                 }
                 Err(e) => {
-                    eprintln!(
-                        "{} Failed to load CLIP model from {}: {}",
-                        "Warning:".yellow().bold(),
+                    panic!(
+                        "CRITICAL: Failed to load CLIP model from {}: {}. Cannot proceed with invalid MockEmbedder fallback as this would produce unreliable scores that could lead to incorrect payouts.",
                         model_path.display(),
                         e
                     );
-                    eprintln!("{} Falling back to MockEmbedder", "Info:".blue().bold());
-                    let embedder = MockEmbedder::clip_like();
-                    calculate_with_embedder(embedder, args, guesses)
                 }
             }
         } else {
@@ -324,14 +320,10 @@ fn calculate_scores_with_embedder(
                     calculate_with_embedder(embedder, args, guesses)
                 }
                 Err(e) => {
-                    eprintln!(
-                        "{} Failed to load default CLIP model: {}",
-                        "Warning:".yellow().bold(),
+                    panic!(
+                        "CRITICAL: Failed to load default CLIP model: {}. Cannot proceed with invalid MockEmbedder fallback as this would produce unreliable scores that could lead to incorrect payouts.",
                         e
                     );
-                    eprintln!("{} Falling back to MockEmbedder", "Info:".blue().bold());
-                    let embedder = MockEmbedder::clip_like();
-                    calculate_with_embedder(embedder, args, guesses)
                 }
             }
         }
