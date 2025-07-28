@@ -48,12 +48,12 @@ pub use config::{CliptionsConfig, ConfigManager, CostTracker, OpenAIConfig, Spen
 pub use embedder::{EmbedderTrait, MockEmbedder};
 pub use error::{CliptionsError, Result};
 pub use payout::{PayoutCalculator, PayoutConfig, PayoutInfo};
-pub use block_processor::RoundProcessor;
+pub use block_processor::BlockProcessor;
 pub use scoring::{ClipBatchStrategy, ScoreValidator, ScoringStrategy};
 pub use social::{
     AnnouncementData, AnnouncementFormatter, HashtagManager, SocialWorkflow, TweetId, UrlParser,
 };
-pub use types::{Guess, Participant, RoundData, ScoringResult};
+pub use types::{Guess, Participant, BlockData, ScoringResult};
 
 // Re-export Python module when feature is enabled
 #[cfg(feature = "python")]

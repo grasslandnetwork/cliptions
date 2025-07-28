@@ -10,7 +10,7 @@ use serde_json::json;
 
 #[derive(Parser)]
 pub struct VerifyCommitmentsArgs {
-    /// Round tweet ID (the original #commitmentsopen tweet)
+    /// Round tweet ID from Twitter URL (the original #commitmentsopen tweet)
     #[arg(short, long)]
     pub round_tweet_id: String,
 
@@ -352,7 +352,7 @@ fn save_to_rounds_json(
         })
     }).collect();
 
-    // Create round data that matches RoundData struct
+            // Create round data that matches BlockData struct
     let round_data = json!({
         "round_version": "1",
         "round_id": round_id,

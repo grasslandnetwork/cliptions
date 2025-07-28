@@ -129,7 +129,7 @@ async fn test_full_round_lifecycle_with_mocks() {
 
     // Start with a pending round
     let now = Utc::now();
-    let pending_round = Round::<Pending>::new(
+    let pending_round = Block::<Pending>::new(
         "integration-test-round".to_string(),
         "Integration Test Round".to_string(),
         "http://example.com/livestream".to_string(),
@@ -273,7 +273,7 @@ async fn test_round_lifecycle_with_machine_readable_tweets() {
 
     // Run through the lifecycle focusing on tweet content verification
     let now = Utc::now();
-    let pending_round = Round::<Pending>::new(
+    let pending_round = Block::<Pending>::new(
         "42".to_string(),
         "Test Round 42".to_string(),
         "http://example.com/livestream".to_string(),

@@ -12,7 +12,7 @@ use serde_json;
 use crate::commitment::{CommitmentGenerator, CommitmentVerifier};
 use crate::embedder::{cosine_similarity, ClipEmbedder, MockEmbedder};
 use crate::error::CliptionsError;
-use crate::block_processor::RoundProcessor;
+use crate::block_processor::BlockProcessor;
 use crate::scoring::{
     calculate_payouts, calculate_rankings, ClipBatchStrategy, ScoreValidator, ScoringStrategy,
 };
@@ -171,20 +171,20 @@ pub fn py_calculate_payouts(
 // Round Processing Python Bindings
 // =============================================================================
 
-/// Python wrapper for RoundProcessor
+/// Python wrapper for BlockProcessor
 #[pyclass]
-pub struct PyRoundProcessor {
-    inner: RoundProcessor<MockEmbedder, ClipBatchStrategy>,
+pub struct PyBlockProcessor {
+    inner: BlockProcessor<MockEmbedder, ClipBatchStrategy>,
 }
 
 #[pymethods]
-impl PyRoundProcessor {
+impl PyBlockProcessor {
     #[new]
     pub fn new(rounds_file: String) -> Self {
         let embedder = MockEmbedder::clip_like();
         let strategy = ClipBatchStrategy::new();
         Self {
-            inner: RoundProcessor::new(rounds_file, embedder, strategy),
+            inner: BlockProcessor::new(rounds_file, embedder, strategy),
         }
     }
 
@@ -241,11 +241,11 @@ pub fn py_process_round_payouts(
 
     let mut processor = if use_mock {
         let embedder = MockEmbedder::clip_like();
-        RoundProcessor::new(rounds_file, embedder, strategy)
+        BlockProcessor::new(rounds_file, embedder, strategy)
     } else {
         // Try CLIP - panic if it fails
         match ClipEmbedder::new() {
-            Ok(embedder) => RoundProcessor::new(rounds_file, embedder, strategy),
+            Ok(embedder) => BlockProcessor::new(rounds_file, embedder, strategy),
             Err(e) => {
                 panic!("CRITICAL: Failed to load CLIP model: {}. Cannot proceed with invalid MockEmbedder fallback as this would produce unreliable payout calculations.", e);
             }
@@ -285,11 +285,11 @@ pub fn py_verify_round_commitments(
 
     let mut processor = if use_mock {
         let embedder = MockEmbedder::clip_like();
-        RoundProcessor::new(rounds_file, embedder, strategy)
+        BlockProcessor::new(rounds_file, embedder, strategy)
     } else {
         // Try CLIP - panic if it fails
         match ClipEmbedder::new() {
-            Ok(embedder) => RoundProcessor::new(rounds_file, embedder, strategy),
+            Ok(embedder) => BlockProcessor::new(rounds_file, embedder, strategy),
             Err(e) => {
                 panic!("CRITICAL: Failed to load CLIP model: {}. Cannot proceed with invalid MockEmbedder fallback as this would produce unreliable verification results.", e);
             }
@@ -353,7 +353,7 @@ fn cliptions_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Classes
     m.add_class::<PyCommitmentGenerator>()?;
     m.add_class::<PyScoreValidator>()?;
-    m.add_class::<PyRoundProcessor>()?;
+    m.add_class::<PyBlockProcessor>()?;
 
     // Functions
     m.add_function(wrap_pyfunction!(py_generate_commitment, m)?)?;

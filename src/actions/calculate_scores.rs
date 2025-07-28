@@ -10,7 +10,7 @@ use clap::Parser;
 use colored::Colorize;
 
 use crate::embedder::{ClipEmbedder, MockEmbedder};
-use crate::block_processor::RoundProcessor;
+use crate::block_processor::BlockProcessor;
 use crate::scoring::ClipBatchStrategy;
 use crate::types::{Participant, ScoringResult};
 use crate::error::Result;
@@ -74,7 +74,7 @@ fn load_verified_participants(round_id: &str, rounds_file: &str) -> Result<Vec<P
     // Create embedder and processor
     let embedder = MockEmbedder::clip_like(); // We'll replace this with real embedder later
     let strategy = ClipBatchStrategy::new();
-    let mut processor = RoundProcessor::new(rounds_file.to_string(), embedder, strategy);
+    let mut processor = BlockProcessor::new(rounds_file.to_string(), embedder, strategy);
     
     // Load rounds data
     processor.load_rounds()?;
@@ -114,7 +114,7 @@ fn calculate_scores_and_payouts(
             println!("Using MockEmbedder for testing");
         }
         let embedder = MockEmbedder::clip_like();
-        let mut processor = RoundProcessor::new(rounds_file.to_string(), embedder, strategy);
+        let mut processor = BlockProcessor::new(rounds_file.to_string(), embedder, strategy);
         
         // Load rounds data
         processor.load_rounds()?;
@@ -127,7 +127,7 @@ fn calculate_scores_and_payouts(
             println!("Processing {} participants against target image: {}", participants.len(), target_image_path);
         }
         
-        // Process round payouts using the existing RoundProcessor logic
+        // Process round payouts using the existing BlockProcessor logic
         let results = processor.process_round_payouts(round_id)?;
         
         if verbose {
@@ -141,7 +141,7 @@ fn calculate_scores_and_payouts(
                 if verbose {
                     println!("Using CLIP embedder for semantic scoring");
                 }
-                let mut processor = RoundProcessor::new(rounds_file.to_string(), clip_embedder, strategy);
+                let mut processor = BlockProcessor::new(rounds_file.to_string(), clip_embedder, strategy);
                 
                 // Load rounds data
                 processor.load_rounds()?;
@@ -154,7 +154,7 @@ fn calculate_scores_and_payouts(
                     println!("Processing {} participants against target image: {}", participants.len(), target_image_path);
                 }
                 
-                // Process round payouts using the existing RoundProcessor logic
+                // Process round payouts using the existing BlockProcessor logic
                 let results = processor.process_round_payouts(round_id)?;
                 
                 if verbose {

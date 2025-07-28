@@ -12,19 +12,19 @@ use serde_json;
 
 use crate::commitment::CommitmentVerifier;
 use crate::embedder::EmbedderTrait;
-use crate::error::{Result, RoundError};
+use crate::error::{Result, BlockError};
 use crate::scoring::{process_participants, ScoreValidator, ScoringStrategy};
-use crate::types::{Participant, RoundData, RoundStatus, ScoringResult};
+use crate::types::{Participant, BlockData, BlockStatus, ScoringResult};
 
 /// Round processor for managing prediction rounds
-pub struct RoundProcessor<E: EmbedderTrait, S: ScoringStrategy> {
+pub struct BlockProcessor<E: EmbedderTrait, S: ScoringStrategy> {
     rounds_file: String,
     commitment_verifier: CommitmentVerifier,
     score_validator: ScoreValidator<E, S>,
-    rounds_cache: HashMap<String, RoundData>,
+    rounds_cache: HashMap<String, BlockData>,
 }
 
-impl<E: EmbedderTrait, S: ScoringStrategy> RoundProcessor<E, S> {
+impl<E: EmbedderTrait, S: ScoringStrategy> BlockProcessor<E, S> {
     /// Create a new round processor
     pub fn new(rounds_file: String, embedder: E, scoring_strategy: S) -> Self {
         Self {
@@ -38,45 +38,45 @@ impl<E: EmbedderTrait, S: ScoringStrategy> RoundProcessor<E, S> {
     /// Load rounds data from file
     pub fn load_rounds(&mut self) -> Result<()> {
         if !Path::new(&self.rounds_file).exists() {
-            // Create empty rounds file if it doesn't exist
-            let empty_rounds: HashMap<String, RoundData> = HashMap::new();
+                    // Create empty rounds file if it doesn't exist
+        let empty_rounds: HashMap<String, BlockData> = HashMap::new();
             self.save_rounds(&empty_rounds)?;
             return Ok(());
         }
 
         let content =
-            fs::read_to_string(&self.rounds_file).map_err(|_e| RoundError::DataFileNotFound {
+            fs::read_to_string(&self.rounds_file).map_err(|_e| BlockError::DataFileNotFound {
                 path: self.rounds_file.clone(),
             })?;
 
         // Handle empty file case
         if content.trim().is_empty() {
-            let empty_rounds: HashMap<String, RoundData> = HashMap::new();
+            let empty_rounds: HashMap<String, BlockData> = HashMap::new();
             self.save_rounds(&empty_rounds)?;
             return Ok(());
         }
 
-        let rounds: HashMap<String, RoundData> = serde_json::from_str(&content)?;
+        let rounds: HashMap<String, BlockData> = serde_json::from_str(&content)?;
         self.rounds_cache = rounds;
 
         Ok(())
     }
 
     /// Save rounds data to file
-    pub fn save_rounds(&self, rounds: &HashMap<String, RoundData>) -> Result<()> {
+    pub fn save_rounds(&self, rounds: &HashMap<String, BlockData>) -> Result<()> {
         let content = serde_json::to_string_pretty(rounds)?;
         fs::write(&self.rounds_file, content)?;
         Ok(())
     }
 
     /// Get a round by ID
-    pub fn get_round(&mut self, round_id: &str) -> Result<&RoundData> {
+    pub fn get_round(&mut self, round_id: &str) -> Result<&BlockData> {
         if self.rounds_cache.is_empty() {
             self.load_rounds()?;
         }
 
         self.rounds_cache.get(round_id).ok_or_else(|| {
-            RoundError::RoundNotFound {
+            BlockError::RoundNotFound {
                 round_id: round_id.to_string(),
             }
             .into()
@@ -84,13 +84,13 @@ impl<E: EmbedderTrait, S: ScoringStrategy> RoundProcessor<E, S> {
     }
 
     /// Get a mutable reference to a round
-    pub fn get_round_mut(&mut self, round_id: &str) -> Result<&mut RoundData> {
+    pub fn get_round_mut(&mut self, round_id: &str) -> Result<&mut BlockData> {
         if self.rounds_cache.is_empty() {
             self.load_rounds()?;
         }
 
         self.rounds_cache.get_mut(round_id).ok_or_else(|| {
-            RoundError::RoundNotFound {
+            BlockError::RoundNotFound {
                 round_id: round_id.to_string(),
             }
             .into()
@@ -112,11 +112,11 @@ impl<E: EmbedderTrait, S: ScoringStrategy> RoundProcessor<E, S> {
         }
 
         if self.rounds_cache.contains_key(&round_id) {
-            return Err(RoundError::AlreadyProcessed.into());
+            return Err(BlockError::AlreadyProcessed.into());
         }
 
         let round = if let (Some(commit_deadline), Some(reveal_deadline)) = (commitment_deadline, reveal_deadline) {
-            RoundData::with_deadlines(
+            BlockData::with_deadlines(
                 round_id.clone(),
                 target_image_path,
                 social_id,
@@ -125,7 +125,7 @@ impl<E: EmbedderTrait, S: ScoringStrategy> RoundProcessor<E, S> {
                 reveal_deadline,
             )
         } else {
-            RoundData::new(
+            BlockData::new(
                 round_id.clone(),
                 target_image_path,
                 social_id,
@@ -144,7 +144,7 @@ impl<E: EmbedderTrait, S: ScoringStrategy> RoundProcessor<E, S> {
         let round = self.get_round_mut(round_id)?;
 
         // if !round.is_open() {
-        //     return Err(RoundError::AlreadyProcessed.into());
+        //     return Err(BlockError::AlreadyProcessed.into());
         // }
 
         round.add_participant(participant);
@@ -163,7 +163,7 @@ impl<E: EmbedderTrait, S: ScoringStrategy> RoundProcessor<E, S> {
         let round =
             self.rounds_cache
                 .get_mut(round_id)
-                .ok_or_else(|| RoundError::RoundNotFound {
+                .ok_or_else(|| BlockError::RoundNotFound {
                     round_id: round_id.to_string(),
                 })?;
 
@@ -203,13 +203,13 @@ impl<E: EmbedderTrait, S: ScoringStrategy> RoundProcessor<E, S> {
             let round =
                 self.rounds_cache
                     .get(round_id)
-                    .ok_or_else(|| RoundError::RoundNotFound {
+                    .ok_or_else(|| BlockError::RoundNotFound {
                         round_id: round_id.to_string(),
                     })?;
 
             // Verify target image exists
             if !Path::new(&round.target_image_path).exists() {
-                return Err(RoundError::TargetImageNotFound {
+                return Err(BlockError::TargetImageNotFound {
                     path: round.target_image_path.clone(),
                 }
                 .into());
@@ -224,7 +224,7 @@ impl<E: EmbedderTrait, S: ScoringStrategy> RoundProcessor<E, S> {
                 .collect();
 
             if verified_participants.is_empty() {
-                return Err(RoundError::NoParticipants {
+                return Err(BlockError::NoParticipants {
                     round_id: round_id.to_string(),
                 }
                 .into());
@@ -247,7 +247,7 @@ impl<E: EmbedderTrait, S: ScoringStrategy> RoundProcessor<E, S> {
 
         // Update round status to Complete (but don't add redundant results section)
         let round = self.rounds_cache.get_mut(round_id).unwrap(); // Safe because we checked above
-        round.set_status(RoundStatus::Complete);
+        round.set_status(BlockStatus::Complete);
         self.save_rounds(&self.rounds_cache)?;
 
         Ok(results)
@@ -270,7 +270,7 @@ impl<E: EmbedderTrait, S: ScoringStrategy> RoundProcessor<E, S> {
         for round_id in round_ids {
             // Only process rounds that are open or processing
             let round = self.get_round(&round_id)?;
-            if matches!(round.status, RoundStatus::Open | RoundStatus::Processing) {
+            if matches!(round.status, BlockStatus::Open | BlockStatus::Processing) {
                 match self.process_round_payouts(&round_id) {
                     Ok(results) => {
                         all_results.insert(round_id, results);
@@ -321,7 +321,7 @@ pub struct RoundStats {
     pub total_prize_pool: f64,
     pub total_payout: f64,
     pub is_complete: bool,
-    pub status: RoundStatus,
+    pub status: BlockStatus,
 }
 
 #[cfg(test)]
@@ -332,13 +332,13 @@ mod tests {
     use crate::types::Guess;
     use tempfile::NamedTempFile;
 
-    fn create_test_processor() -> (RoundProcessor<MockEmbedder, ClipBatchStrategy>, String) {
+    fn create_test_processor() -> (BlockProcessor<MockEmbedder, ClipBatchStrategy>, String) {
         let temp_file = NamedTempFile::new().unwrap();
         let file_path = temp_file.path().to_string_lossy().to_string();
 
         let embedder = MockEmbedder::clip_like();
         let strategy = ClipBatchStrategy::new();
-        let processor = RoundProcessor::new(file_path.clone(), embedder, strategy);
+        let processor = BlockProcessor::new(file_path.clone(), embedder, strategy);
 
         (processor, file_path)
     }
@@ -488,7 +488,7 @@ mod tests {
         assert!(matches!(
             result,
             Err(crate::error::CliptionsError::Round(
-                RoundError::RoundNotFound { .. }
+                BlockError::RoundNotFound { .. }
             ))
         ));
     }

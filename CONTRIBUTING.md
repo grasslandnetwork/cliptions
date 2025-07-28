@@ -348,7 +348,7 @@ Browser-use (Python) → Pydantic Models → src/models.rs (Transport) → src/t
 ##### **Conversion Pattern**
 Future development should include conversion utilities:
 ```rust
-impl From<crate::models::Round> for crate::types::RoundData {
+impl From<crate::models::Round> for crate::types::BlockData {
     fn from(transport: crate::models::Round) -> Self {
         // Convert simple transport DTO to rich domain model
     }

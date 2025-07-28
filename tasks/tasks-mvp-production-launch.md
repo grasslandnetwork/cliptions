@@ -193,24 +193,24 @@ This task list outlines the refactoring and implementation plan for the Cliption
 - [x] Rename subdirectories: `round0/` → `block0/`, `round1/` → `block1/`, `round2/` → `block2/`
 - [x] Rename data files: `rounds.json` → `blocks.json`, `test_round.json` → `test_block.json`, `test_rounds.json` → `test_blocks.json`
 
-**Phase 2: Module and File Names**
+**Phase 2: Module and File Names** ✅ **COMPLETED**
 - [x] Rename `src/round_engine/` → `src/block_engine/`
 - [x] Rename `src/round_processor.rs` → `src/block_processor.rs`
 - [x] Rename `tests/round_engine_integration.rs` → `tests/block_engine_integration.rs`
 - [x] Update all module imports and references
 
-**Phase 3: Rust Types and Structures**
-- [ ] Replace `Round<T>` struct → `Block<T>`
-- [ ] Replace `RoundData` → `BlockData`
-- [ ] Replace `RoundConfig` → `BlockConfig` 
-- [ ] Replace `RoundStatus` → `BlockStatus`
-- [ ] Replace `RoundError` → `BlockError`
-- [ ] Replace `RoundProcessor` → `BlockProcessor`
+**Phase 3: Rust Types and Structures** ✅ **COMPLETED**
+- [x] Replace `Round<T>` struct → `Block<T>`
+- [x] Replace `RoundData` → `BlockData`
+- [x] Replace `RoundConfig` → `BlockConfig` 
+- [x] Replace `RoundStatus` → `BlockStatus`
+- [x] Replace `RoundError` → `BlockError`
+- [x] Replace `RoundProcessor` → `BlockProcessor`
 
 **Phase 4: Variables and Identifiers**
-- [ ] Replace `round_id` → `block_id`
+- [ ] Replace `round_id` → `block_num`
 - [ ] Replace `round_tweet_id` → `block_tweet_id`
-- [ ] Replace `round_number` → `block_number`
+- [ ] Replace `round_number` → `block_num`
 - [ ] Replace `round_version` → `block_version`
 - [ ] Update CLI argument names and help text
 

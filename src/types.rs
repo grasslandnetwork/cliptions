@@ -217,7 +217,7 @@ impl ScoringResult {
 
 /// Configuration for a prediction round
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RoundConfig {
+pub struct BlockConfig {
     /// Prize pool for the round
     pub prize_pool: f64,
     /// Maximum length for guesses
@@ -226,7 +226,7 @@ pub struct RoundConfig {
     pub scoring_version: String,
 }
 
-impl Default for RoundConfig {
+impl Default for BlockConfig {
     fn default() -> Self {
         Self {
             prize_pool: 100.0,
@@ -238,7 +238,7 @@ impl Default for RoundConfig {
 
 /// Status of a prediction round
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub enum RoundStatus {
+pub enum BlockStatus {
     /// Round is accepting submissions
     Open,
     /// Round is closed, processing results
@@ -251,7 +251,7 @@ pub enum RoundStatus {
 
 /// Complete data for a prediction round
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RoundData {
+pub struct BlockData {
     /// The round version number indicates which set of round validation rules to follow
     pub round_version: i32,
     /// Unique identifier for the round
@@ -259,7 +259,7 @@ pub struct RoundData {
     /// Path to the target image
     pub target_image_path: String,
     /// Current status of the round
-    pub status: RoundStatus,
+    pub status: BlockStatus,
     /// Prize pool for the round
     pub prize_pool: f64,
     /// Twitter Conversation URL ID for the round
@@ -281,7 +281,7 @@ pub struct RoundData {
     pub updated_at: DateTime<Utc>,
 }
 
-impl RoundData {
+impl BlockData {
     /// Create a new round
     pub fn new(
         round_id: String,
@@ -294,7 +294,7 @@ impl RoundData {
             round_version: 1,
             round_id,
             target_image_path,
-            status: RoundStatus::Open,
+            status: BlockStatus::Open,
             prize_pool,
             social_id,
             commitment_deadline: now + chrono::Duration::hours(24), // Default 24 hours
@@ -321,7 +321,7 @@ impl RoundData {
             round_version: 1,
             round_id,
             target_image_path,
-            status: RoundStatus::Open,
+            status: BlockStatus::Open,
             prize_pool,
             social_id,
             commitment_deadline,
@@ -341,7 +341,7 @@ impl RoundData {
     }
 
     /// Update the round status
-    pub fn set_status(&mut self, status: RoundStatus) {
+    pub fn set_status(&mut self, status: BlockStatus) {
         self.status = status;
         self.updated_at = Utc::now();
     }
@@ -349,7 +349,7 @@ impl RoundData {
     /// Set the results for the round
     pub fn set_results(&mut self, results: Vec<ScoringResult>) {
         self.results = results;
-        self.status = RoundStatus::Complete;
+        self.status = BlockStatus::Complete;
         self.updated_at = Utc::now();
     }
 
@@ -360,12 +360,12 @@ impl RoundData {
 
     /// Check if the round is open for submissions
     pub fn is_open(&self) -> bool {
-        matches!(self.status, RoundStatus::Open)
+        matches!(self.status, BlockStatus::Open)
     }
 
     /// Check if the round is complete
     pub fn is_complete(&self) -> bool {
-        matches!(self.status, RoundStatus::Complete)
+        matches!(self.status, BlockStatus::Complete)
     }
 }
 

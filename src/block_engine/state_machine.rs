@@ -93,9 +93,9 @@ impl StateMarker for Finished {
     }
 }
 
-/// Round data structure with typestate pattern
+/// Block data structure with typestate pattern
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Round<S> {
+pub struct Block<S> {
     pub id: String,
     pub created_at: DateTime<Utc>,
 
@@ -115,7 +115,7 @@ pub struct Round<S> {
     pub state: std::marker::PhantomData<S>,
 }
 
-impl<S> Round<S> {
+impl<S> Block<S> {
     /// Get the current state name
     pub fn state_name(&self) -> &'static str
     where
@@ -125,17 +125,17 @@ impl<S> Round<S> {
     }
 }
 
-impl<S> fmt::Display for Round<S>
+impl<S> fmt::Display for Block<S>
 where
     S: StateMarker,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Round {} ({})", self.id, S::state_name())
+        write!(f, "Block {} ({})", self.id, S::state_name())
     }
 }
 
 /// Implementation for Pending state
-impl Round<Pending> {
+impl Block<Pending> {
     /// Create a new pending round
     pub fn new(
         id: String,
@@ -161,7 +161,7 @@ impl Round<Pending> {
         mut self,
         commitment_deadline: DateTime<Utc>,
         client: &T,
-    ) -> Result<Round<CommitmentsOpen>> {
+    ) -> Result<Block<CommitmentsOpen>> {
         let formatter = AnnouncementFormatter::new();
         let announcement_data = AnnouncementData {
             round_id: self.id.parse().expect(&format!("CRITICAL: Invalid round ID '{}' - cannot proceed with round announcements", self.id)),
@@ -181,7 +181,7 @@ impl Round<Pending> {
 
         self.commitment_deadline = Some(commitment_deadline);
 
-        Ok(Round {
+        Ok(Block {
             id: self.id,
             created_at: self.created_at,
             description: self.description,
@@ -196,12 +196,12 @@ impl Round<Pending> {
 }
 
 /// Implementation for CommitmentsOpen state
-impl Round<CommitmentsOpen> {
+impl Block<CommitmentsOpen> {
     /// Close commitments
     pub async fn close_commitments<T: TwitterApi>(
         self,
         client: &T,
-    ) -> Result<Round<CommitmentsClosed>> {
+    ) -> Result<Block<CommitmentsClosed>> {
         let formatter = AnnouncementFormatter::new();
         let announcement_data = AnnouncementData {
             round_id: self.id.parse().expect(&format!("CRITICAL: Invalid round ID '{}' - cannot proceed with round announcements", self.id)),
@@ -223,7 +223,7 @@ impl Round<CommitmentsOpen> {
             .await
             .map_err(|e| CliptionsError::ApiError(e.to_string()))?;
 
-        Ok(Round {
+        Ok(Block {
             id: self.id,
             created_at: self.created_at,
             description: self.description,
@@ -238,17 +238,17 @@ impl Round<CommitmentsOpen> {
 }
 
 /// Implementation for CommitmentsClosed state
-impl Round<CommitmentsClosed> {
+impl Block<CommitmentsClosed> {
     /// Capture the frame after the target time has passed.
     /// This is an internal state transition and does not tweet.
-    pub fn capture_frame(mut self, target_frame_path: PathBuf) -> Result<Round<FrameCaptured>> {
+    pub fn capture_frame(mut self, target_frame_path: PathBuf) -> Result<Block<FrameCaptured>> {
         if Utc::now() < self.target_timestamp {
             return Err(CliptionsError::ValidationError(
                 "Target timestamp has not yet been reached.".to_string(),
             ));
         }
         self.target_frame_path = Some(target_frame_path);
-        Ok(Round {
+        Ok(Block {
             id: self.id,
             created_at: self.created_at,
             description: self.description,
@@ -263,14 +263,14 @@ impl Round<CommitmentsClosed> {
 }
 
 /// Implementation for FrameCaptured state
-impl Round<FrameCaptured> {
+impl Block<FrameCaptured> {
     /// Open the reveals phase by publishing the target frame.
     pub async fn open_reveals<T: TwitterApi>(
         mut self,
         reveals_deadline: DateTime<Utc>,
         client: &T,
         parent_tweet_id: &str,
-    ) -> Result<Round<RevealsOpen>> {
+    ) -> Result<Block<RevealsOpen>> {
         let formatter = AnnouncementFormatter::new();
         let announcement_data = AnnouncementData {
             round_id: self.id.parse().expect(&format!("CRITICAL: Invalid round ID '{}' - cannot proceed with round announcements", self.id)),
@@ -298,7 +298,7 @@ impl Round<FrameCaptured> {
 
         self.reveals_deadline = Some(reveals_deadline);
 
-        Ok(Round {
+        Ok(Block {
             id: self.id,
             created_at: self.created_at,
             description: self.description,
@@ -313,11 +313,11 @@ impl Round<FrameCaptured> {
 }
 
 /// Implementation for RevealsOpen state
-impl Round<RevealsOpen> {
+impl Block<RevealsOpen> {
     /// Close reveals and start payout processing
-    pub async fn close_reveals<T: TwitterApi>(self, _client: &T) -> Result<Round<Payouts>> {
+    pub async fn close_reveals<T: TwitterApi>(self, _client: &T) -> Result<Block<Payouts>> {
         // This is a placeholder for the real implementation
-        Ok(Round {
+        Ok(Block {
             id: self.id,
             created_at: self.created_at,
             description: self.description,
@@ -332,10 +332,10 @@ impl Round<RevealsOpen> {
 }
 
 /// Implementation for Payouts state
-impl Round<Payouts> {
-    pub async fn process_payouts<T: TwitterApi>(self, _client: &T) -> Result<Round<Finished>> {
+impl Block<Payouts> {
+    pub async fn process_payouts<T: TwitterApi>(self, _client: &T) -> Result<Block<Finished>> {
         // Placeholder
-        Ok(Round {
+        Ok(Block {
             id: self.id,
             created_at: self.created_at,
             description: self.description,
@@ -349,17 +349,17 @@ impl Round<Payouts> {
     }
 }
 
-impl Round<Finished> {
+impl Block<Finished> {
     pub fn is_complete(&self) -> bool {
         true
     }
 }
 
 // Utility functions for state transitions
-impl<S> Round<S> {
+impl<S> Block<S> {
     /// Convert to any other state (used for deserialization)
-    pub fn into_state<T>(self) -> Round<T> {
-        Round {
+    pub fn into_state<T>(self) -> Block<T> {
+        Block {
             id: self.id,
             created_at: self.created_at,
             description: self.description,
@@ -475,8 +475,8 @@ mod tests {
         }
     }
 
-    fn common_round() -> Round<Pending> {
-        Round::new(
+    fn common_round() -> Block<Pending> {
+        Block::new(
             "1".to_string(),
             "Test Theme".to_string(),
             "http://twitch.tv/test".to_string(),

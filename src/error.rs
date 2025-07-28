@@ -21,7 +21,7 @@ pub enum CliptionsError {
     Embedding(#[from] EmbeddingError),
 
     #[error("Round processing error: {0}")]
-    Round(#[from] RoundError),
+    Round(#[from] BlockError),
 
     #[error("API error: {0}")]
     ApiError(String),
@@ -120,7 +120,7 @@ pub enum EmbeddingError {
 
 /// Round processing errors
 #[derive(Error, Debug)]
-pub enum RoundError {
+pub enum BlockError {
     #[error("Round {round_id} not found")]
     RoundNotFound { round_id: String },
 

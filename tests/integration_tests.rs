@@ -7,11 +7,11 @@ use tempfile::NamedTempFile;
 
 use cliptions_core::commitment::{CommitmentGenerator, CommitmentVerifier};
 use cliptions_core::embedder::{EmbedderTrait, MockEmbedder};
-use cliptions_core::block_processor::RoundProcessor;
+use cliptions_core::block_processor::BlockProcessor;
 use cliptions_core::scoring::{
     calculate_payouts, calculate_rankings, ClipBatchStrategy, ScoreValidator,
 };
-use cliptions_core::types::{Guess, Participant, RoundConfig, RoundData, RoundStatus};
+use cliptions_core::types::{Guess, Participant, BlockConfig, BlockData, BlockStatus};
 
 #[test]
 fn test_complete_round_lifecycle() {
@@ -22,7 +22,7 @@ fn test_complete_round_lifecycle() {
     // Create round processor
     let embedder = MockEmbedder::clip_like();
     let strategy = ClipBatchStrategy::new();
-    let mut processor = RoundProcessor::new(file_path.clone(), embedder, strategy);
+    let mut processor = BlockProcessor::new(file_path.clone(), embedder, strategy);
 
     // 1. Create a new round
     let round_id = "integration_test_round";
@@ -66,7 +66,7 @@ fn test_complete_round_lifecycle() {
 
     // 4. Check round status before processing
     let round = processor.get_round(round_id).unwrap();
-    assert_eq!(round.status, RoundStatus::Open);
+    assert_eq!(round.status, BlockStatus::Open);
     assert_eq!(round.verified_participants().len(), 4);
 
     // Note: We can't actually process payouts in the test because the image file doesn't exist
@@ -257,7 +257,7 @@ fn test_batch_commitment_verification() {
 #[test]
 fn test_round_data_serialization() {
     // Test that round data can be properly serialized and deserialized
-    let mut round = RoundData::new(
+            let mut round = BlockData::new(
         "test_round".to_string(),
         "test.jpg".to_string(),
         "test_social_id".to_string(),
@@ -285,7 +285,7 @@ fn test_round_data_serialization() {
     let json_str = serde_json::to_string_pretty(&round).unwrap();
 
     // Deserialize back
-    let deserialized_round: RoundData = serde_json::from_str(&json_str).unwrap();
+    let deserialized_round: BlockData = serde_json::from_str(&json_str).unwrap();
 
     // Should be identical
     assert_eq!(round.round_id, deserialized_round.round_id);
@@ -328,7 +328,7 @@ fn test_error_handling() {
     let file_path = temp_file.path().to_string_lossy().to_string();
     let embedder = MockEmbedder::clip_like();
     let strategy = ClipBatchStrategy::new();
-    let mut processor = RoundProcessor::new(file_path, embedder, strategy);
+    let mut processor = BlockProcessor::new(file_path, embedder, strategy);
 
     assert!(processor.get_round("nonexistent").is_err());
 }

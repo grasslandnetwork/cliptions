@@ -12,7 +12,7 @@ use std::process;
 
 use cliptions_core::config::ConfigManager;
 use cliptions_core::embedder::{ClipEmbedder, EmbedderTrait, MockEmbedder};
-use cliptions_core::block_processor::RoundProcessor;
+use cliptions_core::block_processor::BlockProcessor;
 use cliptions_core::scoring::ClipBatchStrategy;
 
 #[derive(Parser)]
@@ -275,7 +275,7 @@ fn create_processor_and_verify(
             );
         }
         let embedder = MockEmbedder::clip_like();
-        let processor = RoundProcessor::new(
+        let processor = BlockProcessor::new(
             args.rounds_file.to_string_lossy().to_string(),
             embedder,
             strategy,
@@ -293,7 +293,7 @@ fn create_processor_and_verify(
                             model_path.display()
                         );
                     }
-                    let processor = RoundProcessor::new(
+                    let processor = BlockProcessor::new(
                         args.rounds_file.to_string_lossy().to_string(),
                         embedder,
                         strategy,
@@ -314,7 +314,7 @@ fn create_processor_and_verify(
                     if args.verbose {
                         println!("{} Using default CLIP embedder", "Info:".blue().bold());
                     }
-                    let processor = RoundProcessor::new(
+                    let processor = BlockProcessor::new(
                         args.rounds_file.to_string_lossy().to_string(),
                         embedder,
                         strategy,
@@ -333,7 +333,7 @@ fn create_processor_and_verify(
 }
 
 fn verify_with_processor<E: EmbedderTrait>(
-    mut processor: RoundProcessor<E, ClipBatchStrategy>,
+    mut processor: BlockProcessor<E, ClipBatchStrategy>,
     args: &Args,
 ) -> Result<VerificationResults, Box<dyn std::error::Error>> {
     // Load rounds first
@@ -359,7 +359,7 @@ struct VerificationResults {
 }
 
 fn verify_all_rounds<E: EmbedderTrait>(
-    mut processor: RoundProcessor<E, ClipBatchStrategy>,
+    mut processor: BlockProcessor<E, ClipBatchStrategy>,
     args: &Args,
 ) -> Result<VerificationResults, Box<dyn std::error::Error>> {
     if args.verbose {
@@ -435,7 +435,7 @@ fn verify_all_rounds<E: EmbedderTrait>(
 }
 
 fn verify_single_round<E: EmbedderTrait>(
-    mut processor: RoundProcessor<E, ClipBatchStrategy>,
+    mut processor: BlockProcessor<E, ClipBatchStrategy>,
     round_id: &str,
     args: &Args,
 ) -> Result<VerificationResults, Box<dyn std::error::Error>> {
@@ -473,7 +473,7 @@ fn verify_single_round<E: EmbedderTrait>(
 }
 
 fn process_round_verification<E: EmbedderTrait>(
-    processor: &mut RoundProcessor<E, ClipBatchStrategy>,
+    processor: &mut BlockProcessor<E, ClipBatchStrategy>,
     round_id: &str,
     args: &Args,
 ) -> Result<(Vec<bool>, Vec<cliptions_core::types::Participant>), Box<dyn std::error::Error>> {
@@ -889,7 +889,7 @@ fn save_results(
 mod tests {
     use super::*;
     use cliptions_core::commitment::CommitmentGenerator;
-    use cliptions_core::types::{Guess, Participant, RoundData};
+    use cliptions_core::types::{Guess, Participant, BlockData};
     use std::collections::HashMap;
     use tempfile::NamedTempFile;
 
@@ -979,7 +979,7 @@ mod tests {
         let file_path = temp_file.path().to_path_buf();
 
         // Create test round data
-        let mut round = RoundData::new(
+        let mut round = BlockData::new(
             "test_round".to_string(),
             "test.jpg".to_string(),
             "test_social_id".to_string(),
@@ -1038,7 +1038,7 @@ mod tests {
         let file_path = temp_file.path().to_path_buf();
 
         // Create test round data
-        let mut round = RoundData::new(
+        let mut round = BlockData::new(
             "test_round".to_string(),
             "test.jpg".to_string(),
             "test_social_id".to_string(),

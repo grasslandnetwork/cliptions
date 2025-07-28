@@ -7,7 +7,7 @@ use chrono::{DateTime, Utc};
 use clap::Parser;
 use cliptions_core::config::ConfigManager;
 use cliptions_core::error::Result;
-use cliptions_core::block_engine::state_machine::{Pending, Round};
+use cliptions_core::block_engine::state_machine::{Pending, Block};
 use cliptions_core::social::TweetCacheManager;
 use cliptions_core::twitter_utils::post_tweet_flexible;
 use std::io::{self, Write};
@@ -193,7 +193,7 @@ async fn run_validator_loop(
     let commitment_deadline = Utc::now() + chrono::Duration::hours(commitment_hours);
 
     // --- Create and Announce Round ---
-    let round = Round::<Pending>::new(round_id, description, livestream_url, target_timestamp);
+    let round = Block::<Pending>::new(round_id, description, livestream_url, target_timestamp);
     println!("📢 Announcing new round on Twitter...");
 
     match round.open_commitments(commitment_deadline, &client).await {
