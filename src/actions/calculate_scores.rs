@@ -164,31 +164,7 @@ fn calculate_scores_and_payouts(
                 Ok(results)
             }
             Err(e) => {
-                eprintln!("Warning: Failed to load CLIP model: {}", e);
-                eprintln!("Falling back to MockEmbedder");
-                
-                let embedder = MockEmbedder::clip_like();
-                let mut processor = RoundProcessor::new(rounds_file.to_string(), embedder, strategy);
-                
-                // Load rounds data
-                processor.load_rounds()?;
-                
-                // Get target image path from the round
-                let round = processor.get_round(round_id)?;
-                let target_image_path = round.target_image_path.clone();
-                
-                if verbose {
-                    println!("Processing {} participants against target image: {}", participants.len(), target_image_path);
-                }
-                
-                // Process round payouts using the existing RoundProcessor logic
-                let results = processor.process_round_payouts(round_id)?;
-                
-                if verbose {
-                    println!("Successfully calculated scores and payouts for {} participants", results.len());
-                }
-                
-                Ok(results)
+                panic!("CRITICAL: Failed to load CLIP model: {}. Cannot proceed with invalid MockEmbedder fallback as this would produce unreliable scores that could lead to incorrect payouts.", e);
             }
         }
     }

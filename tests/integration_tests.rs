@@ -29,14 +29,11 @@ fn test_complete_round_lifecycle() {
     processor
         .create_round(
             round_id.to_string(),
-            "Integration Test Round".to_string(),
-            "A round for testing the complete lifecycle".to_string(),
             "test_image.jpg".to_string(),
-            Some(RoundConfig {
-                prize_pool: 1000.0,
-                max_guess_length: 300,
-                scoring_version: "v0.3".to_string(),
-            }),
+            "test_social_id".to_string(),
+            1000.0,
+            None, // commitment_deadline
+            None, // reveal_deadline
         )
         .unwrap();
 
@@ -262,9 +259,9 @@ fn test_round_data_serialization() {
     // Test that round data can be properly serialized and deserialized
     let mut round = RoundData::new(
         "test_round".to_string(),
-        "Test Round".to_string(),
-        "A test round for serialization".to_string(),
         "test.jpg".to_string(),
+        "test_social_id".to_string(),
+        1000.0,
     );
 
     // Add a participant
@@ -292,18 +289,18 @@ fn test_round_data_serialization() {
 
     // Should be identical
     assert_eq!(round.round_id, deserialized_round.round_id);
-    assert_eq!(round.title, deserialized_round.title);
+    assert_eq!(round.target_image_path, deserialized_round.target_image_path);
     assert_eq!(
         round.participants.len(),
         deserialized_round.participants.len()
     );
     assert_eq!(
-        round.participants[0].user_id,
-        deserialized_round.participants[0].user_id
+        round.participants[0].social_id,
+        deserialized_round.participants[0].social_id
     );
     assert_eq!(
-        round.participants[0].verified,
-        deserialized_round.participants[0].verified
+        round.participants[0].commitment,
+        deserialized_round.participants[0].commitment
     );
 }
 
