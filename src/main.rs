@@ -16,7 +16,7 @@ use cliptions_core::actions::calculate_scores::{CalculateScoresArgs, run as calc
 #[derive(Parser)]
 #[command(name = "cliptions")]
 #[command(about = "Cliptions - A CLIP-based prediction market")]
-#[command(version = "0.7.0")]
+#[command(version = "0.7.1")]
 #[command(long_about = "
 Unified CLI tool for Cliptions prediction market operations.
 
