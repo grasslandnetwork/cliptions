@@ -180,7 +180,7 @@ This task list outlines the refactoring and implementation plan for the Cliption
 
 ---
 ### Slice 7: Terminology Update - Round to Block (v0.7.0)
-**Status**: [ ] In Progress
+**Status**: [x] Completed
 **Priority**: Critical
 **Description**: Replace all "round" terminology with "block" throughout the codebase to align with blockchain concepts for future development.
 
@@ -223,19 +223,19 @@ This task list outlines the refactoring and implementation plan for the Cliption
 - [x] Update tweet templates: "Round X is now live" → "Block X is now live"
 - [x] Update all user-facing messages and prompts
 
-**Phase 7: Documentation and Comments**
+**Phase 7: Documentation and Comments** ✅ **COMPLETED**
 - [x] Update README.md with new terminology
 - [x] Update all code comments referencing "round"
 - [x] Update task documentation and PRD files
 - [x] Update CONTRIBUTING.md and other docs
 
-**Phase 8: Testing and Validation**
+**Phase 8: Testing and Validation** ✅ **COMPLETED**
 - [x] Update all test cases with new terminology
 - [x] Verify all tests pass after terminology changes
 - [x] Update `Cargo.toml` to version `0.7.0`
-- [ ] Commit changes and create git tag `v0.7.0`
-- [ ] **Verify the new tag triggers and passes all checks in GitHub Actions**
-- [ ] Update this task list to mark all tasks as completed
+- [x] Commit changes and create git tag `v0.7.0`
+- [x] **Verify the new tag triggers and passes all checks in GitHub Actions**
+- [x] Update this task list to mark all tasks as completed
 
 ---
 
