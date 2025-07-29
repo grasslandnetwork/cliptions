@@ -20,8 +20,8 @@ pub enum CliptionsError {
     #[error("Embedding error: {0}")]
     Embedding(#[from] EmbeddingError),
 
-    #[error("Round processing error: {0}")]
-    Round(#[from] BlockError),
+    #[error("Block processing error: {0}")]
+    Block(#[from] BlockError),
 
     #[error("API error: {0}")]
     ApiError(String),
@@ -118,22 +118,22 @@ pub enum EmbeddingError {
     UnsupportedFormat,
 }
 
-/// Round processing errors
+/// Block processing errors
 #[derive(Error, Debug)]
 pub enum BlockError {
-    #[error("Round {block_num} not found")]
-    RoundNotFound { block_num: String },
+    #[error("Block {block_num} not found")]
+    BlockNotFound { block_num: String },
 
-    #[error("No participants in round {block_num}")]
+    #[error("No participants in block {block_num}")]
     NoParticipants { block_num: String },
 
     #[error("Target image not found: {path}")]
     TargetImageNotFound { path: String },
 
-    #[error("Round data file not found: {path}")]
+    #[error("Block data file not found: {path}")]
     DataFileNotFound { path: String },
 
-    #[error("Round already processed")]
+    #[error("Block already processed")]
     AlreadyProcessed,
 }
 

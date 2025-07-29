@@ -1,7 +1,7 @@
 //! Calculate Scores & Payouts for Cliptions blocks
 //!
 //! This module implements the `calculate-scores` subcommand, which processes verified participants,
-//! calculates CLIP similarity scores, determines payouts, and updates the round state.
+//! calculates CLIP similarity scores, determines payouts, and updates the block state.
 //!
 //! See MVP Slice 6 (v0.6.6) for requirements.
 
@@ -26,8 +26,8 @@ use crate::error::Result;
 #[command(long_about = "
 Calculate similarity scores and payout distribution for verified participants in a Cliptions block.
 
-This subcommand processes verified participants from a round, calculates CLIP similarity scores
-against the target image, determines fair payouts based on rankings, and updates the round state.
+This subcommand processes verified participants from a block, calculates CLIP similarity scores
+against the target image, determines fair payouts based on rankings, and updates the block state.
 
 Examples:
   # Calculate scores for block1 with default settings
@@ -45,8 +45,8 @@ pub struct CalculateScoresArgs {
     pub block_num: String,
     
     /// Path to blocks data file
-    #[arg(short = 'f', long, default_value = "data/rounds.json")]
-    pub rounds_file: String,
+    #[arg(short = 'f', long, default_value = "data/blocks.json")]
+    pub blocks_file: String,
     
     /// Prize pool amount (must be positive)
     #[arg(short, long)]
@@ -69,19 +69,19 @@ pub struct CalculateScoresArgs {
     pub verbose: bool,
 }
 
-/// Load verified participants from rounds data
-fn load_verified_participants(block_num: &str, rounds_file: &str) -> Result<Vec<Participant>> {
+/// Load verified participants from blocks data
+fn load_verified_participants(block_num: &str, blocks_file: &str) -> Result<Vec<Participant>> {
     // Create embedder and processor
     let embedder = MockEmbedder::clip_like(); // We'll replace this with real embedder later
     let strategy = ClipBatchStrategy::new();
-    let mut processor = BlockProcessor::new(rounds_file.to_string(), embedder, strategy);
+    let mut processor = BlockProcessor::new(blocks_file.to_string(), embedder, strategy);
     
-    // Load rounds data
-    processor.load_rounds()?;
+    // Load blocks data
+    processor.load_blocks()?;
     
-    // Get the round and extract verified participants
-    let round = processor.get_round(block_num)?;
-    let verified_participants: Vec<Participant> = round
+    // Get the block and extract verified participants
+    let block = processor.get_block(block_num)?;
+    let verified_participants: Vec<Participant> = block
         .participants
         .iter()
         .filter(|p| p.verified)
@@ -90,7 +90,7 @@ fn load_verified_participants(block_num: &str, rounds_file: &str) -> Result<Vec<
     
     if verified_participants.is_empty() {
         return Err(crate::error::CliptionsError::ValidationError(
-            format!("No verified participants found for round {}", block_num)
+            format!("No verified participants found for block {}", block_num)
         ));
     }
     
@@ -101,7 +101,7 @@ fn load_verified_participants(block_num: &str, rounds_file: &str) -> Result<Vec<
 fn calculate_scores_and_payouts(
     participants: &[Participant],
     block_num: &str,
-    rounds_file: &str,
+    blocks_file: &str,
     prize_pool: f64,
     use_mock: bool,
     verbose: bool,
@@ -114,21 +114,21 @@ fn calculate_scores_and_payouts(
             println!("Using MockEmbedder for testing");
         }
         let embedder = MockEmbedder::clip_like();
-        let mut processor = BlockProcessor::new(rounds_file.to_string(), embedder, strategy);
+        let mut processor = BlockProcessor::new(blocks_file.to_string(), embedder, strategy);
         
-        // Load rounds data
-        processor.load_rounds()?;
+        // Load blocks data
+        processor.load_blocks()?;
         
-        // Get target image path from the round
-        let round = processor.get_round(block_num)?;
-        let target_image_path = round.target_image_path.clone();
+        // Get target image path from the block
+        let block = processor.get_block(block_num)?;
+        let target_image_path = block.target_image_path.clone();
         
         if verbose {
             println!("Processing {} participants against target image: {}", participants.len(), target_image_path);
         }
         
-        // Process round payouts using the existing BlockProcessor logic
-        let results = processor.process_round_payouts(block_num)?;
+        // Process block payouts using the existing BlockProcessor logic
+        let results = processor.process_block_payouts(block_num)?;
         
         if verbose {
             println!("Successfully calculated scores and payouts for {} participants", results.len());
@@ -141,21 +141,21 @@ fn calculate_scores_and_payouts(
                 if verbose {
                     println!("Using CLIP embedder for semantic scoring");
                 }
-                let mut processor = BlockProcessor::new(rounds_file.to_string(), clip_embedder, strategy);
+                let mut processor = BlockProcessor::new(blocks_file.to_string(), clip_embedder, strategy);
                 
-                // Load rounds data
-                processor.load_rounds()?;
+                // Load blocks data
+                processor.load_blocks()?;
                 
-                // Get target image path from the round
-                let round = processor.get_round(block_num)?;
-                let target_image_path = round.target_image_path.clone();
+                // Get target image path from the block
+                let block = processor.get_block(block_num)?;
+                let target_image_path = block.target_image_path.clone();
                 
                 if verbose {
                     println!("Processing {} participants against target image: {}", participants.len(), target_image_path);
                 }
                 
-                // Process round payouts using the existing BlockProcessor logic
-                let results = processor.process_round_payouts(block_num)?;
+                // Process block payouts using the existing BlockProcessor logic
+                let results = processor.process_block_payouts(block_num)?;
                 
                 if verbose {
                     println!("Successfully calculated scores and payouts for {} participants", results.len());
@@ -170,37 +170,37 @@ fn calculate_scores_and_payouts(
     }
 }
 
-/// Update the rounds.json file with calculated scores, payouts, and prize pool
-fn update_rounds_file(
+/// Update the blocks.json file with calculated scores, payouts, and prize pool
+fn update_blocks_file(
     block_num: &str,
-    rounds_file: &str,
+    blocks_file: &str,
     results: &[ScoringResult],
     prize_pool: f64,
     verbose: bool,
 ) -> Result<()> {
-    // Load the current rounds data
-    let rounds_data = std::fs::read_to_string(rounds_file)
+    // Load the current blocks data
+    let blocks_data = std::fs::read_to_string(blocks_file)
         .map_err(|e| crate::error::CliptionsError::Io(e))?;
     
-    let mut rounds: serde_json::Value = serde_json::from_str(&rounds_data)
+    let mut blocks: serde_json::Value = serde_json::from_str(&blocks_data)
         .map_err(|e| crate::error::CliptionsError::Json(e))?;
     
-    // Get the round object
-    let round = rounds.get_mut(block_num)
+    // Get the block object
+    let block = blocks.get_mut(block_num)
         .ok_or_else(|| crate::error::CliptionsError::ValidationError(
-            format!("Round {} not found in rounds file", block_num)
+            format!("Block {} not found in blocks file", block_num)
         ))?;
     
     // Update prize pool
-    round["prize_pool"] = serde_json::Value::from(prize_pool);
+    block["prize_pool"] = serde_json::Value::from(prize_pool);
     
     // Update total payout
     let total_payout: f64 = results.iter().filter_map(|r| r.payout).sum();
-    round["total_payout"] = serde_json::Value::from(total_payout);
+    block["total_payout"] = serde_json::Value::from(total_payout);
     
     
     // Update participants with scores and payouts
-    if let Some(participants) = round.get_mut("participants") {
+    if let Some(participants) = block.get_mut("participants") {
         if let Some(participants_array) = participants.as_array_mut() {
             for participant in participants_array {
                 if let Some(username) = participant.get("username").and_then(|u| u.as_str()) {
@@ -228,17 +228,17 @@ fn update_rounds_file(
     // is already stored in the participant data (scores, payouts, ranks)
     
     // Update timestamp
-    round["updated_at"] = serde_json::Value::from(chrono::Utc::now().to_rfc3339());
+    block["updated_at"] = serde_json::Value::from(chrono::Utc::now().to_rfc3339());
     
     // Write back to file
-    let updated_json = serde_json::to_string_pretty(&rounds)
+    let updated_json = serde_json::to_string_pretty(&blocks)
         .map_err(|e| crate::error::CliptionsError::Json(e))?;
     
-    std::fs::write(rounds_file, updated_json)
+    std::fs::write(blocks_file, updated_json)
         .map_err(|e| crate::error::CliptionsError::Io(e))?;
     
     if verbose {
-        println!("Updated rounds file with scores, payouts, and prize pool information");
+        println!("Updated blocks file with scores, payouts, and prize pool information");
     }
     
     Ok(())
@@ -375,7 +375,7 @@ fn save_results(results: &[ScoringResult], output_file: &PathBuf, format: &str) 
             content
         }
         "table" => {
-            let mut content = String::from("Round Results\n");
+            let mut content = String::from("Block Results\n");
             content.push_str(&"=".repeat(50));
             content.push('\n');
 
@@ -400,24 +400,24 @@ fn save_results(results: &[ScoringResult], output_file: &PathBuf, format: &str) 
 /// Entry point for the calculate-scores subcommand
 pub fn run(args: CalculateScoresArgs) -> Result<()> {
     // Load verified participants
-    let participants = load_verified_participants(&args.block_num, &args.rounds_file)?;
+    let participants = load_verified_participants(&args.block_num, &args.blocks_file)?;
     
     if args.verbose {
-        println!("Loaded {} verified participants for round {}", participants.len(), args.block_num);
+        println!("Loaded {} verified participants for block {}", participants.len(), args.block_num);
     }
     
     // Calculate scores and payouts
     let results = calculate_scores_and_payouts(
         &participants,
         &args.block_num,
-        &args.rounds_file,
+        &args.blocks_file,
         args.prize_pool,
         args.use_mock,
         args.verbose,
     )?;
     
     if args.verbose {
-        println!("Successfully processed round {} with {} results", args.block_num, results.len());
+        println!("Successfully processed block {} with {} results", args.block_num, results.len());
     }
     
     // Display results
@@ -431,10 +431,10 @@ pub fn run(args: CalculateScoresArgs) -> Result<()> {
         }
     }
     
-    // Update rounds.json file
-    update_rounds_file(
+    // Update blocks.json file
+    update_blocks_file(
         &args.block_num,
-        &args.rounds_file,
+        &args.blocks_file,
         &results,
         args.prize_pool,
         args.verbose,

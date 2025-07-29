@@ -143,8 +143,8 @@ class JsonGameOutput(IGameOutput):
                 {
                     "id": p.id,
                     "guess": p.guess,
-                    "score": round(p.score, 2),
-                    "payout": round(p.payout, 2)
+                    "score": block(p.score, 2),
+                    "payout": block(p.payout, 2)
                 }
                 for p in players.values()
             ]

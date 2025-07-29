@@ -2,14 +2,14 @@
 //!
 //! High-performance Rust implementation of the Cliptions prediction market core functionality.
 //! This library provides cryptographic commitments, scoring strategies, embedding integration,
-//! and round processing capabilities.
+//! and block processing capabilities.
 //!
 //! ## Features
 //!
 //! - **Commitment System**: Secure commitment generation and verification using SHA-256
 //! - **Scoring Strategies**: Multiple scoring algorithms including CLIP batch processing
 //! - **Embedding Integration**: Interface for CLIP and other embedding models
-//! - **Round Processing**: Complete round lifecycle management
+//! - **Block Processing**: Complete block lifecycle management
 //! - **Pure Rust Core**: Clean separation between core logic and language bindings
 //!
 //! ## Architecture
@@ -34,7 +34,7 @@ pub mod social;
 pub mod twitter_utils;
 pub mod types;
 
-// New async round engine
+// New async block engine
 pub mod block_engine;
 
 // Python bindings module (conditional compilation)

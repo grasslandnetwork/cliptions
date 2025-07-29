@@ -1,6 +1,6 @@
-//! Round processing for Cliptions prediction markets
+//! Block processing for Cliptions prediction markets
 //!
-//! This module handles the complete lifecycle of prediction rounds,
+//! This module handles the complete lifecycle of prediction blocks,
 //! including participant management, commitment verification, scoring, and payout calculation.
 
 use std::collections::HashMap;
@@ -16,89 +16,89 @@ use crate::error::{Result, BlockError};
 use crate::scoring::{process_participants, ScoreValidator, ScoringStrategy};
 use crate::types::{Participant, BlockData, BlockStatus, ScoringResult};
 
-/// Round processor for managing prediction rounds
+/// Block processor for managing prediction blocks
 pub struct BlockProcessor<E: EmbedderTrait, S: ScoringStrategy> {
-    rounds_file: String,
+    blocks_file: String,
     commitment_verifier: CommitmentVerifier,
     score_validator: ScoreValidator<E, S>,
-    rounds_cache: HashMap<String, BlockData>,
+    blocks_cache: HashMap<String, BlockData>,
 }
 
 impl<E: EmbedderTrait, S: ScoringStrategy> BlockProcessor<E, S> {
-    /// Create a new round processor
-    pub fn new(rounds_file: String, embedder: E, scoring_strategy: S) -> Self {
+    /// Create a new block processor
+    pub fn new(blocks_file: String, embedder: E, scoring_strategy: S) -> Self {
         Self {
-            rounds_file,
+            blocks_file,
             commitment_verifier: CommitmentVerifier::new(),
             score_validator: ScoreValidator::new(embedder, scoring_strategy),
-            rounds_cache: HashMap::new(),
+            blocks_cache: HashMap::new(),
         }
     }
 
-    /// Load rounds data from file
-    pub fn load_rounds(&mut self) -> Result<()> {
-        if !Path::new(&self.rounds_file).exists() {
-                    // Create empty rounds file if it doesn't exist
-        let empty_rounds: HashMap<String, BlockData> = HashMap::new();
-            self.save_rounds(&empty_rounds)?;
+    /// Load blocks data from file
+    pub fn load_blocks(&mut self) -> Result<()> {
+        if !Path::new(&self.blocks_file).exists() {
+                    // Create empty blocks file if it doesn't exist
+        let empty_blocks: HashMap<String, BlockData> = HashMap::new();
+            self.save_blocks(&empty_blocks)?;
             return Ok(());
         }
 
         let content =
-            fs::read_to_string(&self.rounds_file).map_err(|_e| BlockError::DataFileNotFound {
-                path: self.rounds_file.clone(),
+            fs::read_to_string(&self.blocks_file).map_err(|_e| BlockError::DataFileNotFound {
+                path: self.blocks_file.clone(),
             })?;
 
         // Handle empty file case
         if content.trim().is_empty() {
-            let empty_rounds: HashMap<String, BlockData> = HashMap::new();
-            self.save_rounds(&empty_rounds)?;
+            let empty_blocks: HashMap<String, BlockData> = HashMap::new();
+            self.save_blocks(&empty_blocks)?;
             return Ok(());
         }
 
-        let rounds: HashMap<String, BlockData> = serde_json::from_str(&content)?;
-        self.rounds_cache = rounds;
+        let blocks: HashMap<String, BlockData> = serde_json::from_str(&content)?;
+        self.blocks_cache = blocks;
 
         Ok(())
     }
 
-    /// Save rounds data to file
-    pub fn save_rounds(&self, rounds: &HashMap<String, BlockData>) -> Result<()> {
-        let content = serde_json::to_string_pretty(rounds)?;
-        fs::write(&self.rounds_file, content)?;
+    /// Save blocks data to file
+    pub fn save_blocks(&self, blocks: &HashMap<String, BlockData>) -> Result<()> {
+        let content = serde_json::to_string_pretty(blocks)?;
+        fs::write(&self.blocks_file, content)?;
         Ok(())
     }
 
-    /// Get a round by ID
-    pub fn get_round(&mut self, block_num: &str) -> Result<&BlockData> {
-        if self.rounds_cache.is_empty() {
-            self.load_rounds()?;
+    /// Get a block by ID
+    pub fn get_block(&mut self, block_num: &str) -> Result<&BlockData> {
+        if self.blocks_cache.is_empty() {
+            self.load_blocks()?;
         }
 
-        self.rounds_cache.get(block_num).ok_or_else(|| {
-            BlockError::RoundNotFound {
+        self.blocks_cache.get(block_num).ok_or_else(|| {
+            BlockError::BlockNotFound {
                 block_num: block_num.to_string(),
             }
             .into()
         })
     }
 
-    /// Get a mutable reference to a round
-    pub fn get_round_mut(&mut self, block_num: &str) -> Result<&mut BlockData> {
-        if self.rounds_cache.is_empty() {
-            self.load_rounds()?;
+    /// Get a mutable reference to a block
+    pub fn get_block_mut(&mut self, block_num: &str) -> Result<&mut BlockData> {
+        if self.blocks_cache.is_empty() {
+            self.load_blocks()?;
         }
 
-        self.rounds_cache.get_mut(block_num).ok_or_else(|| {
-            BlockError::RoundNotFound {
+        self.blocks_cache.get_mut(block_num).ok_or_else(|| {
+            BlockError::BlockNotFound {
                 block_num: block_num.to_string(),
             }
             .into()
         })
     }
 
-    /// Create a new round
-    pub fn create_round(
+    /// Create a new block
+    pub fn create_block(
         &mut self,
         block_num: String,
         target_image_path: String,
@@ -107,15 +107,15 @@ impl<E: EmbedderTrait, S: ScoringStrategy> BlockProcessor<E, S> {
         commitment_deadline: Option<DateTime<Utc>>,
         reveal_deadline: Option<DateTime<Utc>>,
     ) -> Result<()> {
-        if self.rounds_cache.is_empty() {
-            self.load_rounds()?;
+        if self.blocks_cache.is_empty() {
+            self.load_blocks()?;
         }
 
-        if self.rounds_cache.contains_key(&block_num) {
+        if self.blocks_cache.contains_key(&block_num) {
             return Err(BlockError::AlreadyProcessed.into());
         }
 
-        let round = if let (Some(commit_deadline), Some(reveal_deadline)) = (commitment_deadline, reveal_deadline) {
+        let block = if let (Some(commit_deadline), Some(reveal_deadline)) = (commitment_deadline, reveal_deadline) {
             BlockData::with_deadlines(
                 block_num.clone(),
                 target_image_path,
@@ -133,43 +133,43 @@ impl<E: EmbedderTrait, S: ScoringStrategy> BlockProcessor<E, S> {
             )
         };
 
-        self.rounds_cache.insert(block_num, round);
-        self.save_rounds(&self.rounds_cache)?;
+        self.blocks_cache.insert(block_num, block);
+        self.save_blocks(&self.blocks_cache)?;
 
         Ok(())
     }
 
-    /// Add a participant to a round
+    /// Add a participant to a block
     pub fn add_participant(&mut self, block_num: &str, participant: Participant) -> Result<()> {
-        let round = self.get_round_mut(block_num)?;
+        let block = self.get_block_mut(block_num)?;
 
-        // if !round.is_open() {
+        // if !block.is_open() {
         //     return Err(BlockError::AlreadyProcessed.into());
         // }
 
-        round.add_participant(participant);
-        self.save_rounds(&self.rounds_cache)?;
+        block.add_participant(participant);
+        self.save_blocks(&self.blocks_cache)?;
 
         Ok(())
     }
 
-    /// Verify commitments for a round
+    /// Verify commitments for a block
     pub fn verify_commitments(&mut self, block_num: &str) -> Result<Vec<bool>> {
-        // Load rounds if needed
-        if self.rounds_cache.is_empty() {
-            self.load_rounds()?;
+        // Load blocks if needed
+        if self.blocks_cache.is_empty() {
+            self.load_blocks()?;
         }
 
-        let round =
-            self.rounds_cache
+        let block =
+            self.blocks_cache
                 .get_mut(block_num)
-                .ok_or_else(|| BlockError::RoundNotFound {
+                .ok_or_else(|| BlockError::BlockNotFound {
                     block_num: block_num.to_string(),
                 })?;
 
         let mut results = Vec::new();
 
-        for participant in &mut round.participants {
+        for participant in &mut block.participants {
             if let Some(salt) = &participant.salt {
                 let is_valid = self.commitment_verifier.verify(
                     &participant.guess.text,
@@ -187,36 +187,36 @@ impl<E: EmbedderTrait, S: ScoringStrategy> BlockProcessor<E, S> {
             }
         }
 
-        self.save_rounds(&self.rounds_cache)?;
+        self.save_blocks(&self.blocks_cache)?;
         Ok(results)
     }
 
-    /// Process round payouts
-    pub fn process_round_payouts(&mut self, block_num: &str) -> Result<Vec<ScoringResult>> {
-        // Load rounds if needed
-        if self.rounds_cache.is_empty() {
-            self.load_rounds()?;
+    /// Process block payouts
+    pub fn process_block_payouts(&mut self, block_num: &str) -> Result<Vec<ScoringResult>> {
+        // Load blocks if needed
+        if self.blocks_cache.is_empty() {
+            self.load_blocks()?;
         }
 
-        // Get round data first
+        // Get block data first
         let (target_image_path, prize_pool, verified_participants) = {
-            let round =
-                self.rounds_cache
+            let block =
+                self.blocks_cache
                     .get(block_num)
-                    .ok_or_else(|| BlockError::RoundNotFound {
+                    .ok_or_else(|| BlockError::BlockNotFound {
                         block_num: block_num.to_string(),
                     })?;
 
             // Verify target image exists
-            if !Path::new(&round.target_image_path).exists() {
+            if !Path::new(&block.target_image_path).exists() {
                 return Err(BlockError::TargetImageNotFound {
-                    path: round.target_image_path.clone(),
+                    path: block.target_image_path.clone(),
                 }
                 .into());
             }
 
             // Get verified participants
-            let verified_participants: Vec<Participant> = round
+            let verified_participants: Vec<Participant> = block
                 .participants
                 .iter()
                 .filter(|p| p.verified)
@@ -231,8 +231,8 @@ impl<E: EmbedderTrait, S: ScoringStrategy> BlockProcessor<E, S> {
             }
 
             (
-                round.target_image_path.clone(),
-                round.prize_pool,
+                block.target_image_path.clone(),
+                block.prize_pool,
                 verified_participants,
             )
         };
@@ -245,38 +245,38 @@ impl<E: EmbedderTrait, S: ScoringStrategy> BlockProcessor<E, S> {
             &self.score_validator,
         )?;
 
-        // Update round status to Complete (but don't add redundant results section)
-        let round = self.rounds_cache.get_mut(block_num).unwrap(); // Safe because we checked above
-        round.set_status(BlockStatus::Complete);
-        self.save_rounds(&self.rounds_cache)?;
+        // Update block status to Complete (but don't add redundant results section)
+        let block = self.blocks_cache.get_mut(block_num).unwrap(); // Safe because we checked above
+        block.set_status(BlockStatus::Complete);
+        self.save_blocks(&self.blocks_cache)?;
 
         Ok(results)
     }
 
-    /// Get all round IDs
+    /// Get all block IDs
     pub fn get_block_nums(&mut self) -> Result<Vec<String>> {
-        if self.rounds_cache.is_empty() {
-            self.load_rounds()?;
+        if self.blocks_cache.is_empty() {
+            self.load_blocks()?;
         }
 
-        Ok(self.rounds_cache.keys().cloned().collect())
+        Ok(self.blocks_cache.keys().cloned().collect())
     }
 
-    /// Process all rounds
-    pub fn process_all_rounds(&mut self) -> Result<HashMap<String, Vec<ScoringResult>>> {
+    /// Process all blocks
+    pub fn process_all_blocks(&mut self) -> Result<HashMap<String, Vec<ScoringResult>>> {
         let block_nums = self.get_block_nums()?;
         let mut all_results = HashMap::new();
 
         for block_num in block_nums {
-            // Only process rounds that are open or processing
-            let round = self.get_round(&block_num)?;
-            if matches!(round.status, BlockStatus::Open | BlockStatus::Processing) {
-                match self.process_round_payouts(&block_num) {
+            // Only process blocks that are open or processing
+            let block = self.get_block(&block_num)?;
+            if matches!(block.status, BlockStatus::Open | BlockStatus::Processing) {
+                match self.process_block_payouts(&block_num) {
                     Ok(results) => {
                         all_results.insert(block_num, results);
                     }
                     Err(e) => {
-                        panic!("CRITICAL: Failed to process round {}: {}. Cannot continue batch processing with incomplete results as this could lead to missing payouts.", block_num, e);
+                        panic!("CRITICAL: Failed to process block {}: {}. Cannot continue batch processing with incomplete results as this could lead to missing payouts.", block_num, e);
                     }
                 }
             }
@@ -285,36 +285,36 @@ impl<E: EmbedderTrait, S: ScoringStrategy> BlockProcessor<E, S> {
         Ok(all_results)
     }
 
-    /// Get round statistics
-    pub fn get_round_stats(&mut self, block_num: &str) -> Result<RoundStats> {
-        let round = self.get_round(block_num)?;
+    /// Get block statistics
+    pub fn get_block_stats(&mut self, block_num: &str) -> Result<BlockStats> {
+        let block = self.get_block(block_num)?;
 
-        let total_participants = round.participants.len();
-        let verified_participants = round.verified_participants().len();
-        let total_prize_pool = round.prize_pool;
-        let is_complete = round.is_complete();
+        let total_participants = block.participants.len();
+        let verified_participants = block.verified_participants().len();
+        let total_prize_pool = block.prize_pool;
+        let is_complete = block.is_complete();
 
         let total_payout = if is_complete {
-            round.results.iter().filter_map(|r| r.payout).sum()
+            block.results.iter().filter_map(|r| r.payout).sum()
         } else {
             0.0
         };
 
-        Ok(RoundStats {
+        Ok(BlockStats {
             block_num: block_num.to_string(),
             total_participants,
             verified_participants,
             total_prize_pool,
             total_payout,
             is_complete,
-            status: round.status.clone(),
+            status: block.status.clone(),
         })
     }
 }
 
-/// Statistics for a round
+/// Statistics for a block
 #[derive(Debug, Clone)]
-pub struct RoundStats {
+pub struct BlockStats {
     pub block_num: String,
     pub total_participants: usize,
     pub verified_participants: usize,
@@ -356,21 +356,21 @@ mod tests {
     }
 
     #[test]
-    fn test_round_processor_creation() {
+    fn test_block_processor_creation() {
         let (mut processor, _) = create_test_processor();
 
-        // Should be able to load empty rounds
-        processor.load_rounds().unwrap();
+        // Should be able to load empty blocks
+        processor.load_blocks().unwrap();
         assert!(processor.get_block_nums().unwrap().is_empty());
     }
 
     #[test]
-    fn test_create_round() {
+    fn test_create_block() {
         let (mut processor, _) = create_test_processor();
 
         processor
-            .create_round(
-                "test_round".to_string(),
+            .create_block(
+                "test_block".to_string(),
                 "test.jpg".to_string(),
                 "test_social_id".to_string(),
                 100.0,
@@ -379,11 +379,11 @@ mod tests {
             )
             .unwrap();
 
-        let round = processor.get_round("test_round").unwrap();
-        assert_eq!(round.block_num, "test_round");
-        assert_eq!(round.target_image_path, "test.jpg");
-        assert_eq!(round.social_id, "test_social_id");
-        assert_eq!(round.prize_pool, 100.0);
+        let block = processor.get_block("test_block").unwrap();
+        assert_eq!(block.block_num, "test_block");
+        assert_eq!(block.target_image_path, "test.jpg");
+        assert_eq!(block.social_id, "test_social_id");
+        assert_eq!(block.prize_pool, 100.0);
     }
 
     #[test]
@@ -391,8 +391,8 @@ mod tests {
         let (mut processor, _) = create_test_processor();
 
         processor
-            .create_round(
-                "test_round".to_string(),
+            .create_block(
+                "test_block".to_string(),
                 "test.jpg".to_string(),
                 "test_social_id".to_string(),
                 100.0,
@@ -404,12 +404,12 @@ mod tests {
         let participant = create_test_participant("user1", "test guess", "commitment123");
 
         processor
-            .add_participant("test_round", participant)
+            .add_participant("test_block", participant)
             .unwrap();
 
-        let round = processor.get_round("test_round").unwrap();
-        assert_eq!(round.participants.len(), 1);
-        assert_eq!(round.participants[0].social_id, "user1");
+        let block = processor.get_block("test_block").unwrap();
+        assert_eq!(block.participants.len(), 1);
+        assert_eq!(block.participants[0].social_id, "user1");
     }
 
     #[test]
@@ -417,8 +417,8 @@ mod tests {
         let (mut processor, _) = create_test_processor();
 
         processor
-            .create_round(
-                "test_round".to_string(),
+            .create_block(
+                "test_block".to_string(),
                 "test.jpg".to_string(),
                 "test_social_id".to_string(),
                 100.0,
@@ -442,24 +442,24 @@ mod tests {
         .with_salt(salt.to_string());
 
         processor
-            .add_participant("test_round", participant)
+            .add_participant("test_block", participant)
             .unwrap();
 
-        let results = processor.verify_commitments("test_round").unwrap();
+        let results = processor.verify_commitments("test_block").unwrap();
         assert_eq!(results.len(), 1);
         assert!(results[0]); // Should be valid
 
-        let round = processor.get_round("test_round").unwrap();
-        assert!(round.participants[0].verified);
+        let block = processor.get_block("test_block").unwrap();
+        assert!(block.participants[0].verified);
     }
 
     #[test]
-    fn test_round_stats() {
+    fn test_block_stats() {
         let (mut processor, _) = create_test_processor();
 
         processor
-            .create_round(
-                "test_round".to_string(),
+            .create_block(
+                "test_block".to_string(),
                 "test.jpg".to_string(),
                 "test_social_id".to_string(),
                 100.0,
@@ -470,25 +470,25 @@ mod tests {
 
         let participant = create_test_participant("user1", "test guess", "commitment123");
         processor
-            .add_participant("test_round", participant)
+            .add_participant("test_block", participant)
             .unwrap();
 
-        let stats = processor.get_round_stats("test_round").unwrap();
-        assert_eq!(stats.block_num, "test_round");
+        let stats = processor.get_block_stats("test_block").unwrap();
+        assert_eq!(stats.block_num, "test_block");
         assert_eq!(stats.total_participants, 1);
         assert_eq!(stats.verified_participants, 1);
         assert!(!stats.is_complete);
     }
 
     #[test]
-    fn test_nonexistent_round() {
+    fn test_nonexistent_block() {
         let (mut processor, _) = create_test_processor();
 
-        let result = processor.get_round("nonexistent");
+        let result = processor.get_block("nonexistent");
         assert!(matches!(
             result,
-            Err(crate::error::CliptionsError::Round(
-                BlockError::RoundNotFound { .. }
+            Err(crate::error::CliptionsError::Block(
+                BlockError::BlockNotFound { .. }
             ))
         ));
     }

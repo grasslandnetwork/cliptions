@@ -2,7 +2,7 @@
 Validator modules for Cliptions Twitter automation.
 
 This package contains modules that implement the Validator side of the Cliptions prediction game:
-- Round announcements
+- Block announcements
 - Commitment collection  
 - Entry fee assignment
 - Target frame publication
@@ -11,7 +11,7 @@ This package contains modules that implement the Validator side of the Cliptions
 - Results publication
 """
 
-# Note: Expose RoundAnnouncementTask for easy import
-from .announce_round import RoundAnnouncementTask
+# Note: Expose BlockAnnouncementTask for easy import
+from .announce_block import BlockAnnouncementTask
 
-__all__ = ['RoundAnnouncementTask'] 
+__all__ = ['BlockAnnouncementTask'] 

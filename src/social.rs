@@ -117,7 +117,7 @@ impl HashtagManager {
         }
     }
 
-    /// Generate hashtags for a round with state information
+    /// Generate hashtags for a block with state information
     pub fn generate_hashtags(
         &self,
         block_num: &str,
@@ -136,7 +136,7 @@ impl HashtagManager {
         hashtags
     }
 
-    /// Generate hashtags for a round with state information
+    /// Generate hashtags for a block with state information
     pub fn generate_hashtags_with_state(
         &self,
         block_num: u64,
@@ -187,7 +187,7 @@ impl Default for HashtagManager {
     }
 }
 
-/// Announcement formatter for different types of round announcements
+/// Announcement formatter for different types of block announcements
 pub struct AnnouncementFormatter {
     hashtag_manager: HashtagManager,
 }
@@ -205,7 +205,7 @@ impl AnnouncementFormatter {
         Self { hashtag_manager }
     }
 
-    /// Create a standard round announcement
+    /// Create a standard block announcement
     pub fn create_standard_announcement(&self, data: &AnnouncementData) -> String {
         let hashtags = self.hashtag_manager.generate_hashtags_with_state(
             data.block_num,
@@ -447,7 +447,7 @@ impl TweetCache {
         cache_age < chrono::Duration::minutes(15)
     }
 
-    /// Check if the tweet contains state hashtags that indicate it's a round state tweet
+    /// Check if the tweet contains state hashtags that indicate it's a block state tweet
     pub fn has_state_hashtags(&self) -> bool {
         let hashtag_manager = HashtagManager::new();
         let hashtags = hashtag_manager.extract_hashtags(&self.tweet_text);
@@ -689,7 +689,7 @@ mod tests {
             "Tweet should not contain removed hashtag"
         );
 
-        // Test RevealsOpen state with different round
+        // Test RevealsOpen state with different block
         let data2 = AnnouncementData {
             block_num: 7,
             state_name: "RevealsOpen".to_string(),
@@ -750,7 +750,7 @@ mod tests {
     }
 
     #[test]
-    fn test_create_standard_round_announcement() {
+    fn test_create_standard_block_announcement() {
         let formatter = AnnouncementFormatter::new();
         let data = AnnouncementData {
             block_num: 1,
@@ -772,7 +772,7 @@ mod tests {
     }
 
     #[test]
-    fn test_create_custom_round_announcement() {
+    fn test_create_custom_block_announcement() {
         let formatter = AnnouncementFormatter::new();
         let data = AnnouncementData {
             block_num: 2,

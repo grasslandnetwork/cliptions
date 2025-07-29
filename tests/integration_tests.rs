@@ -14,20 +14,20 @@ use cliptions_core::scoring::{
 use cliptions_core::types::{Guess, Participant, BlockConfig, BlockData, BlockStatus};
 
 #[test]
-fn test_complete_round_lifecycle() {
-    // Create a temporary rounds file
+fn test_complete_block_lifecycle() {
+    // Create a temporary blocks file
     let temp_file = NamedTempFile::new().unwrap();
     let file_path = temp_file.path().to_string_lossy().to_string();
 
-    // Create round processor
+    // Create block processor
     let embedder = MockEmbedder::clip_like();
     let strategy = ClipBatchStrategy::new();
     let mut processor = BlockProcessor::new(file_path.clone(), embedder, strategy);
 
-    // 1. Create a new round
-    let block_num = "integration_test_round";
+    // 1. Create a new block
+    let block_num = "integration_test_block";
     processor
-        .create_round(
+        .create_block(
             block_num.to_string(),
             "test_image.jpg".to_string(),
             "test_social_id".to_string(),
@@ -64,16 +64,16 @@ fn test_complete_round_lifecycle() {
     assert_eq!(verification_results.len(), 4);
     assert!(verification_results.iter().all(|&r| r)); // All should be valid
 
-    // 4. Check round status before processing
-    let round = processor.get_round(block_num).unwrap();
-    assert_eq!(round.status, BlockStatus::Open);
-    assert_eq!(round.verified_participants().len(), 4);
+    // 4. Check block status before processing
+    let block = processor.get_block(block_num).unwrap();
+    assert_eq!(block.status, BlockStatus::Open);
+    assert_eq!(block.verified_participants().len(), 4);
 
     // Note: We can't actually process payouts in the test because the image file doesn't exist
     // But we can test all the other components
 
-    // 5. Test round statistics
-    let stats = processor.get_round_stats(block_num).unwrap();
+    // 5. Test block statistics
+    let stats = processor.get_block_stats(block_num).unwrap();
     assert_eq!(stats.block_num, block_num);
     assert_eq!(stats.total_participants, 4);
     assert_eq!(stats.verified_participants, 4);
@@ -255,10 +255,10 @@ fn test_batch_commitment_verification() {
 }
 
 #[test]
-fn test_round_data_serialization() {
-    // Test that round data can be properly serialized and deserialized
-            let mut round = BlockData::new(
-        "test_round".to_string(),
+fn test_block_data_serialization() {
+    // Test that block data can be properly serialized and deserialized
+            let mut block = BlockData::new(
+        "test_block".to_string(),
         "test.jpg".to_string(),
         "test_social_id".to_string(),
         1000.0,
@@ -279,28 +279,28 @@ fn test_round_data_serialization() {
     .with_salt(salt.to_string())
     .mark_verified();
 
-    round.add_participant(participant);
+    block.add_participant(participant);
 
     // Serialize to JSON
-    let json_str = serde_json::to_string_pretty(&round).unwrap();
+    let json_str = serde_json::to_string_pretty(&block).unwrap();
 
     // Deserialize back
-    let deserialized_round: BlockData = serde_json::from_str(&json_str).unwrap();
+    let deserialized_block: BlockData = serde_json::from_str(&json_str).unwrap();
 
     // Should be identical
-    assert_eq!(round.block_num, deserialized_round.block_num);
-    assert_eq!(round.target_image_path, deserialized_round.target_image_path);
+    assert_eq!(block.block_num, deserialized_block.block_num);
+    assert_eq!(block.target_image_path, deserialized_block.target_image_path);
     assert_eq!(
-        round.participants.len(),
-        deserialized_round.participants.len()
+        block.participants.len(),
+        deserialized_block.participants.len()
     );
     assert_eq!(
-        round.participants[0].social_id,
-        deserialized_round.participants[0].social_id
+        block.participants[0].social_id,
+        deserialized_block.participants[0].social_id
     );
     assert_eq!(
-        round.participants[0].commitment,
-        deserialized_round.participants[0].commitment
+        block.participants[0].commitment,
+        deserialized_block.participants[0].commitment
     );
 }
 
@@ -323,14 +323,14 @@ fn test_error_handling() {
     let generator = CommitmentGenerator::new();
     assert!(generator.generate("message", "").is_err());
 
-    // 4. Nonexistent round
+    // 4. Nonexistent block
     let temp_file = NamedTempFile::new().unwrap();
     let file_path = temp_file.path().to_string_lossy().to_string();
     let embedder = MockEmbedder::clip_like();
     let strategy = ClipBatchStrategy::new();
     let mut processor = BlockProcessor::new(file_path, embedder, strategy);
 
-    assert!(processor.get_round("nonexistent").is_err());
+    assert!(processor.get_block("nonexistent").is_err());
 }
 
 #[test]

@@ -6,7 +6,7 @@ Predict how an AI Agent will caption upcoming frames from live video streams. Pl
 - [Gameplay](#gameplay)
 - [Key Rules](#key-rules)
 - [Key Features](#key-features)
-- [Example Round](#example-round)
+- [Example Block](#example-block)
 - [Getting Started](#getting-started)
   - [Download the CLI Tool](#download-the-cli-tool)
   - [Installation](#installation)
@@ -26,7 +26,7 @@ Predict how an AI Agent will caption upcoming frames from live video streams. Pl
 - [Contributing](#contributing)
 
 ### Gameplay
-1. The Agent announces a new round on Twitter with a target frame
+1. The Agent announces a new block on Twitter with a target frame
 2. Players submit predictions in two steps:
    - First, reply to announcement with a commitment hash of their prediction
    - Later, reveal their actual prediction and salt to verify the commitment
@@ -47,8 +47,8 @@ Predict how an AI Agent will caption upcoming frames from live video streams. Pl
 - **Crypto Rewards:** Prize pools paid out based on prediction accuracy.
 - **Transparent:** All calculations and rankings are verifiable.
 
-### Example Round
-1. Agent tweets "@round2 #targetframe20250223_133057EST from live stream of a cat sanctuary"
+### Example Block
+1. Agent tweets "@block2 #targetframe20250223_133057EST from live stream of a cat sanctuary"
 2. Players participate via Twitter:
    - Submit commitment hash as reply to announcement
    - After frame reveal, reply with prediction and salt
@@ -209,13 +209,13 @@ Post target frame images as replies to commitment tweets:
 
 ```bash
 # Basic target frame posting
-cliptions post-target-frame --reply-to "1234567890123456789" --image "blocks/block2/target.jpg" --round 3 --target-time 2
+cliptions post-target-frame --reply-to "1234567890123456789" --image "blocks/block2/target.jpg" --block 3 --target-time 2
 
 # Verbose output with detailed information
-cliptions post-target-frame --reply-to "1234567890123456789" --image "blocks/block2/target.jpg" --round 3 --target-time 2 --verbose
+cliptions post-target-frame --reply-to "1234567890123456789" --image "blocks/block2/target.jpg" --block 3 --target-time 2 --verbose
 
 # Use custom config file
-cliptions post-target-frame --reply-to "1234567890123456789" --image "blocks/block2/target.jpg" --round 3 --target-time 2 --config config/custom.yaml
+cliptions post-target-frame --reply-to "1234567890123456789" --image "blocks/block2/target.jpg" --block 3 --target-time 2 --config config/custom.yaml
 ```
 
 **Example Output:**
@@ -225,7 +225,7 @@ cliptions post-target-frame --reply-to "1234567890123456789" --image "blocks/blo
 Tweet ID: 9876543210987654321
 URL: https://twitter.com/i/status/9876543210987654321
 Reply to: 1234567890123456789
-Round: 3
+Block: 3
 Target time: 2025-04-01 | 16:30:57 | EST
 ```
 
@@ -238,7 +238,7 @@ Target time: 2025-04-01 | 16:30:57 | EST
 
 ### Score Calculation
 
-Calculate similarity scores and rankings for a round:
+Calculate similarity scores and rankings for a block:
 
 ```bash
 # Basic score calculation with CLIP
@@ -257,7 +257,7 @@ Process payouts for completed blocks:
 
 ```bash
 # Process single block
-cliptions process-payouts round1 --prize-pool 100.0
+cliptions process-payouts block1 --prize-pool 100.0
 
 # Process all blocks with batch mode
 cliptions process-payouts --all
@@ -268,26 +268,26 @@ cliptions process-payouts --all --continue-on-error --output csv --output-file p
 
 ### Commitment Verification
 
-Verify the integrity of player commitments and save results to rounds.json:
+Verify the integrity of player commitments and save results to blocks.json:
 
 ```bash
 # Basic commitment verification
-cliptions verify-commitments --round-tweet-id "1234567890123456789" --round-id "round4"
+cliptions verify-commitments --block-tweet-id "1234567890123456789" --block-id "block4"
 
 # Verbose output with detailed verification process
-cliptions verify-commitments --round-tweet-id "1234567890123456789" --round-id "round4" --verbose
+cliptions verify-commitments --block-tweet-id "1234567890123456789" --block-id "block4" --verbose
 
 # Use custom file paths for commitments and reveals
-cliptions verify-commitments --round-tweet-id "1234567890123456789" --round-id "round4" \
+cliptions verify-commitments --block-tweet-id "1234567890123456789" --block-id "block4" \
   --commitments-file /path/to/commitments.json \
   --reveals-file /path/to/reveals.json
 
 # Different output formats
-cliptions verify-commitments --round-tweet-id "1234567890123456789" --round-id "round4" --output json
-cliptions verify-commitments --round-tweet-id "1234567890123456789" --round-id "round4" --output csv
+cliptions verify-commitments --block-tweet-id "1234567890123456789" --block-id "block4" --output json
+cliptions verify-commitments --block-tweet-id "1234567890123456789" --block-id "block4" --output csv
 
 # Use custom config file
-cliptions verify-commitments --round-tweet-id "1234567890123456789" --round-id "round4" --config config/custom.yaml
+cliptions verify-commitments --block-tweet-id "1234567890123456789" --block-id "block4" --config config/custom.yaml
 ```
 
 **Example Output:**
@@ -306,15 +306,15 @@ Participant 1: 9876543210987654321
   Salt: random_secret_123
   Valid: ✅
 
-✅ Verification results saved to data/rounds.json under round 'round4'
+✅ Verification results saved to data/blocks.json under block 'block4'
 ```
 
 **Features:**
 - **Hash verification**: Validates commitment hashes against revealed guesses and salts
-- **Automatic saving**: Saves verification results to rounds.json with proper ordering
+- **Automatic saving**: Saves verification results to blocks.json with proper ordering
 - **Multiple formats**: Output in text, JSON, or CSV format
 - **Flexible file paths**: Use custom paths for commitments and reveals files
-- **Round tracking**: Associate verification results with specific round IDs
+- **Block tracking**: Associate verification results with specific block IDs
 - **Error handling**: Comprehensive error messages for invalid commitments
 - **Colored output**: Visual indicators for valid/invalid commitments (can be disabled)
 
@@ -333,9 +333,9 @@ cliptions process-payouts --config config.yaml --all
 cliptions calculate-scores --use-mock target.jpg 100.0 "test1" "test2"
 
 # Multiple output formats
-cliptions verify-commitments --round-tweet-id "1234567890123456789" --round-id "round1" --output text  # Default
-cliptions verify-commitments --round-tweet-id "1234567890123456789" --round-id "round1" --output json
-cliptions verify-commitments --round-tweet-id "1234567890123456789" --round-id "round1" --output csv
+cliptions verify-commitments --block-tweet-id "1234567890123456789" --block-id "block1" --output text  # Default
+cliptions verify-commitments --block-tweet-id "1234567890123456789" --block-id "block1" --output json
+cliptions verify-commitments --block-tweet-id "1234567890123456789" --block-id "block1" --output csv
 
 # Quiet mode for scripts
 cliptions generate-commitment "My prediction" --salt "mysalt" --no-save

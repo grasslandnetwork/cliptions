@@ -1,5 +1,5 @@
 """
-Test script for round announcement functionality
+Test script for block announcement functionality
 """
 
 import asyncio
@@ -10,26 +10,26 @@ from pathlib import Path
 # Add the parent directory to sys.path to allow imports
 sys.path.append(str(Path(__file__).parent))
 
-from browser.validator.announce_round import (
-    RoundAnnouncementTask,
-    create_standard_round_announcement
+from browser.validator.announce_block import (
+    BlockAnnouncementTask,
+    create_standard_block_announcement
 )
 
 async def main():
-    # Create a round announcement task
-    task = RoundAnnouncementTask()
+    # Create a block announcement task
+    task = BlockAnnouncementTask()
     
     try:
     # Create test announcement data
-    announcement_data = create_standard_round_announcement(
-        block_num="TEST-ROUND-001",
+    announcement_data = create_standard_block_announcement(
+        block_num="TEST-BLOCK-001",
         livestream_url="https://www.youtube.com/watch?v=SMCRQj9Hbx8",  # Using provided YouTube URL
         entry_fee=0.001,  # 0.001 TAO
         commitment_hours=24,  # 24 hours for commitments
         reveal_hours=48,    # 48 hours for reveals
     )
     
-    print("Posting round announcement...")
+    print("Posting block announcement...")
     result = await task.execute(data=announcement_data)
     
     if result.success:

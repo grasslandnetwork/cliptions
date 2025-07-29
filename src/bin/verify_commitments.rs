@@ -2,7 +2,7 @@
 //!
 //! Enhanced CLI tool with comprehensive error handling, multiple output formats,
 //! configuration support, and improved user experience for verifying cryptographic
-//! commitments in prediction market rounds.
+//! commitments in prediction market blocks.
 
 use clap::Parser;
 use colored::Colorize;
@@ -28,19 +28,19 @@ ensuring the integrity of the prediction market. Results can be displayed in mul
 formats and saved to files for audit trails.
 
 Examples:
-  # Verify commitments for a specific round
-  verify_commitments round1
+  # Verify commitments for a specific block
+  verify_commitments block1
   
   # Detailed verification with verbose output
-  verify_commitments round1 --verbose --detailed
+  verify_commitments block1 --verbose --detailed
   
   # Save verification results to JSON
-  verify_commitments round1 --output json --output-file verification.json
+  verify_commitments block1 --output json --output-file verification.json
   
-  # Use custom rounds file with configuration
-  verify_commitments round1 --rounds-file data/rounds.json --config config.yaml
+  # Use custom blocks file with configuration
+  verify_commitments block1 --blocks-file data/blocks.json --config config.yaml
   
-  # Batch verify multiple rounds
+  # Batch verify multiple blocks
   verify_commitments --all --continue-on-error --output csv
 ")]
 struct Args {
@@ -52,8 +52,8 @@ struct Args {
     all: bool,
 
     /// Path to blocks file
-    #[arg(long, default_value = "rounds.json")]
-    rounds_file: PathBuf,
+    #[arg(long, default_value = "blocks.json")]
+    blocks_file: PathBuf,
 
     /// Output format: table, json, csv
     #[arg(long, short, default_value = "table", value_parser = ["table", "json", "csv"])]
@@ -101,7 +101,7 @@ struct Args {
 
     /// Maximum number of blocks to process (for --all, 0 = unlimited)
     #[arg(long, default_value = "0")]
-    max_rounds: usize,
+    max_blocks: usize,
 }
 
 fn main() {
@@ -192,7 +192,7 @@ fn main() {
 
             // Check for failures and exit with appropriate code
             let has_failures = verification_data
-                .rounds
+                .blocks
                 .iter()
                 .any(|(_, results, _)| results.iter().any(|&r| !r));
 
@@ -221,18 +221,18 @@ fn main() {
 fn validate_inputs(args: &Args) -> Result<(), String> {
     // Validate mutual exclusivity
     if !args.all && args.block_num.is_none() {
-        return Err("Must specify either a round ID or --all".to_string());
+        return Err("Must specify either a block ID or --all".to_string());
     }
 
     if args.all && args.block_num.is_some() {
-        return Err("Cannot specify both a round ID and --all".to_string());
+        return Err("Cannot specify both a block ID and --all".to_string());
     }
 
-    // Validate rounds file exists
-    if !args.rounds_file.exists() {
+    // Validate blocks file exists
+    if !args.blocks_file.exists() {
         return Err(format!(
-            "Rounds file does not exist: {}",
-            args.rounds_file.display()
+            "Blocks file does not exist: {}",
+            args.blocks_file.display()
         ));
     }
 
@@ -276,7 +276,7 @@ fn create_processor_and_verify(
         }
         let embedder = MockEmbedder::clip_like();
         let processor = BlockProcessor::new(
-            args.rounds_file.to_string_lossy().to_string(),
+            args.blocks_file.to_string_lossy().to_string(),
             embedder,
             strategy,
         );
@@ -294,7 +294,7 @@ fn create_processor_and_verify(
                         );
                     }
                     let processor = BlockProcessor::new(
-                        args.rounds_file.to_string_lossy().to_string(),
+                        args.blocks_file.to_string_lossy().to_string(),
                         embedder,
                         strategy,
                     );
@@ -315,7 +315,7 @@ fn create_processor_and_verify(
                         println!("{} Using default CLIP embedder", "Info:".blue().bold());
                     }
                     let processor = BlockProcessor::new(
-                        args.rounds_file.to_string_lossy().to_string(),
+                        args.blocks_file.to_string_lossy().to_string(),
                         embedder,
                         strategy,
                     );
@@ -336,40 +336,40 @@ fn verify_with_processor<E: EmbedderTrait>(
     mut processor: BlockProcessor<E, ClipBatchStrategy>,
     args: &Args,
 ) -> Result<VerificationResults, Box<dyn std::error::Error>> {
-    // Load rounds first
-    processor.load_rounds()?;
+    // Load blocks first
+    processor.load_blocks()?;
 
     if args.all {
-        verify_all_rounds(processor, args)
+        verify_all_blocks(processor, args)
     } else if let Some(block_num) = &args.block_num {
-        verify_single_round(processor, block_num, args)
+        verify_single_block(processor, block_num, args)
     } else {
-        Err("Must specify either a round ID or --all".into())
+        Err("Must specify either a block ID or --all".into())
     }
 }
 
 #[derive(Debug)]
 struct VerificationResults {
-    rounds: Vec<(String, Vec<bool>, Vec<cliptions_core::types::Participant>)>,
-    total_rounds_processed: usize,
+    blocks: Vec<(String, Vec<bool>, Vec<cliptions_core::types::Participant>)>,
+    total_blocks_processed: usize,
     total_participants: usize,
     total_valid: usize,
     total_invalid: usize,
     errors: Vec<String>,
 }
 
-fn verify_all_rounds<E: EmbedderTrait>(
+fn verify_all_blocks<E: EmbedderTrait>(
     mut processor: BlockProcessor<E, ClipBatchStrategy>,
     args: &Args,
 ) -> Result<VerificationResults, Box<dyn std::error::Error>> {
     if args.verbose {
-        println!("{} Verifying all rounds...", "Info:".blue().bold());
+        println!("{} Verifying all blocks...", "Info:".blue().bold());
     }
 
     let block_nums = processor.get_block_nums()?;
     let mut results = VerificationResults {
-        rounds: Vec::new(),
-        total_rounds_processed: 0,
+        blocks: Vec::new(),
+        total_blocks_processed: 0,
         total_participants: 0,
         total_valid: 0,
         total_invalid: 0,
@@ -379,28 +379,28 @@ fn verify_all_rounds<E: EmbedderTrait>(
     let mut processed_count = 0;
 
     for block_num in block_nums {
-        // Check max rounds limit
-        if args.max_rounds > 0 && processed_count >= args.max_rounds {
+        // Check max blocks limit
+        if args.max_blocks > 0 && processed_count >= args.max_blocks {
             if args.verbose {
                 println!(
-                    "{} Reached maximum rounds limit ({})",
+                    "{} Reached maximum blocks limit ({})",
                     "Info:".blue().bold(),
-                    args.max_rounds
+                    args.max_blocks
                 );
             }
             break;
         }
 
-        match process_round_verification(&mut processor, &block_num, args) {
+        match process_block_verification(&mut processor, &block_num, args) {
             Ok((verification_results, participants)) => {
                 let valid_count = verification_results.iter().filter(|&&r| r).count();
                 let invalid_count = verification_results.len() - valid_count;
 
                 let verification_len = verification_results.len();
                 results
-                    .rounds
+                    .blocks
                     .push((block_num.to_string(), verification_results, participants));
-                results.total_rounds_processed += 1;
+                results.total_blocks_processed += 1;
                 results.total_participants += verification_len;
                 results.total_valid += valid_count;
                 results.total_invalid += invalid_count;
@@ -408,7 +408,7 @@ fn verify_all_rounds<E: EmbedderTrait>(
 
                 if args.verbose {
                     println!(
-                        "{} Verified round {} ({}/{} valid)",
+                        "{} Verified block {} ({}/{} valid)",
                         "Info:".blue().bold(),
                         block_num,
                         valid_count,
@@ -417,7 +417,7 @@ fn verify_all_rounds<E: EmbedderTrait>(
                 }
             }
             Err(e) => {
-                let error_msg = format!("Failed to verify round {}: {}", block_num, e);
+                let error_msg = format!("Failed to verify block {}: {}", block_num, e);
                 results.errors.push(error_msg.clone());
 
                 if args.continue_on_error {
@@ -434,25 +434,25 @@ fn verify_all_rounds<E: EmbedderTrait>(
     Ok(results)
 }
 
-fn verify_single_round<E: EmbedderTrait>(
+fn verify_single_block<E: EmbedderTrait>(
     mut processor: BlockProcessor<E, ClipBatchStrategy>,
     block_num: &str,
     args: &Args,
 ) -> Result<VerificationResults, Box<dyn std::error::Error>> {
     if args.verbose {
-        println!("{} Verifying round: {}", "Info:".blue().bold(), block_num);
+        println!("{} Verifying block: {}", "Info:".blue().bold(), block_num);
     }
 
     let (verification_results, participants) =
-        process_round_verification(&mut processor, block_num, args)?;
+        process_block_verification(&mut processor, block_num, args)?;
 
     let valid_count = verification_results.iter().filter(|&&r| r).count();
     let invalid_count = verification_results.len() - valid_count;
 
     let verification_len = verification_results.len();
     let results = VerificationResults {
-        rounds: vec![(block_num.to_string(), verification_results, participants)],
-        total_rounds_processed: 1,
+        blocks: vec![(block_num.to_string(), verification_results, participants)],
+        total_blocks_processed: 1,
         total_participants: verification_len,
         total_valid: valid_count,
         total_invalid: invalid_count,
@@ -461,7 +461,7 @@ fn verify_single_round<E: EmbedderTrait>(
 
     if args.verbose {
         println!(
-            "{} Verified round {} ({}/{} valid)",
+            "{} Verified block {} ({}/{} valid)",
             "Info:".blue().bold(),
             block_num,
             valid_count,
@@ -472,27 +472,27 @@ fn verify_single_round<E: EmbedderTrait>(
     Ok(results)
 }
 
-fn process_round_verification<E: EmbedderTrait>(
+fn process_block_verification<E: EmbedderTrait>(
     processor: &mut BlockProcessor<E, ClipBatchStrategy>,
     block_num: &str,
     args: &Args,
 ) -> Result<(Vec<bool>, Vec<cliptions_core::types::Participant>), Box<dyn std::error::Error>> {
-    // Get round info
-    let round = processor.get_round(block_num)?;
+    // Get block info
+    let block = processor.get_block(block_num)?;
 
     if args.verbose {
         println!(
-            "{} Round: {} - {} participants",
+            "{} Block: {} - {} participants",
             "Info:".blue().bold(),
-            round.block_num,
-            round.participants.len()
+            block.block_num,
+            block.participants.len()
         );
     }
 
-    if round.participants.is_empty() {
+    if block.participants.is_empty() {
         if args.verbose {
             println!(
-                "{} No participants to verify in round {}",
+                "{} No participants to verify in block {}",
                 "Info:".blue().bold(),
                 block_num
             );
@@ -501,7 +501,7 @@ fn process_round_verification<E: EmbedderTrait>(
     }
 
     // Clone participants to avoid borrowing issues
-    let participants = round.participants.clone();
+    let participants = block.participants.clone();
 
     // Verify commitments
     let verification_results = processor.verify_commitments(block_num)?;
@@ -531,12 +531,12 @@ fn display_table_format(
     );
     println!("{}", "=".repeat(80));
 
-    if results.rounds.is_empty() {
-        println!("{} No rounds processed", "Info:".blue().bold());
+    if results.blocks.is_empty() {
+        println!("{} No blocks processed", "Info:".blue().bold());
         return Ok(());
     }
 
-    for (block_num, verification_results, participants) in &results.rounds {
+    for (block_num, verification_results, participants) in &results.blocks {
         println!("\n{} {}", "Block:".bold().blue(), block_num.bright_white());
 
         let valid_count = verification_results.iter().filter(|&&r| r).count();
@@ -612,7 +612,7 @@ fn display_table_format(
 
     println!("\n{}", "=".repeat(80));
     println!("{} {}", "Summary:".bold(), "");
-    println!("Blocks Processed: {}", results.total_rounds_processed);
+    println!("Blocks Processed: {}", results.total_blocks_processed);
     println!("Total Participants: {}", results.total_participants);
     println!(
         "Valid Commitments: {}",
@@ -645,8 +645,8 @@ fn display_table_format(
 fn display_json_format(results: &VerificationResults) -> Result<(), Box<dyn std::error::Error>> {
     let mut output = serde_json::Map::new();
 
-    let rounds_data: Vec<serde_json::Value> = results
-        .rounds
+    let blocks_data: Vec<serde_json::Value> = results
+        .blocks
         .iter()
         .map(|(block_num, verification_results, participants)| {
             let participant_data: Vec<serde_json::Value> = participants
@@ -677,11 +677,11 @@ fn display_json_format(results: &VerificationResults) -> Result<(), Box<dyn std:
         })
         .collect();
 
-    output.insert("rounds".to_string(), serde_json::Value::Array(rounds_data));
+    output.insert("blocks".to_string(), serde_json::Value::Array(blocks_data));
     output.insert(
         "summary".to_string(),
         serde_json::json!({
-            "total_rounds_processed": results.total_rounds_processed,
+            "total_blocks_processed": results.total_blocks_processed,
             "total_participants": results.total_participants,
             "total_valid": results.total_valid,
             "total_invalid": results.total_invalid,
@@ -707,7 +707,7 @@ fn display_json_format(results: &VerificationResults) -> Result<(), Box<dyn std:
 fn display_csv_format(results: &VerificationResults) -> Result<(), Box<dyn std::error::Error>> {
     println!("block_num,username,user_id,guess,commitment,salt,is_verified,commitment_valid");
 
-    for (block_num, verification_results, participants) in &results.rounds {
+    for (block_num, verification_results, participants) in &results.blocks {
         for (participant, &is_valid) in participants.iter().zip(verification_results.iter()) {
             let escaped_guess = participant.guess.text.replace("\"", "\"\"");
             let salt_str = participant
@@ -741,8 +741,8 @@ fn save_results(
         "json" => {
             let mut output = serde_json::Map::new();
 
-            let rounds_data: Vec<serde_json::Value> = results
-                .rounds
+            let blocks_data: Vec<serde_json::Value> = results
+                .blocks
                 .iter()
                 .map(|(block_num, verification_results, participants)| {
                     let participant_data: Vec<serde_json::Value> = participants
@@ -773,11 +773,11 @@ fn save_results(
                 })
                 .collect();
 
-            output.insert("rounds".to_string(), serde_json::Value::Array(rounds_data));
+            output.insert("blocks".to_string(), serde_json::Value::Array(blocks_data));
             output.insert(
                 "summary".to_string(),
                 serde_json::json!({
-                    "total_rounds_processed": results.total_rounds_processed,
+                    "total_blocks_processed": results.total_blocks_processed,
                     "total_participants": results.total_participants,
                     "total_valid": results.total_valid,
                     "total_invalid": results.total_invalid,
@@ -801,7 +801,7 @@ fn save_results(
                 "block_num,username,user_id,guess,commitment,salt,is_verified,commitment_valid\n",
             );
 
-            for (block_num, verification_results, participants) in &results.rounds {
+            for (block_num, verification_results, participants) in &results.blocks {
                 for (participant, &is_valid) in participants.iter().zip(verification_results.iter())
                 {
                     let escaped_guess = participant.guess.text.replace("\"", "\"\"");
@@ -831,8 +831,8 @@ fn save_results(
             content.push_str(&"=".repeat(50));
             content.push('\n');
 
-            for (block_num, verification_results, participants) in &results.rounds {
-                content.push_str(&format!("\nRound: {}\n", block_num));
+            for (block_num, verification_results, participants) in &results.blocks {
+                content.push_str(&format!("\nBlock: {}\n", block_num));
 
                 let valid_count = verification_results.iter().filter(|&&r| r).count();
                 content.push_str(&format!(
@@ -866,8 +866,8 @@ fn save_results(
             content.push_str(&"=".repeat(50));
             content.push('\n');
             content.push_str(&format!(
-                "Total Rounds: {}\n",
-                results.total_rounds_processed
+                "Total Blocks: {}\n",
+                results.total_blocks_processed
             ));
             content.push_str(&format!(
                 "Total Participants: {}\n",
@@ -896,9 +896,9 @@ mod tests {
     #[test]
     fn test_validate_inputs_valid() {
         let args = Args {
-            block_num: Some("test_round".to_string()),
+            block_num: Some("test_block".to_string()),
             all: false,
-            rounds_file: PathBuf::from("tests/fixtures/rounds.json"),
+            blocks_file: PathBuf::from("tests/fixtures/blocks.json"),
             output: "table".to_string(),
             output_file: None,
             use_mock: false,
@@ -910,7 +910,7 @@ mod tests {
             detailed: false,
             strict: false,
             invalid_only: false,
-            max_rounds: 0,
+            max_blocks: 0,
         };
 
         // This will fail if the test file doesn't exist, which is expected
@@ -921,9 +921,9 @@ mod tests {
     #[test]
     fn test_validate_inputs_invalid_both_flags() {
         let args = Args {
-            block_num: Some("test_round".to_string()),
+            block_num: Some("test_block".to_string()),
             all: true,
-            rounds_file: PathBuf::from("rounds.json"),
+            blocks_file: PathBuf::from("blocks.json"),
             output: "table".to_string(),
             output_file: None,
             use_mock: false,
@@ -935,14 +935,14 @@ mod tests {
             detailed: false,
             strict: false,
             invalid_only: false,
-            max_rounds: 0,
+            max_blocks: 0,
         };
 
         let result = validate_inputs(&args);
         assert!(result.is_err());
         assert!(result
             .unwrap_err()
-            .contains("Cannot specify both a round ID and --all"));
+            .contains("Cannot specify both a block ID and --all"));
     }
 
     #[test]
@@ -950,7 +950,7 @@ mod tests {
         let args = Args {
             block_num: None,
             all: false,
-            rounds_file: PathBuf::from("rounds.json"),
+            blocks_file: PathBuf::from("blocks.json"),
             output: "table".to_string(),
             output_file: None,
             use_mock: false,
@@ -962,25 +962,25 @@ mod tests {
             detailed: false,
             strict: false,
             invalid_only: false,
-            max_rounds: 0,
+            max_blocks: 0,
         };
 
         let result = validate_inputs(&args);
         assert!(result.is_err());
         assert!(result
             .unwrap_err()
-            .contains("Must specify either a round ID or --all"));
+            .contains("Must specify either a block ID or --all"));
     }
 
     #[test]
     fn test_verify_commitments_basic() {
-        // Create a temporary rounds file
+        // Create a temporary blocks file
         let temp_file = NamedTempFile::new().unwrap();
         let file_path = temp_file.path().to_path_buf();
 
-        // Create test round data
-        let mut round = BlockData::new(
-            "test_round".to_string(),
+        // Create test block data
+        let mut block = BlockData::new(
+            "test_block".to_string(),
             "test.jpg".to_string(),
             "test_social_id".to_string(),
             1000.0,
@@ -1000,19 +1000,19 @@ mod tests {
         )
         .with_salt(salt.to_string());
 
-        round.add_participant(participant);
+        block.add_participant(participant);
 
-        // Save rounds data
-        let mut rounds = HashMap::new();
-        rounds.insert("test_round".to_string(), round);
-        let content = serde_json::to_string_pretty(&rounds).unwrap();
+        // Save blocks data
+        let mut blocks = HashMap::new();
+        blocks.insert("test_block".to_string(), block);
+        let content = serde_json::to_string_pretty(&blocks).unwrap();
         std::fs::write(&file_path, content).unwrap();
 
         // Test validation
         let args = Args {
-            block_num: Some("test_round".to_string()),
+            block_num: Some("test_block".to_string()),
             all: false,
-            rounds_file: file_path,
+            blocks_file: file_path,
             output: "table".to_string(),
             output_file: None,
             use_mock: false,
@@ -1024,7 +1024,7 @@ mod tests {
             detailed: false,
             strict: false,
             invalid_only: false,
-            max_rounds: 0,
+            max_blocks: 0,
         };
 
         let result = validate_inputs(&args);
@@ -1033,13 +1033,13 @@ mod tests {
 
     #[test]
     fn test_verify_invalid_commitment() {
-        // Create a temporary rounds file
+        // Create a temporary blocks file
         let temp_file = NamedTempFile::new().unwrap();
         let file_path = temp_file.path().to_path_buf();
 
-        // Create test round data
-        let mut round = BlockData::new(
-            "test_round".to_string(),
+        // Create test block data
+        let mut block = BlockData::new(
+            "test_block".to_string(),
             "test.jpg".to_string(),
             "test_social_id".to_string(),
             1000.0,
@@ -1054,19 +1054,19 @@ mod tests {
         )
         .with_salt("test_salt".to_string());
 
-        round.add_participant(participant);
+        block.add_participant(participant);
 
-        // Save rounds data
-        let mut rounds = HashMap::new();
-        rounds.insert("test_round".to_string(), round);
-        let content = serde_json::to_string_pretty(&rounds).unwrap();
+        // Save blocks data
+        let mut blocks = HashMap::new();
+        blocks.insert("test_block".to_string(), block);
+        let content = serde_json::to_string_pretty(&blocks).unwrap();
         std::fs::write(&file_path, content).unwrap();
 
         // Test validation
         let args = Args {
-            block_num: Some("test_round".to_string()),
+            block_num: Some("test_block".to_string()),
             all: false,
-            rounds_file: file_path,
+            blocks_file: file_path,
             output: "table".to_string(),
             output_file: None,
             use_mock: false,
@@ -1078,7 +1078,7 @@ mod tests {
             detailed: false,
             strict: false,
             invalid_only: false,
-            max_rounds: 0,
+            max_blocks: 0,
         };
 
         let result = validate_inputs(&args);

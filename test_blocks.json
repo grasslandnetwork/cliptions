@@ -1,8 +1,8 @@
 {
-  "test_round": {
-    "block_num": "test_round",
-    "title": "Test Round",
-    "description": "A test round for calculate-scores",
+  "test_block": {
+    "block_num": "test_block",
+    "title": "Test Block",
+    "description": "A test block for calculate-scores",
     "target_image_path": "blocks/test_target.jpg",
     "status": "Open",
     "config": {

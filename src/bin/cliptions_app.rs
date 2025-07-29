@@ -163,20 +163,20 @@ async fn run_validator_loop(
     _verbose: bool,
     client: TwitterClient,
 ) -> Result<()> {
-    println!("🔍 Validator: Checking for active round...");
+    println!("🔍 Validator: Checking for active block...");
 
-    // For now, we assume no round is active and prompt to create one.
-    // A real implementation would first check Twitter for the latest round state.
+    // For now, we assume no block is active and prompt to create one.
+    // A real implementation would first check Twitter for the latest block state.
 
-    let create_new = prompt_user("No active round found. Create a new one? (y/n): ");
+    let create_new = prompt_user("No active block found. Create a new one? (y/n): ");
     if create_new.to_lowercase() != "y" {
         println!("Exiting.");
         return Ok(());
     }
 
-    // --- Gather New Round Info ---
+    // --- Gather New Block Info ---
             let block_num = prompt_user("Enter Block ID (e.g., '10'): ");
-    let description = prompt_user("Enter Round Description/Theme: ");
+    let description = prompt_user("Enter Block Description/Theme: ");
     let livestream_url = prompt_user("Enter Livestream URL: ");
     let target_timestamp_str = prompt_user("Enter Target Timestamp (YYYY-MM-DD HH:MM:SS): ");
     let target_timestamp = DateTime::parse_from_str(
@@ -192,16 +192,16 @@ async fn run_validator_loop(
         .unwrap_or_else(|e| panic!("Invalid hours format: {}", e));
     let commitment_deadline = Utc::now() + chrono::Duration::hours(commitment_hours);
 
-    // --- Create and Announce Round ---
-    let round = Block::<Pending>::new(block_num, description, livestream_url, target_timestamp);
-    println!("📢 Announcing new round on Twitter...");
+    // --- Create and Announce Block ---
+    let block = Block::<Pending>::new(block_num, description, livestream_url, target_timestamp);
+    println!("📢 Announcing new block on Twitter...");
 
-    match round.open_commitments(commitment_deadline, &client).await {
+    match block.open_commitments(commitment_deadline, &client).await {
         Ok(_) => {
             println!("✅ Block announced successfully!");
         }
         Err(e) => {
-            eprintln!("🔥 Failed to announce round: {}", e);
+            eprintln!("🔥 Failed to announce block: {}", e);
             return Err(e);
         }
     }
@@ -218,7 +218,7 @@ async fn run_miner_loop(
     port: u16,
 ) -> Result<()> {
     use std::process::Command;
-    println!("🔍 Miner: Monitoring round state...");
+    println!("🔍 Miner: Monitoring block state...");
     println!(
         "💰 Fee payment interface would be available at: http://localhost:{}",
         port
@@ -236,7 +236,7 @@ async fn run_miner_loop(
 
     loop {
         println!(
-            "🔄 Miner: Checking @{} for round updates...",
+            "🔄 Miner: Checking @{} for block updates...",
             validator_username
         );
 
@@ -276,14 +276,14 @@ async fn run_miner_loop(
 
                 // Simple prototype: look for CommitmentsOpen
                 if tweet_text.to_lowercase().contains("#commitmentsopen") {
-                    println!("🟢 This round is OPEN for commitments!");
-                    // Try to extract round number (look for #roundX)
-                    let round = tweet_text
+                    println!("🟢 This block is OPEN for commitments!");
+                    // Try to extract block number (look for #blockX)
+                    let block = tweet_text
                         .split_whitespace()
-                        .find(|w| w.to_lowercase().starts_with("#round"));
-                    let round_str =
-                        round.unwrap_or_else(|| panic!("No #roundX hashtag found in the tweet!"));
-                    println!("Block detected: {}", round_str);
+                        .find(|w| w.to_lowercase().starts_with("#block"));
+                    let block_str =
+                        block.unwrap_or_else(|| panic!("No #blockX hashtag found in the tweet!"));
+                    println!("Block detected: {}", block_str);
                     println!("\nInstructions:");
                     // Print lines containing 'How To Play' and after
                     let mut print_lines = false;
@@ -349,7 +349,7 @@ async fn run_miner_loop(
                         println!("OK, not replying this time.");
                     }
                 } else {
-                    println!("No open commitment round detected in the latest tweet.");
+                    println!("No open commitment block detected in the latest tweet.");
                 }
             }
             Ok(None) => {

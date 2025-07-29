@@ -39,8 +39,8 @@ pub struct VerifyCommitmentsArgs {
     pub config: String,
     
     /// Path to blocks.json file (default: data/blocks.json)
-    #[arg(long, default_value = "data/rounds.json")]
-    pub rounds_file: PathBuf,
+    #[arg(long, default_value = "data/blocks.json")]
+    pub blocks_file: PathBuf,
     
     /// Block ID to save results under (e.g., "block4")
     #[arg(long)]
@@ -78,7 +78,7 @@ pub async fn run(args: VerifyCommitmentsArgs) -> Result<()> {
     }
 
     if args.verbose {
-        println!("Starting commitment verification for round: {}", args.block_tweet_id);
+        println!("Starting commitment verification for block: {}", args.block_tweet_id);
     }
 
     // Load config
@@ -100,8 +100,8 @@ pub async fn run(args: VerifyCommitmentsArgs) -> Result<()> {
     let reveals = load_reveals(&reveals_path, &args.block_tweet_id)?;
 
     if args.verbose {
-        println!("Loaded {} commitments for round {}", commitments.len(), args.block_tweet_id);
-        println!("Loaded {} reveals for round {}", reveals.len(), args.block_tweet_id);
+        println!("Loaded {} commitments for block {}", commitments.len(), args.block_tweet_id);
+        println!("Loaded {} reveals for block {}", reveals.len(), args.block_tweet_id);
     }
 
     // Loop through commitments and look for matching reveals
@@ -150,13 +150,13 @@ pub async fn run(args: VerifyCommitmentsArgs) -> Result<()> {
     // Display results
     display_verification_results(&results, &args)?;
 
-    // Save to rounds.json if block_num is provided
+    // Save to blocks.json if block_num is provided
     if let Some(block_num) = &args.block_num {
-        save_to_rounds_json(&results, &args.rounds_file, block_num)?;
+        save_to_blocks_json(&results, &args.blocks_file, block_num)?;
         
         if args.verbose {
-            println!("✅ Verification results saved to {} under round '{}'", 
-                args.rounds_file.display(), block_num);
+            println!("✅ Verification results saved to {} under block '{}'", 
+                args.blocks_file.display(), block_num);
         }
     }
 
@@ -171,7 +171,7 @@ fn load_commitments(path: &PathBuf, block_tweet_id: &str) -> Result<BTreeMap<Str
     let content = fs::read_to_string(path)?;
     let results: CollectedCommitmentsResults = serde_json::from_str(&content)?;
     
-    // Filter by round
+    // Filter by block
     let mut commitments = BTreeMap::new();
     for commitment in results.commitments {
         if commitment.conversation_id.as_deref() == Some(block_tweet_id) {
@@ -190,7 +190,7 @@ fn load_reveals(path: &PathBuf, block_tweet_id: &str) -> Result<BTreeMap<String,
     let content = fs::read_to_string(path)?;
     let results: CollectedRevealsResults = serde_json::from_str(&content)?;
     
-    // Filter by round
+    // Filter by block
     let mut reveals = BTreeMap::new();
     for reveal in results.reveals {
         if reveal.conversation_id.as_deref() == Some(block_tweet_id) {
@@ -312,15 +312,15 @@ fn csv_escape(field: &str) -> String {
 }
 
 
-// Add new function to save to rounds.json
-fn save_to_rounds_json(
+// Add new function to save to blocks.json
+fn save_to_blocks_json(
     results: &VerificationResults,
-    rounds_file: &PathBuf,
+    blocks_file: &PathBuf,
     block_num: &str,
 ) -> Result<()> {
-    // Load existing rounds data
-    let mut rounds_data: BTreeMap<String, serde_json::Value> = if rounds_file.exists() {
-        let content = fs::read_to_string(rounds_file)?;
+    // Load existing blocks data
+    let mut blocks_data: BTreeMap<String, serde_json::Value> = if blocks_file.exists() {
+        let content = fs::read_to_string(blocks_file)?;
         serde_json::from_str(&content)?
     } else {
         BTreeMap::new()
@@ -352,8 +352,8 @@ fn save_to_rounds_json(
         })
     }).collect();
 
-            // Create round data that matches BlockData struct
-    let round_data = json!({
+            // Create block data that matches BlockData struct
+    let block_data = json!({
         "block_version": "1",
         "block_num": block_num,
         "target_image_path": "", // Will be set in other slices
@@ -369,12 +369,12 @@ fn save_to_rounds_json(
         "updated_at": chrono::Utc::now().to_rfc3339()
     });
 
-    // Insert or update the round
-    rounds_data.insert(block_num.to_string(), round_data);
+    // Insert or update the block
+    blocks_data.insert(block_num.to_string(), block_data);
 
     // Save back to file
-    let content = serde_json::to_string_pretty(&rounds_data)?;
-    fs::write(rounds_file, content)?;
+    let content = serde_json::to_string_pretty(&blocks_data)?;
+    fs::write(blocks_file, content)?;
 
     Ok(())
 }

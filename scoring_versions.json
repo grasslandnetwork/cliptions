@@ -2,7 +2,7 @@
     "versions": {
         "v0.1": {
             "description": "Original scoring without baseline adjustment",
-            "applied_to_rounds": ["round0"],
+            "applied_to_blocks": ["block0"],
             "parameters": {
                 "use_baseline_adjustment": false
             },
@@ -10,7 +10,7 @@
         },
         "v0.2": {
             "description": "Added baseline adjustment to prevent exploit strings",
-            "applied_to_rounds": ["round1", "round2", "round3"],
+            "applied_to_blocks": ["block1", "block2", "block3"],
             "parameters": {
                 "use_baseline_adjustment": true,
                 "baseline_text": "[UNUSED]"

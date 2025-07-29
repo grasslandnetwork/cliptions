@@ -1,8 +1,8 @@
 //! Async State Machine for Cliptions Block Engine
 //!
-//! This module implements the round lifecycle using the Rust typestate pattern.
+//! This module implements the block lifecycle using the Rust typestate pattern.
 //! Each state is a marker type that ensures operations can only be performed
-//! when the round is in the correct state, enforced by the compiler.
+//! when the block is in the correct state, enforced by the compiler.
 
 use crate::error::{CliptionsError, Result};
 use crate::social::{AnnouncementData, AnnouncementFormatter};
@@ -15,15 +15,15 @@ use twitter_api::TwitterApi;
 
 // --- State Markers ---
 
-/// State marker for a round that hasn't started yet
+/// State marker for a block that hasn't started yet
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Pending;
 
-/// State marker for a round accepting commitments
+/// State marker for a block accepting commitments
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CommitmentsOpen;
 
-/// State marker for a round with closed commitments
+/// State marker for a block with closed commitments
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CommitmentsClosed;
 
@@ -31,19 +31,19 @@ pub struct CommitmentsClosed;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct FrameCaptured;
 
-/// State marker for a round accepting reveals
+/// State marker for a block accepting reveals
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RevealsOpen;
 
-/// State marker for a round with closed reveals
+/// State marker for a block with closed reveals
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RevealsClosed;
 
-/// State marker for a round processing payouts
+/// State marker for a block processing payouts
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Payouts;
 
-/// State marker for a finished round
+/// State marker for a finished block
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Finished;
 
@@ -99,7 +99,7 @@ pub struct Block<S> {
     pub id: String,
     pub created_at: DateTime<Utc>,
 
-    // --- Round Parameters (Known at Start) ---
+    // --- Block Parameters (Known at Start) ---
     pub description: String,
     pub livestream_url: String,
     pub target_timestamp: DateTime<Utc>,
@@ -136,7 +136,7 @@ where
 
 /// Implementation for Pending state
 impl Block<Pending> {
-    /// Create a new pending round
+    /// Create a new pending block
     pub fn new(
         id: String,
         description: String,
@@ -156,7 +156,7 @@ impl Block<Pending> {
         }
     }
 
-    /// Start the round by opening commitments
+    /// Start the block by opening commitments
     pub async fn open_commitments<T: TwitterApi>(
         mut self,
         commitment_deadline: DateTime<Utc>,
@@ -164,7 +164,7 @@ impl Block<Pending> {
     ) -> Result<Block<CommitmentsOpen>> {
         let formatter = AnnouncementFormatter::new();
         let announcement_data = AnnouncementData {
-            block_num: self.id.parse().expect(&format!("CRITICAL: Invalid round ID '{}' - cannot proceed with round announcements", self.id)),
+            block_num: self.id.parse().expect(&format!("CRITICAL: Invalid block ID '{}' - cannot proceed with block announcements", self.id)),
             state_name: "CommitmentsOpen".to_string(),
             target_time: commitment_deadline.to_rfc3339(),
             hashtags: vec![],       // The formatter will add standard hashtags
@@ -204,12 +204,12 @@ impl Block<CommitmentsOpen> {
     ) -> Result<Block<CommitmentsClosed>> {
         let formatter = AnnouncementFormatter::new();
         let announcement_data = AnnouncementData {
-            block_num: self.id.parse().expect(&format!("CRITICAL: Invalid round ID '{}' - cannot proceed with round announcements", self.id)),
+            block_num: self.id.parse().expect(&format!("CRITICAL: Invalid block ID '{}' - cannot proceed with block announcements", self.id)),
             state_name: "CommitmentsClosed".to_string(),
             target_time: self.target_timestamp.to_rfc3339(),
             hashtags: vec![],
             message: format!(
-                "Round '{}': Commitments are now closed. Waiting for target time at {}.",
+                "Block '{}': Commitments are now closed. Waiting for target time at {}.",
                 self.id,
                 self.target_timestamp.to_rfc3339()
             ),
@@ -273,12 +273,12 @@ impl Block<FrameCaptured> {
     ) -> Result<Block<RevealsOpen>> {
         let formatter = AnnouncementFormatter::new();
         let announcement_data = AnnouncementData {
-            block_num: self.id.parse().expect(&format!("CRITICAL: Invalid round ID '{}' - cannot proceed with round announcements", self.id)),
+            block_num: self.id.parse().expect(&format!("CRITICAL: Invalid block ID '{}' - cannot proceed with block announcements", self.id)),
             state_name: "RevealsOpen".to_string(),
             target_time: reveals_deadline.to_rfc3339(),
             hashtags: vec![],
             message: format!(
-                "Round '{}': Target frame revealed! Reveals are open until {}.",
+                "Block '{}': Target frame revealed! Reveals are open until {}.",
                 self.id,
                 reveals_deadline.to_rfc3339()
             ),
@@ -475,7 +475,7 @@ mod tests {
         }
     }
 
-    fn common_round() -> Block<Pending> {
+    fn common_block() -> Block<Pending> {
         Block::new(
             "1".to_string(),
             "Test Theme".to_string(),
@@ -491,13 +491,13 @@ mod tests {
         let reveals_deadline = Utc::now() + Duration::hours(48);
 
         // 1. Pending -> CommitmentsOpen
-        let round = common_round();
-        let round = round
+        let block = common_block();
+        let block = block
             .open_commitments(commitment_deadline, &client)
             .await
             .unwrap();
-        assert_eq!(round.state_name(), "CommitmentsOpen");
-        assert_eq!(round.commitment_deadline, Some(commitment_deadline));
+        assert_eq!(block.state_name(), "CommitmentsOpen");
+        assert_eq!(block.commitment_deadline, Some(commitment_deadline));
         let tweet1 = client.last_tweet_text.lock().unwrap().clone().unwrap();
         assert!(tweet1.contains("BLOCK 1 - Commitment Phase"));
         assert!(tweet1.contains("livestream: http://twitch.tv/test"));
@@ -505,27 +505,27 @@ mod tests {
         assert!(tweet1.contains("Reply format ->"));
 
         // 2. CommitmentsOpen -> CommitmentsClosed
-        let round = round.close_commitments(&client).await.unwrap();
-        assert_eq!(round.state_name(), "CommitmentsClosed");
+        let block = block.close_commitments(&client).await.unwrap();
+        assert_eq!(block.state_name(), "CommitmentsClosed");
         let tweet2 = client.last_tweet_text.lock().unwrap().clone().unwrap();
         assert!(tweet2.contains("Commitments are now closed"));
 
         // 3. CommitmentsClosed -> FrameCaptured (Internal state change)
         // We simulate time passing for the check inside capture_frame
-        let mut round = round;
-        round.target_timestamp = Utc::now() - Duration::seconds(1);
+        let mut block = block;
+        block.target_timestamp = Utc::now() - Duration::seconds(1);
         let frame_path = PathBuf::from("/tmp/test_frame.jpg");
-        let round = round.capture_frame(frame_path.clone()).unwrap();
-        assert_eq!(round.state_name(), "FrameCaptured");
-        assert_eq!(round.target_frame_path.clone().unwrap(), frame_path);
+        let block = block.capture_frame(frame_path.clone()).unwrap();
+        assert_eq!(block.state_name(), "FrameCaptured");
+        assert_eq!(block.target_frame_path.clone().unwrap(), frame_path);
 
         // 4. FrameCaptured -> RevealsOpen
-        let round = round
+        let block = block
             .open_reveals(reveals_deadline, &client, &tweet1)
             .await
             .unwrap();
-        assert_eq!(round.state_name(), "RevealsOpen");
-        assert_eq!(round.reveals_deadline, Some(reveals_deadline));
+        assert_eq!(block.state_name(), "RevealsOpen");
+        assert_eq!(block.reveals_deadline, Some(reveals_deadline));
         let tweet3 = client.last_tweet_text.lock().unwrap().clone().unwrap();
         let image_path = client.last_image_path.lock().unwrap().clone().unwrap();
         assert!(tweet3.contains("Target frame revealed!"));
@@ -537,7 +537,7 @@ mod tests {
     #[tokio::test]
     async fn test_capture_frame_before_timestamp_fails() {
         let client = MockTwitterClient::new();
-        let round = common_round()
+        let block = common_block()
             .open_commitments(Utc::now() + Duration::hours(1), &client)
             .await
             .unwrap()
@@ -546,7 +546,7 @@ mod tests {
             .unwrap();
 
         // This should fail because the target_timestamp is in the future
-        let result = round.capture_frame(PathBuf::from("/tmp/fail.jpg"));
+        let result = block.capture_frame(PathBuf::from("/tmp/fail.jpg"));
         assert!(result.is_err());
         if let Err(CliptionsError::ValidationError(msg)) = result {
             assert_eq!(msg, "Target timestamp has not yet been reached.");

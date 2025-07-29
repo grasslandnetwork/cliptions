@@ -1,5 +1,5 @@
 {
-  "round4": {
+  "block4": {
     "commitment_deadline": "2025-07-27T16:52:12.544217Z",
     "created_at": "2025-07-27T16:52:12.544325Z",
     "participants": [
@@ -73,7 +73,7 @@
     "prize_pool": 1000.0,
     "results": [],
     "reveal_deadline": "2025-07-27T16:52:12.544219Z",
-    "block_num": "round4",
+    "block_num": "block4",
     "block_version": 1,
     "social_id": "",
     "status": "Complete",

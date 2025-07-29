@@ -27,23 +27,23 @@ This task list outlines the refactoring and implementation plan for the Cliption
 
 ---
 
-### Slice 0: Validator Opens Round (v0.6.0)
+### Slice 0: Validator Opens Block (v0.6.0)
 **Status**: [ ] Not Started
 **Priority**: Critical
-**Description**: Implement the `open-round` subcommand.
+**Description**: Implement the `open-block` subcommand.
 
 **Tasks**:
-- [ ] Create the `src/actions/open_round.rs` module.
+- [ ] Create the `src/actions/open_block.rs` module.
 - [ ] **Check `binaries_architecture.md` for existing `twitter_post` function signatures before implementing.**
-- [ ] Implement logic to post the #commitmentsopen tweet with round hashtag (e.g., #round8).
-- [ ] Generate tweet text with round instructions and appropriate hashtags.
-- [ ] Wire it up as the `open-round` subcommand.
-- [ ] Implement Twitter posting functionality for round opening (real API)
+- [ ] Implement logic to post the #commitmentsopen tweet with block hashtag (e.g., #block8).
+- [ ] Generate tweet text with block instructions and appropriate hashtags.
+- [ ] Wire it up as the `open-block` subcommand.
+- [ ] Implement Twitter posting functionality for block opening (real API)
 - [ ] Test posting #commitmentsopen tweet to Twitter
 - [ ] Save the posted tweet ID for later use in collect-commitments
 - [ ] Ensure config file can be swapped for different Twitter accounts/roles
-- [ ] **Create tests for the open-round subcommand by moving appropriate tests from the old binary.**
-- [ ] Update `README.md` to document the new `cliptions open-round` command.
+- [ ] **Create tests for the open-block subcommand by moving appropriate tests from the old binary.**
+- [ ] Update `README.md` to document the new `cliptions open-block` command.
 - [ ] Update this task list to mark all tasks as completed.
 
 ---
@@ -214,9 +214,9 @@ This task list outlines the refactoring and implementation plan for the Cliption
 - [x] Replace `round_version` → `block_version`
 - [x] Update CLI argument names and help text
 
-**Phase 5: CLI Subcommands**
+**Phase 5: CLI Subcommands** ✅ **COMPLETED**
 - [x] Rename `open-round` → `open-block` (when implemented)
-- [ ] Update all CLI help text and documentation
+- [x] Update all CLI help text and documentation
 
 **Phase 6: Social Media and User-Facing Text** ✅ **COMPLETED**
 - [x] Update hashtags: `#round8` → `#block8`
@@ -224,15 +224,15 @@ This task list outlines the refactoring and implementation plan for the Cliption
 - [x] Update all user-facing messages and prompts
 
 **Phase 7: Documentation and Comments**
-- [ ] Update README.md with new terminology
-- [ ] Update all code comments referencing "round"
-- [ ] Update task documentation and PRD files
-- [ ] Update CONTRIBUTING.md and other docs
+- [x] Update README.md with new terminology
+- [x] Update all code comments referencing "round"
+- [x] Update task documentation and PRD files
+- [x] Update CONTRIBUTING.md and other docs
 
 **Phase 8: Testing and Validation**
-- [ ] Update all test cases with new terminology
-- [ ] Verify all tests pass after terminology changes
-- [ ] Update `Cargo.toml` to version `0.7.0`
+- [x] Update all test cases with new terminology
+- [x] Verify all tests pass after terminology changes
+- [x] Update `Cargo.toml` to version `0.7.0`
 - [ ] Commit changes and create git tag `v0.7.0`
 - [ ] **Verify the new tag triggers and passes all checks in GitHub Actions**
 - [ ] Update this task list to mark all tasks as completed

@@ -14,8 +14,8 @@ This document outlines the Minimum Viable Product (MVP) requirements for launchi
 
 ## 2. Goals
 
-- **Goal 1: Production Launch**: Deploy a working Cliptions system that can run a complete round tomorrow
-- **Goal 2: Core Gameplay**: Enable miners to participate and validators to manage rounds end-to-end
+- **Goal 1: Production Launch**: Deploy a working Cliptions system that can run a complete block tomorrow
+- **Goal 2: Core Gameplay**: Enable miners to participate and validators to manage blocks end-to-end
 - **Goal 3: Cost Control**: Total payout is limited by the prize pool.
 - **Goal 4: Manual Reliability**: Use proven CLI tools and manual workflows over complex automation
 - **Goal 5: Simple Distribution**: Source code compilation with clear instructions
@@ -73,7 +73,7 @@ All functionality **must** be accessible through a single `cliptions` binary usi
 - **Web Server**: No web interface or server components
 - **BASE API Integration**: Reverting to $TAO/Bittensor addresses only
 - **Advanced Automation**: No automated state machine workflows
-- **Multiple Round Management**: Single round focus only
+- **Multiple Block Management**: Single block focus only
 - **User Authentication**: No user accounts or authentication
 - **Analytics and Reporting**: No advanced metrics or dashboards
 - **Mobile Support**: Desktop/CLI only
@@ -125,8 +125,8 @@ The existing binaries will be refactored into a single application following a *
 
 ## 7. Success Metrics
 
-- **Metric 1**: At least 3 miners can complete a full round (commitment → reveal → verification) using the new `cliptions` CLI tool.
-- **Metric 2**: Validator can manage one round end-to-end without critical errors using the new `cliptions` CLI tool.
+- **Metric 1**: At least 3 miners can complete a full block (commitment → reveal → verification) using the new `cliptions` CLI tool.
+- **Metric 2**: Validator can manage one block end-to-end without critical errors using the new `cliptions` CLI tool.
 - **Metric 3**: Score calculations are consistent between validator and miner verification.
 - **Metric 4**: The `cliptions` binary can be compiled and run from source on major platforms (macOS, Linux, Windows).
 

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Demo script for testing the Round Announcement module
+Demo script for testing the Block Announcement module
 
-This script demonstrates how to use the RoundAnnouncementTask to create
-and format round announcements for the Cliptions prediction network.
+This script demonstrates how to use the BlockAnnouncementTask to create
+and format block announcements for the Cliptions prediction network.
 """
 
 import sys
@@ -16,28 +16,28 @@ ROOT_DIR = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(ROOT_DIR))
 
 # Import module via package path
-from browser.validator.announce_round import (
-    RoundAnnouncementTask,
-    create_standard_round_announcement,
-    create_custom_round_announcement
+from browser.validator.announce_block import (
+    BlockAnnouncementTask,
+    create_standard_block_announcement,
+    create_custom_block_announcement
 )
 
 
-async def demo_round_announcement():
-    """Demonstrate the round announcement functionality"""
-    print("🎯 Cliptions Round Announcement Demo")
+async def demo_block_announcement():
+    """Demonstrate the block announcement functionality"""
+    print("🎯 Cliptions Block Announcement Demo")
     print("=" * 50)
     
-    # Create a standard round announcement
-    print("\n1. Creating a standard round announcement:")
-    standard_data = create_standard_round_announcement(
-        block_num="demo_round_1",
+    # Create a standard block announcement
+    print("\n1. Creating a standard block announcement:")
+    standard_data = create_standard_block_announcement(
+        block_num="demo_block_1",
         entry_fee=0.001,
         prize_pool=0.005
     )
     
     # Initialize the task
-    task = RoundAnnouncementTask()
+    task = BlockAnnouncementTask()
     
     # Format the content (without actually posting)
     content = task.format_content(standard_data)
@@ -46,17 +46,17 @@ async def demo_round_announcement():
     print(content)
     print("-" * 30)
     
-    # Create a custom round announcement
-    print("\n2. Creating a custom round announcement:")
+    # Create a custom block announcement
+    print("\n2. Creating a custom block announcement:")
     now = datetime.now()
-    custom_data = create_custom_round_announcement(
-        block_num="demo_round_2",
+    custom_data = create_custom_block_announcement(
+        block_num="demo_block_2",
         entry_fee=0.002,
         commitment_deadline=now + timedelta(hours=12),
         reveal_deadline=now + timedelta(hours=36),
         prize_pool=0.010,
-        instructions="This is a special demo round with custom parameters",
-        hashtags=["#cliptions", "$TAO", "#customround"]
+        instructions="This is a special demo block with custom parameters",
+        hashtags=["#cliptions", "$TAO", "#customblock"]
     )
     
     custom_content = task.format_content(custom_data)
@@ -86,4 +86,4 @@ async def demo_round_announcement():
 
 if __name__ == "__main__":
     # Run the demo
-    asyncio.run(demo_round_announcement()) 
+    asyncio.run(demo_block_announcement()) 
