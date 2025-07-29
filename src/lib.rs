@@ -2,14 +2,14 @@
 //!
 //! High-performance Rust implementation of the Cliptions prediction market core functionality.
 //! This library provides cryptographic commitments, scoring strategies, embedding integration,
-//! and round processing capabilities.
+//! and block processing capabilities.
 //!
 //! ## Features
 //!
 //! - **Commitment System**: Secure commitment generation and verification using SHA-256
 //! - **Scoring Strategies**: Multiple scoring algorithms including CLIP batch processing
 //! - **Embedding Integration**: Interface for CLIP and other embedding models
-//! - **Round Processing**: Complete round lifecycle management
+//! - **Block Processing**: Complete block lifecycle management
 //! - **Pure Rust Core**: Clean separation between core logic and language bindings
 //!
 //! ## Architecture
@@ -28,14 +28,14 @@ pub mod embedder;
 pub mod error;
 pub mod models;
 pub mod payout;
-pub mod round_processor;
+pub mod block_processor;
 pub mod scoring;
 pub mod social;
 pub mod twitter_utils;
 pub mod types;
 
-// New async round engine
-pub mod round_engine;
+// New async block engine
+pub mod block_engine;
 
 // Python bindings module (conditional compilation)
 #[cfg(feature = "python")]
@@ -48,12 +48,12 @@ pub use config::{CliptionsConfig, ConfigManager, CostTracker, OpenAIConfig, Spen
 pub use embedder::{EmbedderTrait, MockEmbedder};
 pub use error::{CliptionsError, Result};
 pub use payout::{PayoutCalculator, PayoutConfig, PayoutInfo};
-pub use round_processor::RoundProcessor;
+pub use block_processor::BlockProcessor;
 pub use scoring::{ClipBatchStrategy, ScoreValidator, ScoringStrategy};
 pub use social::{
     AnnouncementData, AnnouncementFormatter, HashtagManager, SocialWorkflow, TweetId, UrlParser,
 };
-pub use types::{Guess, Participant, RoundData, ScoringResult};
+pub use types::{Guess, Participant, BlockData, ScoringResult};
 
 // Re-export Python module when feature is enabled
 #[cfg(feature = "python")]

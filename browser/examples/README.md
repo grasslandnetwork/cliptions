@@ -11,12 +11,12 @@ This directory contains example and demo scripts for the modular Twitter automat
 Each script in this directory is self-contained and can be run directly from the project root. For example:
 
 ```bash
-python browser/examples/demo_round_announcement.py
+python browser/examples/demo_block_announcement.py
 ```
 
 These scripts do **not** require Twitter credentials or actual browser automation—they focus on content formatting, data model usage, and interface demonstration.
 
 ## Scripts
-- `demo_round_announcement.py`: Shows how to create and format round announcement tweets using the `RoundAnnouncementTask`.
+- `demo_block_announcement.py`: Shows how to create and format block announcement tweets using the `BlockAnnouncementTask`.
 
 Feel free to add more examples as new modules are developed! 

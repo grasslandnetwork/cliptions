@@ -25,10 +25,10 @@ async def test_collect_commitments_integration():
     """
     Integration test for collecting commitments from a real Twitter announcement.
     
-    This test uses the actual Round 2 announcement which has known commitment replies
+    This test uses the actual Block 2 announcement which has known commitment replies
     from davidynamic and track_data_.
     """
-    # Round 2 announcement URL with multiple commitment replies
+    # Block 2 announcement URL with multiple commitment replies
     announcement_url = "https://x.com/cliptions_test/status/1907159517013422578"
     
     print(f"\n🧪 Integration Test: Collecting commitments from {announcement_url}")
@@ -63,7 +63,7 @@ async def test_collect_commitments_integration():
             assert len(commitment.commitment_hash) > 32, f"Commitment hash should be substantial: {commitment.commitment_hash}"
             assert len(commitment.wallet_address) > 20, f"Wallet address should be substantial: {commitment.wallet_address}"
         
-        # Check for expected participants (based on rounds/guesses.json)
+        # Check for expected participants (based on blocks/guesses.json)
         usernames = [c.username for c in results.commitments]
         assert "@davidynamic" in usernames, "Should find davidynamic's commitment"
         assert "@track_data_" in usernames, "Should find track_data_'s commitment"

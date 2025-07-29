@@ -8,14 +8,14 @@ Based on the comprehensive search, these files still contain `realmir` reference
 - `tests/integration_tests.rs` - Update `realmir_core` imports to `cliptions_core`
 
 ### Python Test Files  
-- `tests/test_round_announcement.py` - Update hashtag references and social media handles
+- `tests/test_block_announcement.py` - Update hashtag references and social media handles
 - `tests/test_schema_consistency.py` - Update `realmir_core` imports and social media handles
 
 ### Browser Module Documentation
 - `browser/miner/__init__.py` - Update documentation header
 - `browser/miner/submit_commitment.py` - Update documentation header  
 - `browser/validator/__init__.py` - Update documentation header
-- `browser/validator/announce_round.py` - Update hashtag defaults
+- `browser/validator/announce_block.py` - Update hashtag defaults
 - `browser/validator/collect_commitments.py` - Update documentation header
 - `browser/validator/assign_entry_fees.py` - Update documentation header and social handles
 - `browser/integration_tests/__init__.py` - Update documentation header
@@ -34,7 +34,7 @@ Based on the comprehensive search, these files still contain `realmir` reference
   - [x] 1.1 Update `tests/integration_tests.rs` imports from `realmir_core` to `cliptions_core`
 
 - [x] 2.0 Update Python Test Files
-  - [x] 2.1 Update `tests/test_round_announcement.py` hashtag and social media references
+  - [x] 2.1 Update `tests/test_block_announcement.py` hashtag and social media references
   - [x] 2.2 Update `tests/test_schema_consistency.py` imports and social media handles
 
 - [x] 3.0 Update Browser Module Documentation

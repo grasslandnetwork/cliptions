@@ -136,7 +136,7 @@ class TwitterPostingInterface(TwitterTask):
     Interface for Twitter content creation tasks.
     
     Specialized for modules that create tweets, replies, or other content on Twitter.
-    Examples: RoundAnnouncer, CommitmentSubmitter, RevealSubmitter, ResultsPublisher
+    Examples: BlockAnnouncer, CommitmentSubmitter, RevealSubmitter, ResultsPublisher
     """
     
     @abstractmethod

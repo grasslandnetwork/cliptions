@@ -17,7 +17,7 @@ Based on PRD: `prd-rebrand-to-cliptions.md`
 - `tests/*.py` - Update Python test files
 - `tests/*.rs` - Update Rust test files
 - `media/realMIR_*` - ✅ Renamed media assets to use Cliptions branding
-- `data/rounds.json` - ✅ Updated social media handles from realmir_testnet to cliptions_test
+- `data/blocks.json` - ✅ Updated social media handles from realmir_testnet to cliptions_test
 
 ### Notes
 

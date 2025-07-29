@@ -2,7 +2,7 @@
 Commitment Collection Module for Cliptions Validators
 
 This module is responsible for extracting all miner commitment submissions
-from the replies to a validator's round announcement tweet.
+from the replies to a validator's block announcement tweet.
 """
 
 import asyncio
@@ -42,7 +42,7 @@ class CollectCommitmentsTask(BaseTwitterTask):
     """
     A task to collect commitment submissions from a Twitter thread using Browser Use.
     
-    This task extracts replies to a round announcement tweet and parses them to find
+    This task extracts replies to a block announcement tweet and parses them to find
     miner commitments in the format:
     - Commit: <hash>
     - Wallet: <address>

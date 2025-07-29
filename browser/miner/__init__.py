@@ -1,7 +1,7 @@
 """
 Cliptions Miner Automation Modules
 
-This package contains modules for automating miner participation in Cliptions prediction rounds.
+This package contains modules for automating miner participation in Cliptions prediction blocks.
 Miners use these modules to submit commitments and reveals in response to validator announcements.
 """
 

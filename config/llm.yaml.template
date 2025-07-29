@@ -21,10 +21,10 @@ cost_tracking:
 #
 # If you are applying for a Twitter/X developer account to participate as a miner, you can use the following description in your application:
 #
-# I am participating in a game where users make predictions about livestream events by replying to official round announcement tweets.
+# I am participating in a game where users make predictions about livestream events by replying to official block announcement tweets.
 #
 # My application will:
-# - Read round announcement tweets from the game organizer’s account.
+# - Read block announcement tweets from the game organizer’s account.
 # - Reply to those tweets with a prediction
 # - (Optionally) read replies to see my own submissions.
 #

@@ -23,8 +23,8 @@ pub struct Reveal {
 }
 
 #[derive(Serialize, Deserialize, Debug, Default)]
-pub struct RoundData {
-    pub round_id: String,
+pub struct BlockData {
+    pub block_num: String,
     #[serde(default)]
     pub commitments: Vec<Commitment>,
     #[serde(default)]

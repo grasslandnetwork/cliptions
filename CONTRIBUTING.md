@@ -129,7 +129,7 @@ Task: Collect Cliptions game guesses from Twitter replies.
 Steps:
 1. Navigate to Twitter.com
 2. Search for @cliptions_test
-3. Find the latest tweet with hashtag #round{NUMBER}
+3. Find the latest tweet with hashtag #block{NUMBER}
 4. Collect all replies containing guesses:
    - Look for patterns like:
      * "I commit to guess: [GUESS]"
@@ -140,7 +140,7 @@ Steps:
 
 Return data in this format:
 {
-  "round": NUMBER,
+  "block": NUMBER,
   "guesses": [
     {"username": "user1", "guess": "guess text"},
     {"username": "user2", "guess": "guess text"}
@@ -157,7 +157,7 @@ export TWITTER_NAME="your_twitter_username"
 export TWITTER_PASSWORD="your_twitter_password"
 
 # Run Twitter data extraction with automatic cost tracking
-python browser/twitter_data_fetcher.py --round 1 --target-time "20250523_133057EST"
+python browser/twitter_data_fetcher.py --block 1 --target-time "20250523_133057EST"
 
 # Example output:
 # ✅ OpenAI usage tracker initialized
@@ -222,7 +222,7 @@ The `requirements.txt` file contains different groups of dependencies:
 **✅ COMPLETED & PRODUCTION READY:**
 - **Core Business Logic**: Payout calculations, configuration management, social integration
 - **Cryptographic System**: SHA-256 commitments with 100x performance improvement over Python
-- **Data Management**: Round processing, participant tracking, scoring strategies
+- **Data Management**: Block processing, participant tracking, scoring strategies
 - **Test Coverage**: 69 tests with 98.5% success rate (68/69 passing)
 
 **⚠️ REMAINING WORK NEEDED:**
@@ -250,7 +250,7 @@ src/
 ├── error.rs            # Pure Rust error handling
 ├── commitment.rs       # Cryptographic commitments (pure Rust)
 ├── scoring.rs          # Scoring strategies (pure Rust)
-├── round.rs            # Round processing (pure Rust)
+├── block.rs            # Block processing (pure Rust)
 ├── embedder.rs         # Embedding interfaces (pure Rust)
 ├── python_bridge.rs    # Python bindings (PyO3 only)
 └── bin/                # CLI tools (pure Rust)
@@ -311,7 +311,7 @@ pub struct Commitment {
 - **Rust-Native Types**: Uses `DateTime<Utc>`, enums, and complex validation
 - **Business Methods**: Contains methods like `is_verified()`, `get_active_participants()`
 - **Performance Optimized**: Designed for high-performance internal computation
-- **State Management**: Full round lifecycle with metadata and validation rules
+- **State Management**: Full block lifecycle with metadata and validation rules
 
 ```rust
 // Domain layer - rich types with business logic
@@ -348,8 +348,8 @@ Browser-use (Python) → Pydantic Models → src/models.rs (Transport) → src/t
 ##### **Conversion Pattern**
 Future development should include conversion utilities:
 ```rust
-impl From<crate::models::Round> for crate::types::RoundData {
-    fn from(transport: crate::models::Round) -> Self {
+impl From<crate::models::Block> for crate::types::BlockData {
+    fn from(transport: crate::models::Block) -> Self {
         // Convert simple transport DTO to rich domain model
     }
 }
@@ -468,14 +468,14 @@ pub fn py_calculate_score(data: Vec<f64>) -> PyResult<f64> {
 # Build CLI tools (no Python dependencies)
 cargo build --release --no-default-features
 
-# Calculate scores for a round
-./target/release/calculate_scores --round-id round1 --rounds-file data/rounds.json
+# Calculate scores for a block
+./target/release/calculate_scores --block-id block1 --blocks-file data/blocks.json
 
 # Process payouts
-./target/release/process_payouts --round-id round1 --prize-pool 1000.0
+./target/release/process_payouts --block-id block1 --prize-pool 1000.0
 
 # Verify commitments
-./target/release/verify_commitments --round-id round1
+./target/release/verify_commitments --block-id block1
 ```
 
 ### Testing Strategy
@@ -502,8 +502,8 @@ with softmax to create competitive rankings. This approach fixes the ranking inv
 where semantic descriptions were ranked lower than exploit strings.
 
 ### Historical Strategies (Preserved in scoring_versions.json)
-- **v0.1**: Original scoring without baseline adjustment (applied to round0)
-- **v0.2**: Added baseline adjustment to prevent exploit strings (applied to round1-3)
+- **v0.1**: Original scoring without baseline adjustment (applied to block0)
+- **v0.2**: Added baseline adjustment to prevent exploit strings (applied to block1-3)
 
 ### Migration from Baseline to CLIP Batch
 The baseline adjustment approach has been deprecated in favor of the CLIP batch strategy 
@@ -514,18 +514,18 @@ because:
 4. Better aligns with CLIP's intended usage patterns
 
 ### Data Model Requirements
-Each round in the data must include a `scoring_version` field that references the version 
-used for that round's scoring calculations. This ensures:
+Each block in the data must include a `scoring_version` field that references the version 
+used for that block's scoring calculations. This ensures:
 - **Reproducibility**: Ability to recalculate scores using the same method
 - **Audit Trail**: Clear record of which scoring strategy was applied
 - **Data Integrity**: Prevents confusion when multiple scoring versions exist
 
-Example round data structure:
+Example block data structure:
 ```json
 {
-  "round_id": "round4",
+  "block_num": "block4",
   "scoring_version": "v0.3",
-  "target_image_path": "rounds/round4/target.jpg",
+          "target_image_path": "blocks/block4/target.jpg",
   "participants": [...],
   "results": [...]
 }
@@ -533,8 +533,8 @@ Example round data structure:
 
 **Next Steps**: After completing the baseline code removal, we will:
 1. Add v0.3 to scoring_versions.json with the commit hash and set it as the default version
-2. Update Rust round data structures to include the `scoring_version` field
-3. Ensure all new rounds reference the correct scoring version
+2. Update Rust block data structures to include the `scoring_version` field
+3. Ensure all new blocks reference the correct scoring version
 
 ## Development Guidelines
 
@@ -615,17 +615,17 @@ All critical gaps identified in the original analysis have been **successfully i
 
 | **Invalid Guesses Get Zero Score** | ❌ **Missing** | ✅ `test_invalid_guesses_get_zero_score` | **Need Rust zero score test** |
 
-| **🎮 Round Management Features** | **Rust Tests** | **Python Tests** | **Coverage Gap** |
+| **🎮 Block Management Features** | **Rust Tests** | **Python Tests** | **Coverage Gap** |
 |----------------------------------|----------------|------------------|------------------|
-| **Round Creation** | ✅ `test_round_processor_round_creation` | ❌ **Missing** | **Need Python round creation test** |
-| **Commitment Handling** | ✅ `test_round_processor_commitment_handling` | ✅ `test_process_round_payouts_valid_commitments` | **Both covered** |
-| **Invalid Commitment Handling (Abort)** | ❌ **Missing** | ✅ `test_process_round_payouts_invalid_commitments_abort` | **Need Rust abort test** |
-| **Invalid Commitment Handling (Continue)** | ❌ **Missing** | ✅ `test_process_round_payouts_invalid_commitments_continue` | **Need Rust continue test** |
-| **Data Persistence** | ✅ `test_round_processor_data_persistence` | ❌ **Missing** | **Need Python persistence test** |
-| **Process All Rounds** | ❌ **Missing** | ✅ `test_process_all_rounds` | **Need Rust process all test** |
-| **Get Validator for Round** | ❌ **Missing** | ✅ `test_get_validator_for_round` | **Need Rust validator getter** |
-| **Error Handling** | ✅ `test_round_processor_error_handling` | ❌ **Missing** | **Need Python error test** |
-| **Edge Cases** | ✅ `test_round_processor_edge_cases` | ❌ **Missing** | **Need Python edge case test** |
+| **Block Creation** | ✅ `test_block_processor_block_creation` | ❌ **Missing** | **Need Python block creation test** |
+| **Commitment Handling** | ✅ `test_block_processor_commitment_handling` | ✅ `test_process_block_payouts_valid_commitments` | **Both covered** |
+| **Invalid Commitment Handling (Abort)** | ❌ **Missing** | ✅ `test_process_block_payouts_invalid_commitments_abort` | **Need Rust abort test** |
+| **Invalid Commitment Handling (Continue)** | ❌ **Missing** | ✅ `test_process_block_payouts_invalid_commitments_continue` | **Need Rust continue test** |
+| **Data Persistence** | ✅ `test_block_processor_data_persistence` | ❌ **Missing** | **Need Python persistence test** |
+| **Process All Blocks** | ❌ **Missing** | ✅ `test_process_all_blocks` | **Need Rust process all test** |
+| **Get Validator for Block** | ❌ **Missing** | ✅ `test_get_validator_for_block` | **Need Rust validator getter** |
+| **Error Handling** | ✅ `test_block_processor_error_handling` | ❌ **Missing** | **Need Python error test** |
+| **Edge Cases** | ✅ `test_block_processor_edge_cases` | ❌ **Missing** | **Need Python edge case test** |
 
 | **💰 Payout & Economics Features** | **Rust Tests** | **Python Tests** | **Status** |
 |------------------------------------|----------------|------------------|------------|
@@ -645,8 +645,8 @@ All critical gaps identified in the original analysis have been **successfully i
 | **🔄 Data Models & Schema Features** | **Rust Tests** | **Python Tests** | **Coverage Gap** |
 |--------------------------------------|----------------|------------------|------------------|
 | **Commitment Schema Consistency** | ✅ (via integration) | ✅ `test_commitment_schema_consistency` | **Both covered** |
-| **Round Schema Consistency** | ✅ (via integration) | ✅ `test_round_schema_consistency` | **Both covered** |
-| **Round with Empty Commitments** | ✅ (via integration) | ✅ `test_round_with_empty_commitments` | **Both covered** |
+| **Block Schema Consistency** | ✅ (via integration) | ✅ `test_block_schema_consistency` | **Both covered** |
+| **Block with Empty Commitments** | ✅ (via integration) | ✅ `test_block_with_empty_commitments` | **Both covered** |
 
 | **🐦 Social Integration Features** | **Rust Tests** | **Python Tests** | **Status** |
 |-------------------------------------|----------------|------------------|------------|
@@ -655,8 +655,8 @@ All critical gaps identified in the original analysis have been **successfully i
 | **Tweet ID Extraction** | ✅ `test_extract_tweet_id_from_url` | ✅ `test_extract_tweet_id_from_url` | ✅ **Both Implemented** |
 | **Task Execution Success** | ✅ `test_social_task_execute_success` | ✅ `test_execute_success` | ✅ **Both Implemented** |
 | **Task Execution with Parameters** | ✅ `test_social_task_execute_with_kwargs` | ✅ `test_execute_with_kwargs` | ✅ **Both Implemented** |
-| **Standard Announcement Creation** | ✅ `test_create_standard_round_announcement` | ✅ `test_create_standard_round_announcement` | ✅ **Both Implemented** |
-| **Custom Announcement Creation** | ✅ `test_create_custom_round_announcement` | ✅ `test_create_custom_round_announcement` | ✅ **Both Implemented** |
+| **Standard Announcement Creation** | ✅ `test_create_standard_block_announcement` | ✅ `test_create_standard_block_announcement` | ✅ **Both Implemented** |
+| **Custom Announcement Creation** | ✅ `test_create_custom_block_announcement` | ✅ `test_create_custom_block_announcement` | ✅ **Both Implemented** |
 | **Full Announcement Workflow** | ✅ `test_full_announcement_flow` | ✅ `test_full_announcement_flow` | ✅ **Both Implemented** |
 | **Social Workflow Management** | ✅ `test_social_workflow` | ✅ (via integration) | ✅ **Both Implemented** |
 | **URL Validation** | ✅ `test_validate_url` | ✅ (via integration) | ✅ **Both Implemented** |
@@ -684,12 +684,12 @@ All critical gaps identified in the original analysis have been **successfully i
 
 | **✅ Verification Features** | **Rust Tests** | **Python Tests** | **Coverage Gap** |
 |------------------------------|----------------|------------------|------------------|
-| **Empty Round Verification** | ❌ **Missing** | ✅ `test_empty_round` | **Need Rust empty round test** |
+| **Empty Block Verification** | ❌ **Missing** | ✅ `test_empty_block` | **Need Rust empty block test** |
 | **File Not Found Handling** | ❌ **Missing** | ✅ `test_file_not_found` | **Need Rust file error test** |
 | **Invalid Commitments** | ❌ **Missing** | ✅ `test_invalid_commitments` | **Need Rust invalid test** |
 | **Missing Data Handling** | ❌ **Missing** | ✅ `test_missing_data` | **Need Rust missing data test** |
 | **Mixed Valid/Invalid Commitments** | ❌ **Missing** | ✅ `test_mixed_commitments` | **Need Rust mixed test** |
-| **Round Not Found** | ❌ **Missing** | ✅ `test_round_not_found` | **Need Rust not found test** |
+| **Block Not Found** | ❌ **Missing** | ✅ `test_block_not_found` | **Need Rust not found test** |
 | **Valid Commitments** | ✅ `test_verify_commitments` (bin) | ✅ `test_valid_commitments` | **Both covered** |
 | **Score Calculation (Binary)** | ✅ `test_calculate_scores` (bin) | ❌ **Missing** | **Need Python binary test** |
 | **Payout Processing (Binary)** | ✅ `test_process_payouts` (bin) | ❌ **Missing** | **Need Python binary test** |
@@ -699,7 +699,7 @@ All critical gaps identified in the original analysis have been **successfully i
 |-------------------|----------------|------------------|------------------|
 | **🔗 Integration Tests** | ✅ **12 tests** | ✅ **Various** | **Rust has comprehensive integration coverage** |
 | | `test_commitment_system_integration` | (Distributed across modules) | |
-| | `test_complete_round_lifecycle` | | |
+| | `test_complete_block_lifecycle` | | |
 | | `test_scoring_system_integration` | | |
 | | `test_embedder_integration` | | |
 | | `test_data_persistence_integration` | | |
@@ -740,7 +740,7 @@ All critical gaps identified in the original analysis have been **successfully i
 
 5. **✅ Enhanced Verification** - 2 tests needed
    - Mixed commitment scenarios
-   - Missing round handling
+   - Missing block handling
 
 ### **✅ Well Covered Areas**
 - **Commitment/Cryptography**: Rust has excellent coverage
@@ -754,7 +754,7 @@ All critical gaps identified in the original analysis have been **successfully i
 | Commitments | 🟢 Excellent (7/7) | 🟡 Good (4/9) | 🟢 **Strong** |
 | Embeddings | 🟡 Good (8/13) | 🟢 Excellent (10/10) | 🟢 **Strong** |
 | Scoring | 🟢 Excellent (7/7) | 🟢 Excellent (10/10) | 🟢 **Excellent** |
-| Round Management | 🟢 Excellent (5/5) | 🟢 Good (5/5) | 🟢 **Excellent** |
+| Block Management | 🟢 Excellent (5/5) | 🟢 Good (5/5) | 🟢 **Excellent** |
 | **Payouts** | 🟢 **Excellent (12/12)** ✅ | 🟢 Excellent (12/12) | 🟢 **Excellent** ✅ |
 | **Configuration** | 🟢 **Excellent (8/9)** ✅ | 🟡 Partial (9/9, some failing) | 🟢 **Strong** ✅ |
 | **Social Integration** | 🟢 **Excellent (9/9)** ✅ | 🟡 Partial (9/9, some failing) | 🟢 **Excellent** ✅ |
@@ -812,7 +812,7 @@ The Cliptions Rust core now includes **complete implementations** of all major m
 - **`src/commitment.rs`** - Cryptographic commitments with generation, verification, batch processing (7 tests)
 - **`src/scoring.rs`** - Multiple scoring strategies with embeddings integration (7 tests)
 - **`src/embedder.rs`** - CLIP embedding interface with similarity calculations (5 tests)
-- **`src/round.rs`** - Round management with participant tracking and lifecycle (5 tests)
+- **`src/block.rs`** - Block management with participant tracking and lifecycle (5 tests)
 - **`src/types.rs`** - Core data structures with serialization support
 - **`src/error.rs`** - Comprehensive error handling
 
