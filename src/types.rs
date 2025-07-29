@@ -1,7 +1,7 @@
 //! Core data types for Cliptions
 //!
 //! This module defines the fundamental data structures used throughout the Cliptions system,
-//! including participants, guesses, scoring results, and round data.
+//! including participants, guesses, scoring results, and block data.
 
 use chrono::{DateTime, Utc};
 use ndarray::Array1;
@@ -215,18 +215,18 @@ impl ScoringResult {
     }
 }
 
-/// Configuration for a prediction round
+/// Configuration for a prediction block
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RoundConfig {
-    /// Prize pool for the round
+pub struct BlockConfig {
+    /// Prize pool for the block
     pub prize_pool: f64,
     /// Maximum length for guesses
     pub max_guess_length: usize,
-    /// Scoring version to use for this round
+    /// Scoring version to use for this block
     pub scoring_version: String,
 }
 
-impl Default for RoundConfig {
+impl Default for BlockConfig {
     fn default() -> Self {
         Self {
             prize_pool: 100.0,
@@ -236,65 +236,65 @@ impl Default for RoundConfig {
     }
 }
 
-/// Status of a prediction round
+/// Status of a prediction block
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub enum RoundStatus {
-    /// Round is accepting submissions
+pub enum BlockStatus {
+    /// Block is accepting submissions
     Open,
-    /// Round is closed, processing results
+    /// Block is closed, processing results
     Processing,
-    /// Round is complete with results
+    /// Block is complete with results
     Complete,
-    /// Round was cancelled
+    /// Block was cancelled
     Cancelled,
 }
 
-/// Complete data for a prediction round
+/// Complete data for a prediction block
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RoundData {
-    /// The round version number indicates which set of round validation rules to follow
-    pub round_version: i32,
-    /// Unique identifier for the round
-    pub round_id: String,
+pub struct BlockData {
+    /// The block version number indicates which set of block validation rules to follow
+    pub block_version: i32,
+    /// Unique identifier for the block
+    pub block_num: String,
     /// Path to the target image
     pub target_image_path: String,
-    /// Current status of the round
-    pub status: RoundStatus,
-    /// Prize pool for the round
+    /// Current status of the block
+    pub status: BlockStatus,
+    /// Prize pool for the block
     pub prize_pool: f64,
-    /// Twitter Conversation URL ID for the round
+    /// Twitter Conversation URL ID for the block
     pub social_id: String,
-    /// Commitment deadline for the round
+    /// Commitment deadline for the block
     pub commitment_deadline: DateTime<Utc>,
-    /// Reveal deadline for the round
+    /// Reveal deadline for the block
     pub reveal_deadline: DateTime<Utc>,
-    /// Total payout for the round
+    /// Total payout for the block
     pub total_payout: f64,
     /// List of participants
     pub participants: Vec<Participant>,
     /// Scoring results (if processed)
     #[serde(default)]
     pub results: Vec<ScoringResult>,
-    /// Timestamp when the round was created
+    /// Timestamp when the block was created
     pub created_at: DateTime<Utc>,
-    /// Timestamp when the round was last updated
+    /// Timestamp when the block was last updated
     pub updated_at: DateTime<Utc>,
 }
 
-impl RoundData {
-    /// Create a new round
+impl BlockData {
+    /// Create a new block
     pub fn new(
-        round_id: String,
+        block_num: String,
         target_image_path: String,
         social_id: String,
         prize_pool: f64,
     ) -> Self {
         let now = Utc::now();
         Self {
-            round_version: 1,
-            round_id,
+            block_version: 1,
+            block_num,
             target_image_path,
-            status: RoundStatus::Open,
+            status: BlockStatus::Open,
             prize_pool,
             social_id,
             commitment_deadline: now + chrono::Duration::hours(24), // Default 24 hours
@@ -307,9 +307,9 @@ impl RoundData {
         }
     }
 
-    /// Create a new round with custom deadlines
+    /// Create a new block with custom deadlines
     pub fn with_deadlines(
-        round_id: String,
+        block_num: String,
         target_image_path: String,
         social_id: String,
         prize_pool: f64,
@@ -318,10 +318,10 @@ impl RoundData {
     ) -> Self {
         let now = Utc::now();
         Self {
-            round_version: 1,
-            round_id,
+            block_version: 1,
+            block_num,
             target_image_path,
-            status: RoundStatus::Open,
+            status: BlockStatus::Open,
             prize_pool,
             social_id,
             commitment_deadline,
@@ -334,22 +334,22 @@ impl RoundData {
         }
     }
 
-    /// Add a participant to the round
+    /// Add a participant to the block
     pub fn add_participant(&mut self, participant: Participant) {
         self.participants.push(participant);
         self.updated_at = Utc::now();
     }
 
-    /// Update the round status
-    pub fn set_status(&mut self, status: RoundStatus) {
+    /// Update the block status
+    pub fn set_status(&mut self, status: BlockStatus) {
         self.status = status;
         self.updated_at = Utc::now();
     }
 
-    /// Set the results for the round
+    /// Set the results for the block
     pub fn set_results(&mut self, results: Vec<ScoringResult>) {
         self.results = results;
-        self.status = RoundStatus::Complete;
+        self.status = BlockStatus::Complete;
         self.updated_at = Utc::now();
     }
 
@@ -358,14 +358,14 @@ impl RoundData {
         self.participants.iter().filter(|p| p.verified).collect()
     }
 
-    /// Check if the round is open for submissions
+    /// Check if the block is open for submissions
     pub fn is_open(&self) -> bool {
-        matches!(self.status, RoundStatus::Open)
+        matches!(self.status, BlockStatus::Open)
     }
 
-    /// Check if the round is complete
+    /// Check if the block is complete
     pub fn is_complete(&self) -> bool {
-        matches!(self.status, RoundStatus::Complete)
+        matches!(self.status, BlockStatus::Complete)
     }
 }
 

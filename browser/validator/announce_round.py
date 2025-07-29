@@ -1,9 +1,9 @@
 """
-Round Announcement Module for Cliptions Validator
+Block Announcement Module for Cliptions Validator
 
-This module implements the TwitterPostingInterface to post new round announcements.
-The Validator uses this to kick off each prediction round by posting details about
-the upcoming round including entry fees, deadlines, and participation instructions.
+This module implements the TwitterPostingInterface to post new block announcements.
+The Validator uses this to kick off each prediction block by posting details about
+the upcoming block including entry fees, deadlines, and participation instructions.
 """
 
 import logging
@@ -23,9 +23,9 @@ except ImportError:
     from core.base_task import BaseTwitterTask
 
 
-class RoundAnnouncementData(BaseModel):
-    """Data structure for round announcement content"""
-    round_id: str = Field(..., description="Unique identifier for the round")
+class BlockAnnouncementData(BaseModel):
+    """Data structure for block announcement content"""
+    block_num: str = Field(..., description="Unique identifier for the block")
     entry_fee: float = Field(..., description="Entry fee in TAO")
     commitment_deadline: datetime = Field(..., description="Deadline for commitment submissions")
     reveal_deadline: datetime = Field(..., description="Deadline for reveal submissions")
@@ -34,71 +34,71 @@ class RoundAnnouncementData(BaseModel):
     hashtags: list[str] = Field(default_factory=lambda: ["#cliptions", "$TAO"])
 
 
-class RoundAnnouncementResult(BaseModel):
-    """Result from posting a round announcement"""
+class BlockAnnouncementResult(BaseModel):
+    """Result from posting a block announcement"""
     success: bool = Field(..., description="Whether the announcement was posted successfully")
     tweet_url: Optional[str] = Field(None, description="URL of the posted tweet")
     tweet_id: Optional[str] = Field(None, description="ID of the posted tweet")
-    round_id: str = Field(..., description="The announced round ID")
+    block_num: str = Field(..., description="The announced block ID")
     timestamp: datetime = Field(default_factory=datetime.now, description="When the announcement was posted")
     error_message: Optional[str] = Field(None, description="Error message if posting failed")
 
 
-class RoundAnnouncementTask(BaseTwitterTask):
+class BlockAnnouncementTask(BaseTwitterTask):
     """
-    Task for posting round announcements to Twitter.
+    Task for posting block announcements to Twitter.
     
     This task implements the TwitterPostingInterface to handle the Validator's
-    initial announcement of a new prediction round.
+    initial announcement of a new prediction block.
     """
     
     def __init__(self, config_path: Optional[str] = None):
         super().__init__(config_path)
         self.logger = logging.getLogger(__name__)
     
-    async def execute(self, **kwargs) -> RoundAnnouncementResult:
+    async def execute(self, **kwargs) -> BlockAnnouncementResult:
         """
-        Execute the round announcement posting task.
+        Execute the block announcement posting task.
         
         Args:
-            **kwargs: Should contain RoundAnnouncementData fields or a 'data' key
-                     with RoundAnnouncementData instance
+            **kwargs: Should contain BlockAnnouncementData fields or a 'data' key
+                     with BlockAnnouncementData instance
         
         Returns:
-            RoundAnnouncementResult: Result of the announcement posting
+            BlockAnnouncementResult: Result of the announcement posting
         """
         try:
             # Use the base class execute method which includes cleanup
             result = await super().execute(**kwargs)
             return result
         except Exception as e:
-            self.logger.error(f"Failed to post round announcement: {str(e)}")
-            return RoundAnnouncementResult(
+            self.logger.error(f"Failed to post block announcement: {str(e)}")
+            return BlockAnnouncementResult(
                 success=False,
-                round_id=kwargs.get('round_id', 'unknown'),
+                block_num=kwargs.get('block_num', 'unknown'),
                 error_message=str(e)
             )
     
-    async def _execute_task(self, **kwargs) -> RoundAnnouncementResult:
+    async def _execute_task(self, **kwargs) -> BlockAnnouncementResult:
         """
         Internal task execution method called by the base class.
         
         Args:
-            **kwargs: Should contain RoundAnnouncementData fields or a 'data' key
-                     with RoundAnnouncementData instance
+            **kwargs: Should contain BlockAnnouncementData fields or a 'data' key
+                     with BlockAnnouncementData instance
         
         Returns:
-            RoundAnnouncementResult: Result of the announcement posting
+            BlockAnnouncementResult: Result of the announcement posting
         """
         # Parse input data
         if 'data' in kwargs:
             announcement_data = kwargs['data']
-            if not isinstance(announcement_data, RoundAnnouncementData):
-                announcement_data = RoundAnnouncementData(**announcement_data)
+            if not isinstance(announcement_data, BlockAnnouncementData):
+                announcement_data = BlockAnnouncementData(**announcement_data)
         else:
-            announcement_data = RoundAnnouncementData(**kwargs)
+            announcement_data = BlockAnnouncementData(**kwargs)
         
-        self.logger.info(f"Starting round announcement for round {announcement_data.round_id}")
+        self.logger.info(f"Starting block announcement for block {announcement_data.block_num}")
         
         # Format the announcement content
         content = self.format_content(announcement_data)
@@ -106,37 +106,37 @@ class RoundAnnouncementTask(BaseTwitterTask):
         # Post the announcement
         result = await self.post_content(content)
         
-        return RoundAnnouncementResult(
+        return BlockAnnouncementResult(
             success=True,
             tweet_url=result.get('tweet_url'),
             tweet_id=result.get('tweet_id'),
-            round_id=announcement_data.round_id,
+            block_num=announcement_data.block_num,
             timestamp=datetime.now()
         )
     
-    def format_content(self, data: RoundAnnouncementData) -> str:
+    def format_content(self, data: BlockAnnouncementData) -> str:
         """
-        Format the round announcement content for Twitter.
+        Format the block announcement content for Twitter.
         
         Args:
-            data: Round announcement data
+            data: Block announcement data
             
         Returns:
             Formatted tweet content
         """
-        # Extract round number from round_id (e.g., "TEST-ROUND-001" -> "TEST ROUND 001")
-        round_display = data.round_id.replace("-", " ").upper()
+        # Extract block number from block_num (e.g., "TEST-BLOCK-001" -> "TEST BLOCK 001")
+        block_display = data.block_num.replace("-", " ").upper()
         
         # Format commitment deadline as readable time (assume UTC if no timezone)
         commitment_time = data.commitment_deadline.strftime('%I:%M:%S %p UTC on %B %d, %Y')
         
         # Combine all hashtags at the top
-        round_hashtag = f"#{data.round_id.lower().replace('-', '')}"
-        all_hashtags = [round_hashtag, "#roundannouncement"] + data.hashtags
+        block_hashtag = f"#{data.block_num.lower().replace('-', '')}"
+        all_hashtags = [block_hashtag, "#blockannouncement"] + data.hashtags
         
         content_parts = [
             " ".join(all_hashtags),
-            f"{round_display} - Hash Your Prediction",
+            f"{block_display} - Hash Your Prediction",
             "",
             "How To Play:",
             f"1. Watch: {data.livestream_url}",
@@ -207,7 +207,7 @@ class RoundAnnouncementTask(BaseTwitterTask):
                 "success": True,
                 "tweet_url": tweet_url,
                 "tweet_id": tweet_id,
-                "message": "Successfully posted round announcement"
+                "message": "Successfully posted block announcement"
             }
             
         except Exception as e:
@@ -233,7 +233,7 @@ class RoundAnnouncementTask(BaseTwitterTask):
         
         return None
     
-    def validate_output(self, result: Any) -> RoundAnnouncementResult:
+    def validate_output(self, result: Any) -> BlockAnnouncementResult:
         """
         Validate that the announcement was posted successfully.
         
@@ -241,47 +241,47 @@ class RoundAnnouncementTask(BaseTwitterTask):
             result: The result to validate
             
         Returns:
-            Validated RoundAnnouncementResult
+            Validated BlockAnnouncementResult
         """
-        if isinstance(result, RoundAnnouncementResult):
+        if isinstance(result, BlockAnnouncementResult):
             return result
         
-        # If it's not already a RoundAnnouncementResult, something went wrong
-        return RoundAnnouncementResult(
+        # If it's not already a BlockAnnouncementResult, something went wrong
+        return BlockAnnouncementResult(
             success=False,
-            round_id="unknown",
+            block_num="unknown",
             error_message="Invalid result type returned from task execution"
         )
 
 
 # Utility functions for creating announcement data
 
-def create_standard_round_announcement(
-    round_id: str,
+def create_standard_block_announcement(
+    block_num: str,
     livestream_url: str = "https://www.youtube.com/watch?v=SMCRQj9Hbx8",
     entry_fee: float = 0.001,
     commitment_hours: int = 24,
     reveal_hours: int = 48
-) -> RoundAnnouncementData:
+) -> BlockAnnouncementData:
     """
-    Create a standard round announcement with default timing.
+    Create a standard block announcement with default timing.
     
     Args:
-        round_id: Unique identifier for the round
+        block_num: Unique identifier for the block
         livestream_url: URL of the livestream players are predicting (defaults to sample URL)
         entry_fee: Entry fee in TAO (default: 0.001)
         commitment_hours: Hours from now until commitment deadline
         reveal_hours: Hours from now until reveal deadline
         
     Returns:
-        RoundAnnouncementData instance
+        BlockAnnouncementData instance
     """
     now = datetime.now()
     commitment_deadline = now + timedelta(hours=commitment_hours)
     reveal_deadline = now + timedelta(hours=reveal_hours)
     
-    return RoundAnnouncementData(
-        round_id=round_id,
+    return BlockAnnouncementData(
+        block_num=block_num,
         livestream_url=livestream_url,
         entry_fee=entry_fee,
         commitment_deadline=commitment_deadline,
@@ -289,20 +289,20 @@ def create_standard_round_announcement(
     )
 
 
-def create_custom_round_announcement(
-    round_id: str,
+def create_custom_block_announcement(
+    block_num: str,
     livestream_url: str,
     entry_fee: float,
     commitment_deadline: datetime,
     reveal_deadline: datetime,
     instructions: str = "",
     hashtags: Optional[list[str]] = None
-) -> RoundAnnouncementData:
+) -> BlockAnnouncementData:
     """
-    Create a custom round announcement with specific parameters.
+    Create a custom block announcement with specific parameters.
     
     Args:
-        round_id: Unique identifier for the round
+        block_num: Unique identifier for the block
         livestream_url: URL of the livestream players are predicting
         entry_fee: Entry fee in TAO
         commitment_deadline: When commitments are due
@@ -311,10 +311,10 @@ def create_custom_round_announcement(
         hashtags: Custom hashtags (uses defaults if not provided)
         
     Returns:
-        RoundAnnouncementData instance
+        BlockAnnouncementData instance
     """
-    return RoundAnnouncementData(
-        round_id=round_id,
+    return BlockAnnouncementData(
+        block_num=block_num,
         livestream_url=livestream_url,
         entry_fee=entry_fee,
         commitment_deadline=commitment_deadline,

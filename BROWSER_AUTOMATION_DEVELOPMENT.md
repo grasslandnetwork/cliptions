@@ -45,7 +45,7 @@
 ### 3. **Test Data & Resources**
 - **Any .jpg image** from the repo for target frame posting (we're just testing image upload)
 - **Fake TAO address**: `5FakeEntryFeeAddressForTestingOnly12345`
-- **Existing Twitter URLs** from rounds.json for reply targets
+- **Existing Twitter URLs** from blocks.json for reply targets
 - **Simulated content** - we're testing posting mechanics, not content accuracy
 
 ### 4. **Required Infrastructure**
@@ -116,7 +116,7 @@ Reply posting to specific tweet URLs with text content.
 ### **Implementation Steps**
 
 1. **Setup & Validation (30 seconds)**
-   - Load round2 commitment URLs from rounds.json
+   - Load block2 commitment URLs from blocks.json
    - Validate URLs are accessible via browser
    - Take screenshot of initial browser state
 

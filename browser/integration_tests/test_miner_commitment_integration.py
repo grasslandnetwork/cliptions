@@ -26,7 +26,7 @@ async def main():
         commitment_data = create_commitment_submission(
             prediction="Cat sanctuary with caretakers feeding cats",
             salt="test-salt-123",
-            wallet_address="5Co2unDtZKZDzYNZHT2fUMkEnpVWnassfbuabvZmGTrYKgtD",  # Example wallet from rounds data
+            wallet_address="5Co2unDtZKZDzYNZHT2fUMkEnpVWnassfbuabvZmGTrYKgtD",  # Example wallet from blocks data
             reply_to_url=announcement_url
         )
         

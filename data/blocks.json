@@ -1,5 +1,5 @@
 {
-  "round4": {
+  "block4": {
     "commitment_deadline": "2025-07-27T16:52:12.544217Z",
     "created_at": "2025-07-27T16:52:12.544325Z",
     "participants": [
@@ -73,11 +73,11 @@
     "prize_pool": 1000.0,
     "results": [],
     "reveal_deadline": "2025-07-27T16:52:12.544219Z",
-    "round_id": "round4",
-    "round_version": 1,
+    "block_num": "block4",
+    "block_version": 1,
     "social_id": "",
     "status": "Complete",
-    "target_image_path": "rounds/round0/target20250223_133057EST.jpg",
+            "target_image_path": "blocks/block0/target20250223_133057EST.jpg",
     "total_payout": 999.9999999999999,
     "updated_at": "2025-07-28T13:49:50.593924+00:00"
   }

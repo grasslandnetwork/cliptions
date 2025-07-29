@@ -12,7 +12,7 @@ use serde_json;
 use crate::commitment::{CommitmentGenerator, CommitmentVerifier};
 use crate::embedder::{cosine_similarity, ClipEmbedder, MockEmbedder};
 use crate::error::CliptionsError;
-use crate::round_processor::RoundProcessor;
+use crate::block_processor::BlockProcessor;
 use crate::scoring::{
     calculate_payouts, calculate_rankings, ClipBatchStrategy, ScoreValidator, ScoringStrategy,
 };
@@ -168,43 +168,43 @@ pub fn py_calculate_payouts(
 }
 
 // =============================================================================
-// Round Processing Python Bindings
+// Block Processing Python Bindings
 // =============================================================================
 
-/// Python wrapper for RoundProcessor
+/// Python wrapper for BlockProcessor
 #[pyclass]
-pub struct PyRoundProcessor {
-    inner: RoundProcessor<MockEmbedder, ClipBatchStrategy>,
+pub struct PyBlockProcessor {
+    inner: BlockProcessor<MockEmbedder, ClipBatchStrategy>,
 }
 
 #[pymethods]
-impl PyRoundProcessor {
+impl PyBlockProcessor {
     #[new]
-    pub fn new(rounds_file: String) -> Self {
+    pub fn new(blocks_file: String) -> Self {
         let embedder = MockEmbedder::clip_like();
         let strategy = ClipBatchStrategy::new();
         Self {
-            inner: RoundProcessor::new(rounds_file, embedder, strategy),
+            inner: BlockProcessor::new(blocks_file, embedder, strategy),
         }
     }
 
-    pub fn load_rounds(&mut self) -> PyResult<()> {
-        self.inner.load_rounds().map_err(|e| e.into())
+    pub fn load_blocks(&mut self) -> PyResult<()> {
+        self.inner.load_blocks().map_err(|e| e.into())
     }
 
-    pub fn verify_commitments(&mut self, round_id: &str) -> PyResult<Vec<bool>> {
+    pub fn verify_commitments(&mut self, block_num: &str) -> PyResult<Vec<bool>> {
         self.inner
-            .verify_commitments(round_id)
+            .verify_commitments(block_num)
             .map_err(|e| e.into())
     }
 
-    pub fn process_round_payouts(
+    pub fn process_block_payouts(
         &mut self,
-        round_id: &str,
+        block_num: &str,
     ) -> PyResult<Vec<(String, String, f64, usize, f64)>> {
         let results = self
             .inner
-            .process_round_payouts(round_id)
+            .process_block_payouts(block_num)
             .map_err(|e| PyErr::from(e))?;
 
         // Convert to Python-friendly format
@@ -224,28 +224,28 @@ impl PyRoundProcessor {
         Ok(py_results)
     }
 
-    pub fn get_round_ids(&mut self) -> PyResult<Vec<String>> {
-        self.inner.get_round_ids().map_err(|e| e.into())
+    pub fn get_block_nums(&mut self) -> PyResult<Vec<String>> {
+        self.inner.get_block_nums().map_err(|e| e.into())
     }
 }
 
-/// Python function for processing round payouts
+/// Python function for processing block payouts
 #[pyfunction]
-#[pyo3(signature = (rounds_file, round_id, use_mock = false))]
-pub fn py_process_round_payouts(
-    rounds_file: String,
-    round_id: String,
+#[pyo3(signature = (blocks_file, block_num, use_mock = false))]
+pub fn py_process_block_payouts(
+    blocks_file: String,
+    block_num: String,
     use_mock: bool,
 ) -> PyResult<Vec<(String, String, f64, usize, f64)>> {
     let strategy = ClipBatchStrategy::new();
 
     let mut processor = if use_mock {
         let embedder = MockEmbedder::clip_like();
-        RoundProcessor::new(rounds_file, embedder, strategy)
+        BlockProcessor::new(blocks_file, embedder, strategy)
     } else {
         // Try CLIP - panic if it fails
         match ClipEmbedder::new() {
-            Ok(embedder) => RoundProcessor::new(rounds_file, embedder, strategy),
+            Ok(embedder) => BlockProcessor::new(blocks_file, embedder, strategy),
             Err(e) => {
                 panic!("CRITICAL: Failed to load CLIP model: {}. Cannot proceed with invalid MockEmbedder fallback as this would produce unreliable payout calculations.", e);
             }
@@ -253,7 +253,7 @@ pub fn py_process_round_payouts(
     };
 
     let results = processor
-        .process_round_payouts(&round_id)
+        .process_block_payouts(&block_num)
         .map_err(|e| PyErr::from(e))?;
 
     // Convert to Python-friendly format
@@ -273,23 +273,23 @@ pub fn py_process_round_payouts(
     Ok(py_results)
 }
 
-/// Python function for verifying round commitments
+/// Python function for verifying block commitments
 #[pyfunction]
-#[pyo3(signature = (rounds_file, round_id, use_mock = false))]
-pub fn py_verify_round_commitments(
-    rounds_file: String,
-    round_id: String,
+#[pyo3(signature = (blocks_file, block_num, use_mock = false))]
+pub fn py_verify_block_commitments(
+    blocks_file: String,
+    block_num: String,
     use_mock: bool,
 ) -> PyResult<Vec<bool>> {
     let strategy = ClipBatchStrategy::new();
 
     let mut processor = if use_mock {
         let embedder = MockEmbedder::clip_like();
-        RoundProcessor::new(rounds_file, embedder, strategy)
+        BlockProcessor::new(blocks_file, embedder, strategy)
     } else {
         // Try CLIP - panic if it fails
         match ClipEmbedder::new() {
-            Ok(embedder) => RoundProcessor::new(rounds_file, embedder, strategy),
+            Ok(embedder) => BlockProcessor::new(blocks_file, embedder, strategy),
             Err(e) => {
                 panic!("CRITICAL: Failed to load CLIP model: {}. Cannot proceed with invalid MockEmbedder fallback as this would produce unreliable verification results.", e);
             }
@@ -297,7 +297,7 @@ pub fn py_verify_round_commitments(
     };
 
     processor
-        .verify_commitments(&round_id)
+        .verify_commitments(&block_num)
         .map_err(|e| e.into())
 }
 
@@ -329,18 +329,18 @@ fn test_deserialize_commitment(commitment_dict: &Bound<'_, pyo3::types::PyDict>)
     Ok(())
 }
 
-/// Test function to deserialize a Round from a Python dict.
+/// Test function to deserialize a Block from a Python dict.
 /// Used for ensuring Pydantic models and Rust structs are in sync.
 #[pyfunction]
-fn test_deserialize_round(round_dict: &Bound<'_, pyo3::types::PyDict>) -> PyResult<()> {
+fn test_deserialize_block(block_dict: &Bound<'_, pyo3::types::PyDict>) -> PyResult<()> {
     // Convert Python dict to JSON string, then deserialize to Rust struct
-    let json_module = PyModule::import_bound(round_dict.py(), "json")?;
+    let json_module = PyModule::import_bound(block_dict.py(), "json")?;
     let json_str = json_module
         .getattr("dumps")?
-        .call1((round_dict,))?
+        .call1((block_dict,))?
         .extract::<String>()?;
 
-    let _: crate::models::Round = serde_json::from_str(&json_str).map_err(|e| {
+    let _: crate::models::Block = serde_json::from_str(&json_str).map_err(|e| {
         pyo3::exceptions::PyValueError::new_err(format!("JSON deserialization failed: {}", e))
     })?;
 
@@ -353,7 +353,7 @@ fn cliptions_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Classes
     m.add_class::<PyCommitmentGenerator>()?;
     m.add_class::<PyScoreValidator>()?;
-    m.add_class::<PyRoundProcessor>()?;
+    m.add_class::<PyBlockProcessor>()?;
 
     // Functions
     m.add_function(wrap_pyfunction!(py_generate_commitment, m)?)?;
@@ -362,12 +362,12 @@ fn cliptions_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     m.add_function(wrap_pyfunction!(py_calculate_rankings, m)?)?;
     m.add_function(wrap_pyfunction!(py_calculate_payouts, m)?)?;
-    m.add_function(wrap_pyfunction!(py_process_round_payouts, m)?)?;
-    m.add_function(wrap_pyfunction!(py_verify_round_commitments, m)?)?;
+    m.add_function(wrap_pyfunction!(py_process_block_payouts, m)?)?;
+    m.add_function(wrap_pyfunction!(py_verify_block_commitments, m)?)?;
 
     // Schema test functions
     m.add_function(wrap_pyfunction!(test_deserialize_commitment, m)?)?;
-    m.add_function(wrap_pyfunction!(test_deserialize_round, m)?)?;
+    m.add_function(wrap_pyfunction!(test_deserialize_block, m)?)?;
 
     Ok(())
 }

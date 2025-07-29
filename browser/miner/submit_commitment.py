@@ -2,7 +2,7 @@
 Commitment Submission Module for Cliptions Miners
 
 This module implements the TwitterPostingInterface to submit commitment hashes as replies
-to validator round announcement tweets. Miners use this to participate in prediction rounds
+to validator block announcement tweets. Miners use this to participate in prediction blocks
 by submitting their cryptographic commitments along with their wallet addresses.
 """
 
@@ -28,7 +28,7 @@ class CommitmentSubmissionData(BaseModel):
     prediction: str = Field(..., description="The plaintext prediction")
     salt: str = Field(..., description="Salt used to generate commitment hash")
     wallet_address: str = Field(..., description="Miner's wallet address for payouts")
-    reply_to_url: str = Field(..., description="URL of the round announcement tweet to reply to")
+    reply_to_url: str = Field(..., description="URL of the block announcement tweet to reply to")
     commitment_hash: Optional[str] = Field(None, description="Pre-computed commitment hash (optional)")
 
 
@@ -45,10 +45,10 @@ class CommitmentSubmissionResult(BaseModel):
 
 class CommitmentSubmissionTask(BaseTwitterTask):
     """
-    Task for submitting commitment hashes to Twitter as replies to round announcements.
+    Task for submitting commitment hashes to Twitter as replies to block announcements.
     
     This task implements the TwitterPostingInterface to handle a miner's
-    participation in a prediction round by submitting their commitment.
+    participation in a prediction block by submitting their commitment.
     """
     
     def __init__(self, config_path: Optional[str] = None):
@@ -253,7 +253,7 @@ def create_commitment_submission(
         prediction: The plaintext prediction to commit
         salt: Salt value for the commitment hash
         wallet_address: Miner's wallet address for payouts
-        reply_to_url: URL of the round announcement tweet to reply to
+        reply_to_url: URL of the block announcement tweet to reply to
         
     Returns:
         CommitmentSubmissionData instance
@@ -279,7 +279,7 @@ def create_precomputed_commitment_submission(
     Args:
         commitment_hash: Pre-computed commitment hash
         wallet_address: Miner's wallet address for payouts
-        reply_to_url: URL of the round announcement tweet to reply to
+        reply_to_url: URL of the block announcement tweet to reply to
         prediction: Original prediction (optional, for reference)
         salt: Original salt (optional, for reference)
         

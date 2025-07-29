@@ -19,9 +19,9 @@ pub struct PostTargetFrameArgs {
     #[arg(short, long)]
     pub image: PathBuf,
 
-    /// Round number
+    /// Block number
     #[arg(long)]
-    pub round: u64,
+    pub block: u64,
 
     /// Target time in hours from now
     #[arg(long)]
@@ -50,7 +50,7 @@ struct PostTargetFrameResults {
     tweet_url: String,
     reply_to_tweet_id: String,
     image_path: String,
-    round_number: u64,
+    block_num: u64,
     target_time: String,
     posted_at: String,
 }
@@ -65,7 +65,7 @@ pub async fn run(args: PostTargetFrameArgs) -> Result<()> {
         println!("Starting target frame posting...");
         println!("Replying to tweet: {}", args.reply_to);
         println!("Image file: {}", args.image.display());
-        println!("Round: {}", args.round);
+        println!("Block: {}", args.block);
         println!("Target time: {} hours from now", args.target_time);
     }
 
@@ -107,7 +107,7 @@ pub async fn run(args: PostTargetFrameArgs) -> Result<()> {
 
     // Create announcement data for reveals
     let announcement_data = crate::social::AnnouncementData {
-        round_id: args.round,
+        block_num: args.block,
         state_name: "revealsopen".to_string(),
         target_time: formatted_target_time.clone(),
         hashtags: vec![], // The formatter will add standard hashtags
@@ -143,7 +143,7 @@ pub async fn run(args: PostTargetFrameArgs) -> Result<()> {
                 tweet_url: format!("https://twitter.com/i/status/{}", tweet.id),
                 reply_to_tweet_id: args.reply_to.clone(),
                 image_path: args.image.display().to_string(),
-                round_number: args.round,
+                block_num: args.block,
                 target_time: formatted_target_time,
                 posted_at: Utc::now().to_rfc3339(),
             };
@@ -153,7 +153,7 @@ pub async fn run(args: PostTargetFrameArgs) -> Result<()> {
                 println!("Tweet ID: {}", results.tweet_id);
                 println!("URL: {}", results.tweet_url);
                 println!("Reply to: {}", results.reply_to_tweet_id);
-                println!("Round: {}", results.round_number);
+                println!("Block: {}", results.block_num);
                 println!("Target time: {}", results.target_time);
             }
 
@@ -270,13 +270,13 @@ mod tests {
             "post-target-frame",
             "--reply-to", "123456789",
             "--image", "/path/to/image.jpg",
-            "--round", "5",
+            "--block", "5",
             "--target-time", "2",
         ]).unwrap();
 
         assert_eq!(args.reply_to, "123456789");
         assert_eq!(args.image, PathBuf::from("/path/to/image.jpg"));
-        assert_eq!(args.round, 5);
+        assert_eq!(args.block, 5);
         assert_eq!(args.target_time, 2);
         assert!(!args.verbose);
         assert!(!args.no_color);
@@ -290,7 +290,7 @@ mod tests {
             "post-target-frame",
             "--reply-to", "123456789",
             "--image", "/path/to/image.jpg",
-            "--round", "5",
+            "--block", "5",
             "--target-time", "2",
             "--verbose",
             "--no-color",
@@ -300,7 +300,7 @@ mod tests {
 
         assert_eq!(args.reply_to, "123456789");
         assert_eq!(args.image, PathBuf::from("/path/to/image.jpg"));
-        assert_eq!(args.round, 5);
+        assert_eq!(args.block, 5);
         assert_eq!(args.target_time, 2);
         assert!(args.verbose);
         assert!(args.no_color);
@@ -314,7 +314,7 @@ mod tests {
             "post-target-frame",
             "--reply-to", "123456789",
             // Missing --image
-            "--round", "5",
+            "--block", "5",
             "--target-time", "2",
         ]);
         assert!(result.is_err());

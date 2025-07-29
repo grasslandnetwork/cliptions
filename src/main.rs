@@ -16,7 +16,7 @@ use cliptions_core::actions::calculate_scores::{CalculateScoresArgs, run as calc
 #[derive(Parser)]
 #[command(name = "cliptions")]
 #[command(about = "Cliptions - A CLIP-based prediction market")]
-#[command(version = "0.6.6")]
+#[command(version = "0.7.0")]
 #[command(long_about = "
 Unified CLI tool for Cliptions prediction market operations.
 
@@ -25,7 +25,7 @@ This tool provides all functionality through subcommands:
 - collect-commitments: Collect commitment replies from a specific tweet
 - post-target-frame: Post target frame image as reply to commitment tweet
 - collect-reveals: Collect reveal replies from target frame tweet
-- verify-commitments: Verify commitments against reveals for a round
+- verify-commitments: Verify commitments against reveals for a block
 - calculate-scores: Calculate scores and payouts for verified participants
 
 Use 'cliptions <SUBCOMMAND> --help' for detailed help on each command.
@@ -53,7 +53,7 @@ enum Commands {
     #[command(name = "collect-reveals")]
     CollectReveals(CollectRevealsArgs),
     
-    /// Verify commitments for prediction rounds
+    /// Verify commitments for prediction blocks
     #[command(name = "verify-commitments")]
     VerifyCommitments(VerifyCommitmentsArgs),
     

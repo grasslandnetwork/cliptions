@@ -21,12 +21,12 @@ class Commitment(BaseModel):
     tweet_url: str = Field(..., description="The URL of the reply tweet containing the commitment.")
     timestamp: datetime = Field(..., description="The timestamp when the reply was posted.")
 
-class Round(BaseModel):
+class Block(BaseModel):
     """
-    Represents a full prediction round.
-    Mirrors the Rust `Round` struct.
+    Represents a full prediction block.
+    Mirrors the Rust `Block` struct.
     """
-    round_id: str = Field(..., description="Unique identifier for the round.")
+    block_num: str = Field(..., description="Unique identifier for the block.")
     announcement_url: str = Field(..., description="URL of the announcement tweet that was processed.")
     livestream_url: str = Field(..., description="URL of the livestream players are predicting.")
     entry_fee: float = Field(..., description="Entry fee in TAO.")

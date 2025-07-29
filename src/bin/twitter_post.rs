@@ -25,9 +25,9 @@ struct Args {
     #[arg(long)]
     state: Option<String>,
 
-    /// Round number
+    /// Block number
     #[arg(long)]
-    round: Option<u64>,
+    block: Option<u64>,
 
     /// Livestream URL
     #[arg(long)]
@@ -91,8 +91,8 @@ async fn main() {
     }
 
     // Get tweet text either from direct input or generate it from state parameters
-    let tweet_text = if let (Some(state), Some(round), Some(hours)) =
-        (&args.state, args.round, args.target_time)
+    let tweet_text = if let (Some(state), Some(block), Some(hours)) =
+        (&args.state, args.block, args.target_time)
     {
         // Calculate target time (hours from now)
         let target_time = Utc::now() + ChronoDuration::hours(hours as i64);
@@ -108,7 +108,7 @@ async fn main() {
 
         // Create announcement data
         let announcement_data = cliptions_core::social::AnnouncementData {
-            round_id: round,
+            block_num: block,
             state_name: state.to_string(),
             target_time: formatted_target_time.clone(),
             hashtags: vec![],       // The formatter will add standard hashtags
@@ -137,7 +137,7 @@ async fn main() {
         }
     } else {
         args.text.ok_or_else(|| {
-            eprintln!("Either --text or all of --state, --round, and --target-time must be provided");
+            eprintln!("Either --text or all of --state, --block, and --target-time must be provided");
             eprintln!("Note: --livestream is optional for reveals announcements but required for commitment announcements");
             std::process::exit(1);
         }).unwrap()

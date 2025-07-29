@@ -62,29 +62,29 @@ class AssignEntryFeesTask(BaseTwitterTask):
         )
         
     def load_commitment_urls(self) -> List[str]:
-        """Load commitment URLs from rounds.json."""
+        """Load commitment URLs from blocks.json."""
         try:
-            rounds_file = Path("data/rounds.json")
-            if not rounds_file.exists():
-                self.logger.warning(f"Rounds file not found: {rounds_file}")
+            blocks_file = Path("data/blocks.json")
+            if not blocks_file.exists():
+                self.logger.warning(f"Blocks file not found: {blocks_file}")
                 return []
                 
-            with open(rounds_file, 'r') as f:
-                rounds_data = json.load(f)
+            with open(blocks_file, 'r') as f:
+                blocks_data = json.load(f)
             
-            # Extract commitment URLs from round2 (known to have data)
+            # Extract commitment URLs from block2 (known to have data)
             commitment_urls = []
-            if "round2" in rounds_data:
-                round2_data = rounds_data["round2"]
+            if "block2" in blocks_data:
+                block2_data = blocks_data["block2"]
                 # Try collected_commitments first (newer format)
-                if "collected_commitments" in round2_data and round2_data["collected_commitments"].get("commitments"):
-                    commitments = round2_data["collected_commitments"]["commitments"]
+                if "collected_commitments" in block2_data and block2_data["collected_commitments"].get("commitments"):
+                    commitments = block2_data["collected_commitments"]["commitments"]
                     for commitment in commitments:
                         if "tweet_url" in commitment:
                             commitment_urls.append(commitment["tweet_url"])
                 # Fallback to participants (older format)
-                elif "participants" in round2_data:
-                    participants = round2_data["participants"]
+                elif "participants" in block2_data:
+                    participants = block2_data["participants"]
                     for participant in participants:
                         if "commitment_url" in participant:
                             commitment_urls.append(participant["commitment_url"])
@@ -158,7 +158,7 @@ class AssignEntryFeesTask(BaseTwitterTask):
         
         try:
             # Create reply text
-            reply_text = f"💰 Entry fee required: Send 0.1 TAO to {self.fake_tao_address} to participate in this round. #cliptions #entry_fee"
+            reply_text = f"💰 Entry fee required: Send 0.1 TAO to {self.fake_tao_address} to participate in this block. #cliptions #entry_fee"
             
             # Create browser-use task (focused on checking for existing replies first, then replying if needed)
             task = f"""
