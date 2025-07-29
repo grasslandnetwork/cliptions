@@ -215,13 +215,13 @@ This task list outlines the refactoring and implementation plan for the Cliption
 - [x] Update CLI argument names and help text
 
 **Phase 5: CLI Subcommands**
-- [ ] Rename `open-round` → `open-block` (when implemented)
+- [x] Rename `open-round` → `open-block` (when implemented)
 - [ ] Update all CLI help text and documentation
 
-**Phase 6: Social Media and User-Facing Text**
-- [ ] Update hashtags: `#round8` → `#block8`
-- [ ] Update tweet templates: "Round X is now live" → "Block X is now live"
-- [ ] Update all user-facing messages and prompts
+**Phase 6: Social Media and User-Facing Text** ✅ **COMPLETED**
+- [x] Update hashtags: `#round8` → `#block8`
+- [x] Update tweet templates: "Round X is now live" → "Block X is now live"
+- [x] Update all user-facing messages and prompts
 
 **Phase 7: Documentation and Comments**
 - [ ] Update README.md with new terminology

@@ -175,7 +175,7 @@ async fn run_validator_loop(
     }
 
     // --- Gather New Round Info ---
-    let block_num = prompt_user("Enter Round ID (e.g., '10'): ");
+            let block_num = prompt_user("Enter Block ID (e.g., '10'): ");
     let description = prompt_user("Enter Round Description/Theme: ");
     let livestream_url = prompt_user("Enter Livestream URL: ");
     let target_timestamp_str = prompt_user("Enter Target Timestamp (YYYY-MM-DD HH:MM:SS): ");

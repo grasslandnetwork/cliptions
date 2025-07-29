@@ -44,14 +44,14 @@ Examples:
   verify_commitments --all --continue-on-error --output csv
 ")]
 struct Args {
-    /// Round ID to verify (required unless --all is specified)
+    /// Block ID to verify (required unless --all is specified)
     block_num: Option<String>,
 
-    /// Verify all rounds
+    /// Verify all blocks
     #[arg(long)]
     all: bool,
 
-    /// Path to rounds file
+    /// Path to blocks file
     #[arg(long, default_value = "rounds.json")]
     rounds_file: PathBuf,
 
@@ -99,7 +99,7 @@ struct Args {
     #[arg(long)]
     invalid_only: bool,
 
-    /// Maximum number of rounds to process (for --all, 0 = unlimited)
+    /// Maximum number of blocks to process (for --all, 0 = unlimited)
     #[arg(long, default_value = "0")]
     max_rounds: usize,
 }

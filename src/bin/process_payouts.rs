@@ -41,15 +41,15 @@ Examples:
   process_payouts --round round1 --rounds-file data/custom_rounds.json
 ")]
 struct Args {
-    /// Process all rounds
+    /// Process all blocks
     #[arg(long)]
     all: bool,
 
-    /// Specific round ID to process
+    /// Specific block ID to process
     #[arg(long)]
     round: Option<String>,
 
-    /// Path to rounds file
+    /// Path to blocks file
     #[arg(long, default_value = "rounds.json")]
     rounds_file: PathBuf,
 
@@ -89,11 +89,11 @@ struct Args {
     #[arg(long)]
     detailed: bool,
 
-    /// Minimum number of participants required to process a round
+    /// Minimum number of participants required to process a block
     #[arg(long, default_value = "1")]
     min_participants: usize,
 
-    /// Maximum number of rounds to process (for --all, 0 = unlimited)
+    /// Maximum number of blocks to process (for --all, 0 = unlimited)
     #[arg(long, default_value = "0")]
     max_rounds: usize,
 }

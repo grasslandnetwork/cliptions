@@ -30,21 +30,21 @@ This subcommand processes verified participants from a round, calculates CLIP si
 against the target image, determines fair payouts based on rankings, and updates the round state.
 
 Examples:
-  # Calculate scores for round1 with default settings
-  cliptions calculate-scores --round-id round1 --prize-pool 1000.0
+  # Calculate scores for block1 with default settings
+  cliptions calculate-scores --block-num block1 --prize-pool 1000.0
   
   # Use MockEmbedder for testing
-  cliptions calculate-scores --round-id round1 --prize-pool 1000.0 --use-mock
+  cliptions calculate-scores --block-num block1 --prize-pool 1000.0 --use-mock
   
   # Save results to JSON file
-  cliptions calculate-scores --round-id round1 --prize-pool 1000.0 --output json --output-file results.json
+  cliptions calculate-scores --block-num block1 --prize-pool 1000.0 --output json --output-file results.json
 ")]
 pub struct CalculateScoresArgs {
-    /// Round ID to calculate scores for
+    /// Block ID to calculate scores for
     #[arg(short, long)]
     pub block_num: String,
     
-    /// Path to rounds data file
+    /// Path to blocks data file
     #[arg(short = 'f', long, default_value = "data/rounds.json")]
     pub rounds_file: String,
     

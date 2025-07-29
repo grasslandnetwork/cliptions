@@ -125,8 +125,8 @@ impl HashtagManager {
     ) -> Vec<String> {
         let mut hashtags = self.standard_hashtags.clone();
 
-        // Add round-specific hashtag
-        hashtags.push(format!("#round{}", block_num));
+        // Add block-specific hashtag
+        hashtags.push(format!("#block{}", block_num));
 
         // Add custom hashtags if provided
         if let Some(custom) = custom_hashtags {
@@ -145,8 +145,8 @@ impl HashtagManager {
     ) -> Vec<String> {
         let mut hashtags = self.standard_hashtags.clone();
 
-        // Add round-specific hashtag
-        hashtags.push(format!("#round{}", block_num));
+        // Add block-specific hashtag
+        hashtags.push(format!("#block{}", block_num));
 
         // Add state-specific hashtag (lowercase, no prefix)
         let state_hashtag = format!("#{}", state_name.to_lowercase());
@@ -221,7 +221,7 @@ impl AnnouncementFormatter {
         };
 
         format!(
-            "🎯 Round {} is now live! Target frame reveal at {}.{} Submit your predictions below! {}",
+            "🎯 Block {} is now live! Target frame reveal at {}.{} Submit your predictions below! {}",
             data.block_num,
             data.target_time,
             prize_info,
@@ -257,7 +257,7 @@ impl AnnouncementFormatter {
             "#cliptions".to_string(),
             "#ai".to_string(),
             "#CLIP".to_string(),
-            format!("#round{}", data.block_num),
+            format!("#block{}", data.block_num),
             format!("#{}", data.state_name.to_lowercase()),
         ];
 
@@ -267,7 +267,7 @@ impl AnnouncementFormatter {
         let hashtag_string = self.hashtag_manager.format_hashtags(&hashtags);
 
         let instructions = format!(
-            "ROUND {} - Commitment Phase\n\
+            "BLOCK {} - Commitment Phase\n\
             livestream: {}\n\n\
             How To Play:\n\
             1. Generate commitment hash\n\
@@ -288,7 +288,7 @@ impl AnnouncementFormatter {
             "#cliptions".to_string(),
             "#ai".to_string(),
             "#CLIP".to_string(),
-            format!("#round{}", data.block_num),
+            format!("#block{}", data.block_num),
             format!("#{}", data.state_name.to_lowercase()),
         ];
 
@@ -298,8 +298,8 @@ impl AnnouncementFormatter {
         let hashtag_string = self.hashtag_manager.format_hashtags(&hashtags);
 
         let instructions = format!(
-            "ROUND {} - REVEAL PHASE - Target frame below \n\n\
-            Reply to THIS tweet with the unencrypted text of your #round{} commitment before the deadline\n\n\
+            "BLOCK {} - REVEAL PHASE - Target frame below \n\n\
+            Reply to THIS tweet with the unencrypted text of your #block{} commitment before the deadline\n\n\
             Deadline: {}\n\n\
             Use this format:\n\
             Guess: [your-guess]\n\
@@ -452,11 +452,11 @@ impl TweetCache {
         let hashtag_manager = HashtagManager::new();
         let hashtags = hashtag_manager.extract_hashtags(&self.tweet_text);
 
-        // Look for state hashtags: #cliptions, #round{number}, state-specific hashtags
+        // Look for state hashtags: #cliptions, #block{number}, state-specific hashtags
         let has_cliptions = hashtags.iter().any(|h| h.to_lowercase() == "#cliptions");
-        let has_round = hashtags
+        let has_block = hashtags
             .iter()
-            .any(|h| h.to_lowercase().starts_with("#round"));
+            .any(|h| h.to_lowercase().starts_with("#block"));
         let has_state = hashtags.iter().any(|h| {
             let h_lower = h.to_lowercase();
             h_lower == "#commitmentsopen"
@@ -467,7 +467,7 @@ impl TweetCache {
                 || h_lower == "#finished"
         });
 
-        has_cliptions && has_round && has_state
+        has_cliptions && has_block && has_state
     }
 }
 
@@ -614,7 +614,7 @@ mod tests {
 
         let hashtags = hashtag_manager.generate_hashtags("1", None);
         assert!(hashtags.contains(&"#cliptions".to_string()));
-        assert!(hashtags.contains(&"#round1".to_string()));
+        assert!(hashtags.contains(&"#block1".to_string()));
 
         let custom_hashtags = vec!["#custom".to_string()];
         let hashtags = hashtag_manager.generate_hashtags("2", Some(custom_hashtags));
@@ -628,7 +628,7 @@ mod tests {
 
         let hashtags = hashtag_manager.generate_hashtags("1", None);
         assert!(hashtags.contains(&"#customtag".to_string()));
-        assert!(hashtags.contains(&"#round1".to_string()));
+        assert!(hashtags.contains(&"#block1".to_string()));
     }
 
     #[test]
@@ -637,7 +637,7 @@ mod tests {
 
         let hashtags = hashtag_manager.generate_hashtags_with_state(5, "CommitmentsOpen", None);
         assert!(hashtags.contains(&"#cliptions".to_string()));
-        assert!(hashtags.contains(&"#round5".to_string()));
+        assert!(hashtags.contains(&"#block5".to_string()));
         assert!(hashtags.contains(&"#commitmentsopen".to_string()));
         assert!(hashtags.contains(&"#CLIP".to_string()));
 
@@ -645,7 +645,7 @@ mod tests {
         let hashtags =
             hashtag_manager.generate_hashtags_with_state(3, "RevealsOpen", Some(custom_hashtags));
         assert!(hashtags.contains(&"#custom".to_string()));
-        assert!(hashtags.contains(&"#round3".to_string()));
+        assert!(hashtags.contains(&"#block3".to_string()));
         assert!(hashtags.contains(&"#revealsopen".to_string()));
     }
 
@@ -672,8 +672,8 @@ mod tests {
             "Tweet should contain lowercase #cliptions"
         );
         assert!(
-            tweet.contains("#round42"),
-            "Tweet should contain round-specific hashtag"
+            tweet.contains("#block42"),
+            "Tweet should contain block-specific hashtag"
         );
         assert!(
             tweet.contains("#commitmentsopen"),
@@ -702,8 +702,8 @@ mod tests {
 
         let tweet2 = formatter.format_announcement(&data2, true);
         assert!(
-            tweet2.contains("#round7"),
-            "Tweet should contain correct round number"
+            tweet2.contains("#block7"),
+            "Tweet should contain correct block number"
         );
         assert!(
             tweet2.contains("#revealsopen"),
@@ -716,8 +716,8 @@ mod tests {
             "State hashtag should be lowercase"
         );
         assert!(
-            !tweet2.contains("#Round7"),
-            "Round hashtag should be lowercase"
+            !tweet2.contains("#Block7"),
+            "Block hashtag should be lowercase"
         );
     }
 
@@ -763,11 +763,11 @@ mod tests {
         };
 
         let announcement = formatter.create_standard_announcement(&data);
-        assert!(announcement.contains("Round 1 is now live"));
+        assert!(announcement.contains("Block 1 is now live"));
         assert!(announcement.contains("2024-01-01 12:00:00"));
         assert!(announcement.contains("Prize pool: 100 TAO"));
         assert!(announcement.contains("#cliptions"));
-        assert!(announcement.contains("#round1"));
+        assert!(announcement.contains("#block1"));
         assert!(announcement.contains("#commitmentsopen"));
     }
 
@@ -787,7 +787,7 @@ mod tests {
         let announcement = formatter.create_custom_announcement(&data);
         assert!(announcement.contains("Custom announcement message"));
         assert!(announcement.contains("#custom"));
-        assert!(announcement.contains("#round2"));
+        assert!(announcement.contains("#block2"));
         assert!(announcement.contains("#revealsopen"));
     }
 
@@ -806,11 +806,11 @@ mod tests {
 
         // Test standard announcement
         let standard = formatter.format_announcement(&data, false);
-        assert!(standard.contains("Round 3 is now live"));
+        assert!(standard.contains("Block 3 is now live"));
 
         // Test custom announcement (should fallback to standard when message is empty)
         let custom = formatter.format_announcement(&data, true);
-        assert!(custom.contains("Round 3 is now live"));
+        assert!(custom.contains("Block 3 is now live"));
     }
 
     #[test]

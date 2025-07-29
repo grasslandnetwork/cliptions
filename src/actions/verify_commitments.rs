@@ -10,7 +10,7 @@ use serde_json::json;
 
 #[derive(Parser)]
 pub struct VerifyCommitmentsArgs {
-    /// Round tweet ID from Twitter URL (the original #commitmentsopen tweet)
+    /// Block tweet ID from Twitter URL (the original #commitmentsopen tweet)
     #[arg(short, long)]
     pub block_tweet_id: String,
 
@@ -38,11 +38,11 @@ pub struct VerifyCommitmentsArgs {
     #[arg(long, default_value = "config/llm.yaml")]
     pub config: String,
     
-    /// Path to rounds.json file (default: data/rounds.json)
+    /// Path to blocks.json file (default: data/blocks.json)
     #[arg(long, default_value = "data/rounds.json")]
     pub rounds_file: PathBuf,
     
-    /// Round ID to save results under (e.g., "round4")
+    /// Block ID to save results under (e.g., "block4")
     #[arg(long)]
     pub block_num: Option<String>,
 }

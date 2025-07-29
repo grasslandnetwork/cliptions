@@ -25,7 +25,7 @@ struct Args {
     #[arg(long)]
     state: Option<String>,
 
-    /// Round number
+    /// Block number
     #[arg(long)]
     round: Option<u64>,
 

@@ -499,10 +499,10 @@ mod tests {
         assert_eq!(round.state_name(), "CommitmentsOpen");
         assert_eq!(round.commitment_deadline, Some(commitment_deadline));
         let tweet1 = client.last_tweet_text.lock().unwrap().clone().unwrap();
-        assert!(tweet1.contains("ROUND 1 - Commitment Phase"));
+        assert!(tweet1.contains("BLOCK 1 - Commitment Phase"));
         assert!(tweet1.contains("livestream: http://twitch.tv/test"));
         assert!(tweet1.contains("How To Play:"));
-        assert!(tweet1.contains("Reply with:"));
+        assert!(tweet1.contains("Reply format ->"));
 
         // 2. CommitmentsOpen -> CommitmentsClosed
         let round = round.close_commitments(&client).await.unwrap();
