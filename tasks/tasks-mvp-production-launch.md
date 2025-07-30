@@ -28,18 +28,18 @@ This task list outlines the refactoring and implementation plan for the Cliption
 ---
 
 ### Slice 0: Validator Opens Block (v0.6.0)
-**Status**: [ ] Not Started
+**Status**: [x] In Progress
 **Priority**: Critical
 **Description**: Implement the `open-block` subcommand.
 
 **Tasks**:
-- [ ] Create the `src/actions/open_block.rs` module.
-- [ ] **Check `binaries_architecture.md` for existing `twitter_post` function signatures before implementing.**
-- [ ] Implement logic to post the #commitmentsopen tweet with block hashtag (e.g., #block8).
-- [ ] Generate tweet text with block instructions and appropriate hashtags.
-- [ ] Wire it up as the `open-block` subcommand.
-- [ ] Implement Twitter posting functionality for block opening (real API)
-- [ ] Test posting #commitmentsopen tweet to Twitter
+- [x] Create the `src/actions/new_block.rs` module.
+- [x] **Check `binaries_architecture.md` for existing `twitter_post` function signatures before implementing.**
+- [x] Implement logic to post the #commitmentsopen tweet with block hashtag (e.g., #block8).
+- [x] Generate tweet text with block instructions and appropriate hashtags.
+- [x] Wire it up as the `new-block` subcommand.
+- [x] Implement Twitter posting functionality for block opening (real API)
+- [x] Test posting #commitmentsopen tweet to Twitter
 - [ ] Save the posted tweet ID for later use in collect-commitments
 - [ ] Ensure config file can be swapped for different Twitter accounts/roles
 - [ ] **Create tests for the open-block subcommand by moving appropriate tests from the old binary.**
@@ -240,13 +240,13 @@ This task list outlines the refactoring and implementation plan for the Cliption
 ---
 
 ### Slice 8: End-to-End Testing & Validation (v0.7.1)
-**Status**: [ ] Not Started
+**Status**: [ ] In Progress
 **Priority**: Critical
 **Description**: Conduct comprehensive end-to-end testing of the full block lifecycle with live Twitter interactions.
 
 **Tasks**:
-- [ ] Configure Twitter API credentials for live testing (support multiple config files for different roles/slices)
-- [ ] Start a real block and document the process
+- [x] Configure Twitter API credentials for live testing (support multiple config files for different roles/slices)
+- [x] Start a real block and document the process
 - [ ] Test each slice with actual Twitter API calls (post, read, reply, etc.)
 - [ ] Integration test: Ensure all slices work together in a real block
 - [ ] Monitor block progress (commitments, fees, reveals, verification, payouts)
