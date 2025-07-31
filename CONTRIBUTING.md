@@ -91,9 +91,9 @@ playwright install --with-deps chromium
 ### Configuration Setup
 ```bash
 # Copy the template configuration file
-cp config/llm.yaml.template config/llm.yaml
+cp config/config.yaml.template config/config.yaml
 
-# Edit config/llm.yaml to set your API key and project ID:
+# Edit config/config.yaml to set your API key and project ID:
 # Replace "YOUR_API_KEY_HERE" with your actual OpenAI API key for browser-use
 # Replace "YOUR_PROJECT_ID_HERE" with your actual OpenAI project ID
 # Daily spending limits and model settings are configurable
@@ -104,7 +104,7 @@ cp config/llm.yaml.template config/llm.yaml
 
 The system includes built-in cost tracking and spending limits to prevent unexpected charges:
 
-- **Daily Spending Limits**: Configurable via `config/llm.yaml` (default: $5.00/day)
+- **Daily Spending Limits**: Configurable via `config/config.yaml` (default: $5.00/day)
 - **Project-Specific Tracking**: Only tracks costs for your specific OpenAI project
 - **Real-Time Monitoring**: Checks spending before each browser automation run
 - **Automatic Prevention**: Stops execution if daily limit would be exceeded

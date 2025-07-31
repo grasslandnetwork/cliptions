@@ -220,7 +220,7 @@ cliptions collect-commitments --tweet-id "1234567890123456789" --config config/c
 
 **Example Output:**
 ```
-✅ Loaded config from: config/llm.yaml
+✅ Loaded config from: config/config.yaml
 ✅ Search complete!
 Total replies found: 3
 
@@ -255,7 +255,7 @@ cliptions post-target-frame --reply-to "1234567890123456789" --image "blocks/blo
 
 **Example Output:**
 ```
-✅ Loaded config from: config/llm.yaml
+✅ Loaded config from: config/config.yaml
 ✅ Target frame posted successfully!
 Tweet ID: 9876543210987654321
 URL: https://twitter.com/i/status/9876543210987654321

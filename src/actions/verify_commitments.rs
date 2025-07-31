@@ -34,8 +34,8 @@ pub struct VerifyCommitmentsArgs {
     #[arg(long)]
     pub no_color: bool,
 
-    /// Config file path (default: config/llm.yaml)
-    #[arg(long, default_value = "config/llm.yaml")]
+    /// Config file path (default: config/config.yaml)
+    #[arg(long, default_value = "config/config.yaml")]
     pub config: String,
     
     /// Path to blocks.json file (default: data/blocks.json)
