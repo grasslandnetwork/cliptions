@@ -257,7 +257,49 @@ This task list outlines the refactoring and implementation plan for the Cliption
 
 ---
 
-### Finalization (v0.7.2)
+### Slice 9: Centralized File Path Management (v0.7.2)
+**Status**: [ ] Not Started
+**Priority**: Critical
+**Description**: Refactor the application to use a centralized path management system for all configuration and data files, storing them in `~/.cliptions`. This will ensure the application can be run from any directory.
+
+**Tasks**:
+- [ ] **Add `dirs` Crate**: 
+    - [ ] Run `cargo add dirs` to add the dependency to `Cargo.toml`. This crate provides cross-platform access to user directories (like the home directory).
+- [ ] **Create `PathManager` in `src/config.rs`**:
+    - [ ] Define a new public struct called `PathManager`.
+    - [ ] Implement a `new()` function for `PathManager`.
+    - [ ] In `new()`, get the user's home directory using `dirs::home_dir()`.
+    - [ ] Construct the base path `~/.cliptions`.
+    - [ ] Create the `~/.cliptions` directory and its subdirectories (`data`, `miner`, `validator`) if they don't exist. Use `std::fs::create_dir_all()`.
+- [ ] **Implement Path Getter Functions**:
+    - [ ] Add public methods to `PathManager` to return `PathBuf` for each required file:
+        - `get_config_path()` -> `~/.cliptions/config.yaml`
+        - `get_blocks_path()` -> `~/.cliptions/data/blocks.json`
+        - `get_twitter_posts_path()` -> `~/.cliptions/data/twitter_posts.json`
+        - `get_scoring_versions_path()` -> `~/.cliptions/data/scoring_versions.json`
+        - `get_validator_tweet_cache_path()` -> `~/.cliptions/validator/validator_tweet_cache.json`
+        - `get_miner_commitments_path()` -> `~/.cliptions/miner/commitments.json`
+        - `get_validator_collected_commitments_path()` -> `~/.cliptions/validator/collected_commitments.json`
+        - `get_validator_collected_reveals_path()` -> `~/.cliptions/validator/collected_reveals.json`
+- [ ] **Integrate `PathManager` with `ConfigManager`**:
+    - [ ] Modify `ConfigManager::new()` and `ConfigManager::with_path()` to use `PathManager` to determine the config file path. The default `new()` should use `PathManager::new().get_config_path()`.
+- [ ] **Refactor Codebase to Use `PathManager`**:
+    - [ ] Search the codebase for hardcoded paths (e.g., `"data/blocks.json"`, `"config/config.yaml"`).
+    - [ ] Replace all hardcoded paths with calls to the appropriate getter functions in `PathManager`.
+- [ ] **Handle Missing `config.yaml`**:
+    - [ ] Ensure the application provides a clear error message if `~/.cliptions/config.yaml` is not found, instructing the user to copy the template.
+- [ ] **Update Documentation**:
+    - [ ] Modify `README.md` and any other relevant documentation to reflect the new file locations under `~/.cliptions`.
+- [ ] **Testing**:
+    - [ ] Write unit tests for `PathManager` to ensure paths are generated correctly and directories are created.
+- [ ] Update `Cargo.toml` to version `0.7.2`.
+- [ ] Commit the changes and create a git tag `v0.7.2`.
+- [ ] **Verify the new tag triggers and passes all checks in GitHub Actions.**
+- [ ] Update this task list to mark all tasks as completed.
+
+---
+
+### Finalization (v0.7.3)
 **Status**: [ ] Not Started
 **Priority**: Medium
 **Description**: Finalize the project for release.
