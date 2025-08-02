@@ -184,8 +184,6 @@ This task list outlines the refactoring and implementation plan for the Cliption
 **Priority**: Critical
 **Description**: Replace all "round" terminology with "block" throughout the codebase to align with blockchain concepts for future development.
 
-**Tasks**:
-
 **Note**: All Python (*.py) files are being ignored during this terminology update as they will be deleted as part of the migration to the new Rust-only architecture.
 
 **Phase 1: Directory and File Structure** ✅ **COMPLETED**
@@ -294,6 +292,40 @@ This task list outlines the refactoring and implementation plan for the Cliption
     - [ ] Write unit tests for `PathManager` to ensure paths are generated correctly and directories are created.
 - [ ] Update `Cargo.toml` to version `0.7.2`.
 - [ ] Commit the changes and create a git tag `v0.7.2`.
+- [ ] **Verify the new tag triggers and passes all checks in GitHub Actions.**
+- [ ] Update this task list to mark all tasks as completed.
+
+---
+
+### Slice 10: Fix Block Version JSON Type Inconsistency (v0.7.3)
+**Status**: [ ] Not Started
+**Priority**: Critical
+**Description**: Fix the JSON parsing error in calculate-scores caused by inconsistent block_version field types.
+
+**Root Cause Analysis**:
+- The `BlockData` struct in `src/types.rs` defines `block_version: i32` (integer)
+- The `save_to_blocks_json` function in `src/actions/verify_commitments.rs` writes `"block_version": "1"` (string)
+- This creates inconsistency in `data/blocks.json` where some blocks have string values and others have integer values
+- The `calculate-scores` command fails with: `Error: Json(Error("invalid type: string \"1\", expected i32", line: 4, column: 24))`
+
+**Tasks**:
+- [ ] **Fix the JSON generation code**:
+    - [ ] In `src/actions/verify_commitments.rs`, line 356, change `"block_version": "1"` to `"block_version": 1`
+    - [ ] Verify this matches the `BlockData` struct definition in `src/types.rs`
+- [ ] **Fix existing JSON data**:
+    - [ ] Update `data/blocks.json` to ensure all `block_version` fields are integers, not strings
+    - [ ] Test that the file can be parsed without errors
+- [ ] **Add validation**:
+    - [ ] Add a test to ensure `block_version` is always written as an integer
+    - [ ] Consider adding a validation function to check JSON consistency
+- [ ] **Test the fix**:
+    - [ ] Run `./target/release/cliptions calculate-scores -b 3 -p 0.015` to verify it works
+    - [ ] Test with other block numbers to ensure consistency
+- [ ] **Update documentation**:
+    - [ ] Add a note about the block_version field type requirement
+    - [ ] Update any relevant documentation about JSON schema
+- [ ] Update `Cargo.toml` to version `0.7.3`.
+- [ ] Commit the changes and create a git tag `v0.7.3`.
 - [ ] **Verify the new tag triggers and passes all checks in GitHub Actions.**
 - [ ] Update this task list to mark all tasks as completed.
 
