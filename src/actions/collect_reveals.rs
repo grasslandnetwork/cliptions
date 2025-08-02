@@ -325,6 +325,10 @@ fn parse_reveal_from_reply(reply: &twitter_api::Tweet) -> Option<CollectedReveal
     
     let guess = guess_capture.get(1)?.as_str().trim().to_string();
     let salt = salt_capture.get(1)?.as_str().trim().to_string();
+
+    if guess == "[your-guess]" && salt == "[your-salt]" { // Ignore placeholder values from the validator tweet
+        return None;
+    }
     
     // Extract username from author_id (we'll need to get the actual username)
     let username = format!("user_{}", reply.author_id);
