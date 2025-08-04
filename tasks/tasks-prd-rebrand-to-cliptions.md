@@ -22,7 +22,7 @@ Based on PRD: `prd-rebrand-to-cliptions.md`
 ### Notes
 
 - **DO NOT** rename the project root directory to avoid Cursor IDE issues
-- **DO NOT** change environment variable names in configuration files (e.g., ./config/llm.yaml)
+- **DO NOT** change environment variable names in configuration files (e.g., ./config/config.yaml)
 - Maintain existing functionality while updating branding
 - Use case-sensitive replacements: "Cliptions" for proper nouns, "cliptions" for technical identifiers
 - Run tests after each major change to ensure functionality remains intact

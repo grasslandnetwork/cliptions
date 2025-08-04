@@ -28,18 +28,18 @@ This task list outlines the refactoring and implementation plan for the Cliption
 ---
 
 ### Slice 0: Validator Opens Block (v0.6.0)
-**Status**: [ ] Not Started
+**Status**: [x] In Progress
 **Priority**: Critical
 **Description**: Implement the `open-block` subcommand.
 
 **Tasks**:
-- [ ] Create the `src/actions/open_block.rs` module.
-- [ ] **Check `binaries_architecture.md` for existing `twitter_post` function signatures before implementing.**
-- [ ] Implement logic to post the #commitmentsopen tweet with block hashtag (e.g., #block8).
-- [ ] Generate tweet text with block instructions and appropriate hashtags.
-- [ ] Wire it up as the `open-block` subcommand.
-- [ ] Implement Twitter posting functionality for block opening (real API)
-- [ ] Test posting #commitmentsopen tweet to Twitter
+- [x] Create the `src/actions/new_block.rs` module.
+- [x] **Check `binaries_architecture.md` for existing `twitter_post` function signatures before implementing.**
+- [x] Implement logic to post the #commitmentsopen tweet with block hashtag (e.g., #block8).
+- [x] Generate tweet text with block instructions and appropriate hashtags.
+- [x] Wire it up as the `new-block` subcommand.
+- [x] Implement Twitter posting functionality for block opening (real API)
+- [x] Test posting #commitmentsopen tweet to Twitter
 - [ ] Save the posted tweet ID for later use in collect-commitments
 - [ ] Ensure config file can be swapped for different Twitter accounts/roles
 - [ ] **Create tests for the open-block subcommand by moving appropriate tests from the old binary.**
@@ -180,11 +180,9 @@ This task list outlines the refactoring and implementation plan for the Cliption
 
 ---
 ### Slice 7: Terminology Update - Round to Block (v0.7.0)
-**Status**: [ ] In Progress
+**Status**: [x] Completed
 **Priority**: Critical
 **Description**: Replace all "round" terminology with "block" throughout the codebase to align with blockchain concepts for future development.
-
-**Tasks**:
 
 **Note**: All Python (*.py) files are being ignored during this terminology update as they will be deleted as part of the migration to the new Rust-only architecture.
 
@@ -223,41 +221,117 @@ This task list outlines the refactoring and implementation plan for the Cliption
 - [x] Update tweet templates: "Round X is now live" → "Block X is now live"
 - [x] Update all user-facing messages and prompts
 
-**Phase 7: Documentation and Comments**
+**Phase 7: Documentation and Comments** ✅ **COMPLETED**
 - [x] Update README.md with new terminology
 - [x] Update all code comments referencing "round"
 - [x] Update task documentation and PRD files
 - [x] Update CONTRIBUTING.md and other docs
 
-**Phase 8: Testing and Validation**
+**Phase 8: Testing and Validation** ✅ **COMPLETED**
 - [x] Update all test cases with new terminology
 - [x] Verify all tests pass after terminology changes
 - [x] Update `Cargo.toml` to version `0.7.0`
-- [ ] Commit changes and create git tag `v0.7.0`
-- [ ] **Verify the new tag triggers and passes all checks in GitHub Actions**
-- [ ] Update this task list to mark all tasks as completed
+- [x] Commit changes and create git tag `v0.7.0`
+- [x] **Verify the new tag triggers and passes all checks in GitHub Actions**
+- [x] Update this task list to mark all tasks as completed
 
 ---
 
 ### Slice 8: End-to-End Testing & Validation (v0.7.1)
-**Status**: [ ] Not Started
+**Status**: [x] Complete
 **Priority**: Critical
 **Description**: Conduct comprehensive end-to-end testing of the full block lifecycle with live Twitter interactions.
 
 **Tasks**:
-- [ ] Configure Twitter API credentials for live testing (support multiple config files for different roles/slices)
-- [ ] Start a real block and document the process
-- [ ] Test each slice with actual Twitter API calls (post, read, reply, etc.)
-- [ ] Integration test: Ensure all slices work together in a real block
-- [ ] Monitor block progress (commitments, fees, reveals, verification, payouts)
-- [ ] Complete a block and verify all data is correct
-- [ ] Monitor, debug, and document any issues found during live testing
-- [ ] Document the full block lifecycle with real data
-- [ ] Update documentation to reflect real-world usage and troubleshooting
+- [x] Configure Twitter API credentials for live testing (support multiple config files for different roles/slices)
+- [x] Start a real block and document the process
+- [x] Test each slice with actual Twitter API calls (post, read, reply, etc.)
+- [x] Integration test: Ensure all slices work together in a real block
+- [x] Monitor block progress (commitments, fees, reveals, verification, payouts)
+- [x] Complete a block and verify all data is correct
+- [x] Monitor, debug, and document any issues found during live testing
+- [x] Document the full block lifecycle with real data
+- [x] Update documentation to reflect real-world usage and troubleshooting
 
 ---
 
-### Finalization (v0.7.2)
+### Slice 9: Centralized File Path Management (v0.7.2)
+**Status**: [ ] Not Started
+**Priority**: Critical
+**Description**: Refactor the application to use a centralized path management system for all configuration and data files, storing them in `~/.cliptions`. This will ensure the application can be run from any directory.
+
+**Tasks**:
+- [ ] **Add `dirs` Crate**: 
+    - [ ] Run `cargo add dirs` to add the dependency to `Cargo.toml`. This crate provides cross-platform access to user directories (like the home directory).
+- [ ] **Create `PathManager` in `src/config.rs`**:
+    - [ ] Define a new public struct called `PathManager`.
+    - [ ] Implement a `new()` function for `PathManager`.
+    - [ ] In `new()`, get the user's home directory using `dirs::home_dir()`.
+    - [ ] Construct the base path `~/.cliptions`.
+    - [ ] Create the `~/.cliptions` directory and its subdirectories (`data`, `miner`, `validator`) if they don't exist. Use `std::fs::create_dir_all()`.
+- [ ] **Implement Path Getter Functions**:
+    - [ ] Add public methods to `PathManager` to return `PathBuf` for each required file:
+        - `get_config_path()` -> `~/.cliptions/config.yaml`
+        - `get_blocks_path()` -> `~/.cliptions/data/blocks.json`
+        - `get_twitter_posts_path()` -> `~/.cliptions/data/twitter_posts.json`
+        - `get_scoring_versions_path()` -> `~/.cliptions/data/scoring_versions.json`
+        - `get_validator_tweet_cache_path()` -> `~/.cliptions/validator/validator_tweet_cache.json`
+        - `get_miner_commitments_path()` -> `~/.cliptions/miner/commitments.json`
+        - `get_validator_collected_commitments_path()` -> `~/.cliptions/validator/collected_commitments.json`
+        - `get_validator_collected_reveals_path()` -> `~/.cliptions/validator/collected_reveals.json`
+- [ ] **Integrate `PathManager` with `ConfigManager`**:
+    - [ ] Modify `ConfigManager::new()` and `ConfigManager::with_path()` to use `PathManager` to determine the config file path. The default `new()` should use `PathManager::new().get_config_path()`.
+- [ ] **Refactor Codebase to Use `PathManager`**:
+    - [ ] Search the codebase for hardcoded paths (e.g., `"data/blocks.json"`, `"config/config.yaml"`).
+    - [ ] Replace all hardcoded paths with calls to the appropriate getter functions in `PathManager`.
+- [ ] **Handle Missing `config.yaml`**:
+    - [ ] Ensure the application provides a clear error message if `~/.cliptions/config.yaml` is not found, instructing the user to copy the template.
+- [ ] **Update Documentation**:
+    - [ ] Modify `README.md` and any other relevant documentation to reflect the new file locations under `~/.cliptions`.
+- [ ] **Testing**:
+    - [ ] Write unit tests for `PathManager` to ensure paths are generated correctly and directories are created.
+- [ ] Update `Cargo.toml` to version `0.7.2`.
+- [ ] Commit the changes and create a git tag `v0.7.2`.
+- [ ] **Verify the new tag triggers and passes all checks in GitHub Actions.**
+- [ ] Update this task list to mark all tasks as completed.
+
+---
+
+### Slice 10: Fix Block Version JSON Type Inconsistency (v0.7.3)
+**Status**: [ ] Not Started
+**Priority**: Critical
+**Description**: Fix the JSON parsing error in calculate-scores caused by inconsistent block_version field types.
+
+**Root Cause Analysis**:
+- The `BlockData` struct in `src/types.rs` defines `block_version: i32` (integer)
+- The `save_to_blocks_json` function in `src/actions/verify_commitments.rs` writes `"block_version": "1"` (string)
+- This creates inconsistency in `data/blocks.json` where some blocks have string values and others have integer values
+- The `calculate-scores` command fails with: `Error: Json(Error("invalid type: string \"1\", expected i32", line: 4, column: 24))`
+
+**Tasks**:
+- [ ] **Fix the JSON generation code**:
+    - [ ] In `src/actions/verify_commitments.rs`, line 356, change `"block_version": "1"` to `"block_version": 1`
+    - [ ] Verify this matches the `BlockData` struct definition in `src/types.rs`
+- [ ] **Fix existing JSON data**:
+    - [ ] Update `data/blocks.json` to ensure all `block_version` fields are integers, not strings
+    - [ ] Test that the file can be parsed without errors
+- [ ] **Add validation**:
+    - [ ] Add a test to ensure `block_version` is always written as an integer
+    - [ ] Consider adding a validation function to check JSON consistency
+- [ ] **Test the fix**:
+    - [ ] Run `./target/release/cliptions calculate-scores -b 3 -p 0.015` to verify it works
+    - [ ] Test with other block numbers to ensure consistency
+- [ ] **Update documentation**:
+    - [ ] Add a note about the block_version field type requirement
+    - [ ] Update any relevant documentation about JSON schema
+- [ ] Update `Cargo.toml` to version `0.7.3`.
+- [ ] Commit the changes and create a git tag `v0.7.3`.
+- [ ] **Verify the new tag triggers and passes all checks in GitHub Actions.**
+- [ ] Update this task list to mark all tasks as completed.
+
+---
+
+### Finalization (v0.7.3)
 **Status**: [ ] Not Started
 **Priority**: Medium
 **Description**: Finalize the project for release.

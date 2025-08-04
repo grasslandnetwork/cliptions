@@ -6,6 +6,7 @@
 use clap::{Parser, Subcommand};
 
 use cliptions_core::error::Result;
+use cliptions_core::actions::new_block::{NewBlockArgs, run as new_block_run};
 use cliptions_core::actions::generate_commitment::{GenerateCommitmentArgs, run as generate_commitment_run};
 use cliptions_core::actions::collect_commitments::{CollectCommitmentsArgs, run as collect_commitments_run};
 use cliptions_core::actions::post_target_frame::{PostTargetFrameArgs, run as post_target_frame_run};
@@ -16,11 +17,12 @@ use cliptions_core::actions::calculate_scores::{CalculateScoresArgs, run as calc
 #[derive(Parser)]
 #[command(name = "cliptions")]
 #[command(about = "Cliptions - A CLIP-based prediction market")]
-#[command(version = "0.7.0")]
+#[command(version = "0.7.1")]
 #[command(long_about = "
 Unified CLI tool for Cliptions prediction market operations.
 
 This tool provides all functionality through subcommands:
+- new-block: Open a new block and post commitment announcement
 - generate-commitment: Generate cryptographic commitments for predictions
 - collect-commitments: Collect commitment replies from a specific tweet
 - post-target-frame: Post target frame image as reply to commitment tweet
@@ -37,6 +39,10 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Open a new block and post commitment announcement
+    #[command(name = "new-block")]
+    NewBlock(NewBlockArgs),
+    
     /// Generate cryptographic commitments for predictions
     #[command(name = "generate-commitment")]
     GenerateCommitment(GenerateCommitmentArgs),
@@ -66,6 +72,9 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
+        Commands::NewBlock(args) => {
+            tokio::runtime::Runtime::new()?.block_on(new_block_run(args))
+        }
         Commands::GenerateCommitment(args) => generate_commitment_run(args),
         Commands::CollectCommitments(args) => {
             tokio::runtime::Runtime::new()?.block_on(collect_commitments_run(args))

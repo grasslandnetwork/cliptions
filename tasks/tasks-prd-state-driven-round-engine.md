@@ -43,7 +43,7 @@
 
 - [x] 5.0 Implement Configuration
   - [x] 5.1 In `src/config.rs`, add `TwitterConfig` and `BaseConfig` structs to `CliptionsConfig`.
-  - [x] 5.2 Update `config/llm.yaml.template` with placeholders for the new `twitter` and `base` sections.
+  - [x] 5.2 Update `config/config.yaml.template` with placeholders for the new `twitter` and `base` sections.
 
 - [x] 6.0 Implement Async State Machine with API Libraries
   - [x] 6.1 In `src/block_engine/state_machine.rs`, define the granular state markers.

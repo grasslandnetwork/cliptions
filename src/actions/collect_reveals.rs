@@ -44,8 +44,8 @@ pub struct CollectRevealsArgs {
     #[arg(long)]
     pub raw: bool,
 
-    /// Config file path (default: config/llm.yaml)
-    #[arg(long, default_value = "config/llm.yaml")]
+    /// Config file path (default: config/config.yaml)
+    #[arg(long, default_value = "config/config.yaml")]
     pub config: String,
 }
 
@@ -325,6 +325,10 @@ fn parse_reveal_from_reply(reply: &twitter_api::Tweet) -> Option<CollectedReveal
     
     let guess = guess_capture.get(1)?.as_str().trim().to_string();
     let salt = salt_capture.get(1)?.as_str().trim().to_string();
+
+    if guess == "[your-guess]" && salt == "[your-salt]" { // Ignore placeholder values from the validator tweet
+        return None;
+    }
     
     // Extract username from author_id (we'll need to get the actual username)
     let username = format!("user_{}", reply.author_id);
@@ -518,7 +522,7 @@ mod tests {
             no_color: false,
             quiet: false,
             raw: false,
-            config: "config/llm.yaml".to_string(),
+            config: "config/config.yaml".to_string(),
         };
 
         assert_eq!(args.max_results, 100);
@@ -526,7 +530,7 @@ mod tests {
         assert!(args.save_to.is_none());
         assert!(!args.no_save);
         assert!(!args.verbose);
-        assert_eq!(args.config, "config/llm.yaml");
+        assert_eq!(args.config, "config/config.yaml");
     }
 
     #[test]

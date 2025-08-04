@@ -38,7 +38,7 @@ This document outlines the complete rebranding of the RealMIR application to "Cl
 ### 3. Configuration Files
 3.1. Update package.json, Cargo.toml, requirements.txt to use "cliptions" as project name
 3.2. Update any configuration files referencing "realmir" to use "cliptions"
-3.3. **DO NOT** change environment variable names in configuration files (e.g., ./config/llm.yaml) - keep existing environment variable names as-is
+3.3. **DO NOT** change environment variable names in configuration files (e.g., ./config/config.yaml) - keep existing environment variable names as-is
 
 ### 4. Documentation Updates
 4.1. Update README.md to reference "Cliptions" throughout

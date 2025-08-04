@@ -39,8 +39,8 @@ pub struct PostTargetFrameArgs {
     #[arg(short, long)]
     pub quiet: bool,
 
-    /// Config file path (default: config/llm.yaml)
-    #[arg(long, default_value = "config/llm.yaml")]
+    /// Config file path (default: config/config.yaml)
+    #[arg(long, default_value = "config/config.yaml")]
     pub config: String,
 }
 
@@ -281,7 +281,7 @@ mod tests {
         assert!(!args.verbose);
         assert!(!args.no_color);
         assert!(!args.quiet);
-        assert_eq!(args.config, "config/llm.yaml");
+        assert_eq!(args.config, "config/config.yaml");
     }
 
     #[test]

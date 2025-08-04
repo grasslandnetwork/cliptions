@@ -1,5 +1,89 @@
 {
+  "3": {
+    "block_num": "3",
+    "block_version": 1,
+    "commitment_deadline": "2025-08-02T01:41:05.657501Z",
+    "created_at": "2025-08-02T01:41:05.657528Z",
+    "participants": [
+      {
+        "commitment": "fdd5f62236b05b3620ba45311df6225bd9744ba996fb91807ba99ebbdcfb3983",
+        "commitment_url": "https://twitter.com/i/status/1951091643848986922",
+        "guess": {
+          "metadata": {},
+          "text": "Cozy morning scene with sleepy cats plush beds and warm fluorescent lighting",
+          "timestamp": "2025-08-02T01:41:05.657475Z"
+        },
+        "guess_url": "https://twitter.com/i/status/1951371596624699392",
+        "payout": {
+          "amount": 0.0024999999999999996,
+          "currency": "TAO",
+          "url": "https://taostats.io/extrinsic/6134465-0003?network=finney"
+        },
+        "rank": 3,
+        "salt": "saltysalt",
+        "score": 6.046061962842941,
+        "social_id": "1932127192638533632",
+        "username": "user_1932127192638533632",
+        "verified": true,
+        "wallet": "5CRsGf3AoSC8jZwaUQWjLvURjVJihGAbUc3yxHqZg4hELKyi"
+      },
+      {
+        "commitment": "e78217cf780c30dd8da4c3affbe1e41bfd5c8f244e947e7e710e56259804d16f",
+        "commitment_url": "https://twitter.com/i/status/1951098986879692993",
+        "guess": {
+          "metadata": {},
+          "text": "cats resting on soft blankets beneath warm indoor light",
+          "timestamp": "2025-08-02T01:41:05.657498Z"
+        },
+        "guess_url": "https://twitter.com/i/status/1951371176476836081",
+        "payout": {
+          "amount": 0.004999999999999999,
+          "currency": "TAO",
+          "url": "https://taostats.io/extrinsic/6134460-0002?network=finney"
+        },
+        "rank": 2,
+        "salt": "xqmd",
+        "score": 30.968177318572998,
+        "social_id": "1932171202879016960",
+        "username": "user_1932171202879016960",
+        "verified": true,
+        "wallet": "5D2jhF27Pg1rtBV8fYmYSoBY1C96aMhaVUJnkhH9DDVRkUjt"
+      },
+      {
+        "commitment": "b9881f6b7e489e280d4bb8388cd94718b98a2461f0826f6297e7382e42acb3dc",
+        "commitment_url": "https://twitter.com/i/status/1951100643088933373",
+        "guess": {
+          "metadata": {},
+          "text": "Eleven cats visible 3 on blankets 2 near counter 1 in donut bed 1 walking 4 on furniture",
+          "timestamp": "2025-08-02T01:41:05.657500Z"
+        },
+        "guess_url": "https://twitter.com/i/status/1951372036598841423",
+        "payout": {
+          "amount": 0.0075,
+          "currency": "TAO",
+          "url": "https://taostats.io/extrinsic/6134479-0002?network=finney"
+        },
+        "rank": 1,
+        "salt": "meow",
+        "score": 62.985759973526,
+        "social_id": "1932174994676830208",
+        "username": "user_1932174994676830208",
+        "verified": true,
+        "wallet": "5Fxykc1XbrMQrcswX1KArUmB5246sBd2v9JheCRWUe6UMKJX"
+      }
+    ],
+    "prize_pool": 0.015,
+    "results": [],
+    "reveal_deadline": "2025-08-02T01:41:05.657501Z",
+    "social_id": "",
+    "status": "Complete",
+    "target_image_path": "blocks/block3/target20250801_075049EST.jpg",
+    "total_payout": 0.015,
+    "updated_at": "2025-08-02T02:11:50.840488+00:00"
+  },
   "block4": {
+    "block_num": "block4",
+    "block_version": 1,
     "commitment_deadline": "2025-07-27T16:52:12.544217Z",
     "created_at": "2025-07-27T16:52:12.544325Z",
     "participants": [
@@ -17,7 +101,6 @@
           "currency": "TAO",
           "url": ""
         },
-        "rank": 2,
         "salt": "random_secret_123",
         "score": 39.03978765010834,
         "social_id": "1932127192638533632",
@@ -39,7 +122,6 @@
           "currency": "TAO",
           "url": ""
         },
-        "rank": 1,
         "salt": "mysalt",
         "score": 44.20400857925415,
         "social_id": "1932171202879016960",
@@ -61,7 +143,6 @@
           "currency": "TAO",
           "url": ""
         },
-        "rank": 3,
         "salt": "fffff",
         "score": 16.756202280521393,
         "social_id": "1932174994676830208",
@@ -73,12 +154,10 @@
     "prize_pool": 1000.0,
     "results": [],
     "reveal_deadline": "2025-07-27T16:52:12.544219Z",
-    "block_num": "block4",
-    "block_version": 1,
     "social_id": "",
     "status": "Complete",
-            "target_image_path": "blocks/block0/target20250223_133057EST.jpg",
-    "total_payout": 999.9999999999999,
-    "updated_at": "2025-07-28T13:49:50.593924+00:00"
+    "target_image_path": "blocks/block0/target20250223_133057EST.jpg",
+    "total_payout": 1000.0,
+    "updated_at": "2025-07-28T13:49:50.593924Z"
   }
 }

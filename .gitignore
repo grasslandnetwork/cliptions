@@ -177,7 +177,7 @@ Thumbs.db
 browser-use/browser_data/
 
 # Config files with sensitive data (use .template files instead)
-config/llm.yaml
+config/config.yaml
 # Browser data - contains private cookies and session data
 browser/browser_data/
 browser_data/

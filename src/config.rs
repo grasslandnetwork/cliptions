@@ -164,7 +164,7 @@ pub struct ConfigManager {
 impl ConfigManager {
     /// Create a new configuration manager
     pub fn new() -> Result<Self> {
-        let config_path = PathBuf::from("config/llm.yaml");
+        let config_path = PathBuf::from("config/config.yaml");
         let config = Self::load_config(&config_path)?;
 
         Ok(Self {

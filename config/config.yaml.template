@@ -1,22 +1,9 @@
-openai:
-  api_key: "YOUR_API_KEY_HERE"  # Replace with your OpenAI API key for browser-use
-  model: "gpt-4o"
-  temperature: 0.1
-  daily_spending_limit_usd: 5.00
-  max_tokens: 4000
-  project_id: "YOUR_PROJECT_ID_HERE"  # Replace with your actual OpenAI project ID
-  
-# Browser Use specific settings
-browser_use:
-  max_steps: 25
-  use_vision: true
-  timeout_seconds: 300
-  
-# Cost tracking settings
-cost_tracking:
-  enabled: true
-  sync_frequency_hours: 1
-  alert_threshold_percent: 80  # Alert when 80% of daily limit is reached
+twitter:
+  api_key: "YOUR_TWITTER_API_KEY_HERE"  # Replace with your Twitter API key
+  api_secret: "YOUR_TWITTER_API_SECRET_HERE"  # Replace with your Twitter API secret
+  access_token: "YOUR_TWITTER_ACCESS_TOKEN_HERE"  # Replace with your Twitter access token
+  access_token_secret: "YOUR_TWITTER_ACCESS_TOKEN_SECRET_HERE"  # Replace with your Twitter access token secret
+  validator_username: "THE_VALIDATORS_TWITTER_USERNAME_WITHOUT_@_HERE"  # Either "cliptions" for mainnet or "cliptions_test" for testnet
 
 #
 # If you are applying for a Twitter/X developer account to participate as a miner, you can use the following description in your application:
@@ -48,17 +35,24 @@ cost_tracking:
 # 6. Update the values below with your new access token and secret.
 #
 # If you see a 403 error about OAuth permissions, your app likely does not have 'Read and write' enabled, or you need to regenerate your tokens after changing permissions.
-#
-twitter:
-  api_key: "YOUR_TWITTER_API_KEY_HERE"  # Replace with your Twitter API key
-  api_secret: "YOUR_TWITTER_API_SECRET_HERE"  # Replace with your Twitter API secret
-  access_token: "YOUR_TWITTER_ACCESS_TOKEN_HERE"  # Replace with your Twitter access token
-  access_token_secret: "YOUR_TWITTER_ACCESS_TOKEN_SECRET_HERE"  # Replace with your Twitter access token secret
-  validator_username: "THE_VALIDATORS_TWITTER_USERNAME_WITHOUT_@_HERE"  # Either "cliptions" for mainnet or "cliptions_test" for testnet
 
-# Base blockchain configuration
-base:
-  rpc_url: "https://mainnet.base.org"  # Base mainnet RPC URL
-  chain_id: 8453  # Base mainnet chain ID
-  gas_limit: 21000  # Default gas limit for transactions
-  gas_price_gwei: 1.0  # Default gas price in Gwei 
+
+openai:
+  api_key: "YOUR_API_KEY_HERE"  # Replace with your OpenAI API key for browser-use
+  model: "gpt-4o"
+  temperature: 0.1
+  daily_spending_limit_usd: 5.00
+  max_tokens: 4000
+  project_id: "YOUR_PROJECT_ID_HERE"  # Replace with your actual OpenAI project ID
+  
+# Browser Use specific settings
+browser_use:
+  max_steps: 25
+  use_vision: true
+  timeout_seconds: 300
+  
+# Cost tracking settings
+cost_tracking:
+  enabled: true
+  sync_frequency_hours: 1
+  alert_threshold_percent: 80  # Alert when 80% of daily limit is reached
