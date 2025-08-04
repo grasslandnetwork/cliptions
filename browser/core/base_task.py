@@ -43,7 +43,7 @@ class BaseTwitterTask(TwitterTask):
         
         Args:
             config: Configuration dictionary (optional)
-            config_file_path: Path to configuration file (optional, defaults to config/llm.yaml)
+            config_file_path: Path to configuration file (optional, defaults to config/config.yaml)
         """
         # Load configuration
         if config is None:
@@ -75,7 +75,7 @@ class BaseTwitterTask(TwitterTask):
         
     def load_llm_config(self, config_file_path: Optional[str] = None) -> Dict[str, Any]:
         """
-        Load LLM configuration from config/llm.yaml with environment variable substitution.
+        Load LLM configuration from config/config.yaml with environment variable substitution.
         
         Args:
             config_file_path: Optional path to config file
@@ -84,9 +84,9 @@ class BaseTwitterTask(TwitterTask):
             Configuration dictionary
         """
         if config_file_path is None:
-            # Default to config/llm.yaml in project root
+            # Default to config/config.yaml in project root
             script_dir = pathlib.Path(__file__).parent.parent.parent  # Go up from browser-use/core/ to project root
-            config_file_path = script_dir / "config" / "llm.yaml"
+            config_file_path = script_dir / "config" / "config.yaml"
         else:
             config_file_path = pathlib.Path(config_file_path)
         

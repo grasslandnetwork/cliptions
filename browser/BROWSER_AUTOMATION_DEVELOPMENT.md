@@ -52,7 +52,7 @@
 - **BaseTwitterTask inheritance** - for proper cookie and cost management
 - **Saved Twitter cookies** - in `browser/browser_data/twitter_cookies.json`
 - **Environment variables**: `TWITTER_NAME`, `TWITTER_PASSWORD`, `OPENAI_API_KEY`
-- **Config file**: `config/llm.yaml` for cost limits and model settings
+- **Config file**: `config/config.yaml` for cost limits and model settings
 
 ---
 
@@ -281,7 +281,7 @@ class YourTwitterTask(BaseTwitterTask):
 ### **Environment Setup Checklist**
 - [ ] `TWITTER_NAME` and `TWITTER_PASSWORD` environment variables set
 - [ ] `OPENAI_API_KEY` configured for browser-use
-- [ ] `config/llm.yaml` exists with spending limits
+- [ ] `config/config.yaml` exists with spending limits
 - [ ] `browser/browser_data/twitter_cookies.json` exists (saved from previous login)
 - [ ] Virtual environment activated with all dependencies
 

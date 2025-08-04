@@ -40,8 +40,8 @@ pub struct CollectCommitmentsArgs {
     #[arg(short, long)]
     pub quiet: bool,
 
-    /// Config file path (default: config/llm.yaml)
-    #[arg(long, default_value = "config/llm.yaml")]
+    /// Config file path (default: config/config.yaml)
+    #[arg(long, default_value = "config/config.yaml")]
     pub config: String,
 }
 
@@ -433,7 +433,7 @@ mod tests {
             verbose: false,
             no_color: false,
             quiet: false,
-            config: "config/llm.yaml".to_string(),
+            config: "config/config.yaml".to_string(),
         };
 
         assert_eq!(args.max_results, 100);
@@ -441,7 +441,7 @@ mod tests {
         assert!(args.save_to.is_none());
         assert!(!args.no_save);
         assert!(!args.verbose);
-        assert_eq!(args.config, "config/llm.yaml");
+        assert_eq!(args.config, "config/config.yaml");
     }
 
     #[test]

@@ -24,7 +24,7 @@ struct Args {
     role: String,
 
     /// Configuration file path
-    #[arg(short, long, default_value = "config/llm.yaml")]
+    #[arg(short, long, default_value = "config/config.yaml")]
     config: String,
 
     /// Web server port for fee collection
@@ -227,7 +227,7 @@ async fn run_miner_loop(
     let validator_username = &config.twitter.validator_username;
     if validator_username.is_empty() {
         println!(
-            "⚠️  Warning: No validator username configured in llm.yaml. Cannot monitor state."
+            "⚠️  Warning: No validator username configured in config.yaml. Cannot monitor state."
         );
         return Ok(());
     }

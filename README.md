@@ -1,6 +1,36 @@
 # Cliptions
 
-Predict how an AI Agent will caption upcoming frames from live video streams. Players compete for cryptocurrency rewards based on prediction accuracy.
+Welcome to Cliptions
+
+What exactly is a "Cliption"?
+
+A Cliption is a prediction contract that pays out based on how closely a player's submitted caption matches the CLIP model's interpretation of a randomly chosen, upcoming timestamp in a livestream. It's not a tradable asset, just a commitment to your best guess in an open contest.
+
+Cliptions are like options contracts but instead of betting on a price or event, you're betting on AI's semantic interpretation of a future moment.
+
+In other words:
+
+**Cliptions = Semantic options contracts**
+
+**CLIP similarity score = Strike price**
+
+**Frame reveal timestamp = Expiry date**
+
+**Prize pool = Liquidity pool**
+
+## What is CLIP?
+
+CLIP (Contrastive Language-Image Pretraining) is a neural network created by OpenAI and trained to connect visual concepts (images, videos) with textual descriptions (English words or phrases). https://github.com/openai/CLIP
+
+It can look at an image or video frame and accurately predict which textual description best matches it—or vice versa.
+
+In Cliptions, this capability is specifically used for scoring predictions:
+
+- Players submit text predictions for upcoming video frames.
+- CLIP determines how closely each submitted caption matches the actual video frame's content, semantically.
+- Predictions ranked closest by CLIP's embeddings win payouts.
+
+This is how Cliptions leverages CLIP's unique strength in semantic interpretation—creating a novel betting product around predicting the AI's understanding of visual moments.
 
 ### Index
 - [Gameplay](#gameplay)
@@ -412,14 +442,3 @@ Groups:
 [Player3]           - Gets points for 3rd
 [Player4, Player5]   - Split points for 4th/5th
 ```
-
-## Contributing
-
-We welcome contributions! For detailed setup instructions, development guidelines, and advanced configuration options, please see [CONTRIBUTING.md](CONTRIBUTING.md).
-
-### Quick Start
-1. Clone the repository
-2. Install dependencies: `pip install -r requirements.txt`
-3. Build CLI tools: `cargo build --release --no-default-features`
-4. Run tests: `python -m unittest discover tests`
-5. Create a pull request

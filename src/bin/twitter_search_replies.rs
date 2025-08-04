@@ -22,8 +22,8 @@ struct Args {
     /// Show verbose output
     #[arg(short, long)]
     verbose: bool,
-    /// Config file path (default: config/llm.yaml)
-    #[arg(long, default_value = "config/llm.yaml")]
+    /// Config file path (default: config/config.yaml)
+    #[arg(long, default_value = "config/config.yaml")]
     config: String,
 }
 
