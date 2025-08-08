@@ -13,7 +13,7 @@ This PRD outlines a comprehensive refactor of the Cliptions codebase to implemen
 1. **Phase 1**: Implement comprehensive facade pattern to centralize logic and prepare for struct unification
 2. **Phase 2**: Implement centralized path management system for configuration and data files
 3. **Phase 3**: Replace MockEmbedder with real CLIP embeddings across all components
-4. **Phase 4**: Unify BlockData and Block<S> into single typestate-enabled struct
+4. **Phase 4**: Unify `BlockData` and `Block<S>` into single typestate-enabled struct
 5. **Phase 5**: Implement full typestate pattern with compile-time state transition enforcement
 6. **Maintain Backward Compatibility**: Ensure JSON serialization/deserialization continues to work with existing data
 7. **Improve Reliability**: Eliminate mock behavior from production code paths
@@ -41,7 +41,7 @@ The application **must** implement facade patterns for all struct field access:
 1. **BlockFacade**: Wrap `BlockData` with accessor methods for all fields
 2. **ParticipantFacade**: Wrap `Participant` with accessor methods for all fields  
 3. **GuessFacade**: Wrap `Guess` with accessor methods for all fields
-4. **Block<S> Facade**: Wrap typestate `Block<S>` structs with accessor methods
+4. **```Block<S>``` Facade**: Wrap typestate ``Block<S>`` structs with accessor methods
 5. Replace **ALL** direct field access (`struct.field`) with facade methods (`struct.get_field()`)
 6. Centralize all business logic in facade methods
 7. Maintain backward compatibility with existing JSON serialization
@@ -65,9 +65,9 @@ The application **must** enforce real CLIP model usage:
 5. Application **must** fail fast if CLIP models are unavailable
 
 ### FR5: Phase 4 - Struct Unification
-The application **must** unify `BlockData` and `Block<S>` into a single struct:
-1. Create unified `Block<S>` struct combining fields from both structs
-2. Migrate all `BlockData` usage to unified `Block<S>` 
+The application **must** unify `BlockData` and ``Block<S>`` into a single struct:
+1. Create unified ``Block<S>`` struct combining fields from both structs
+2. Migrate all `BlockData` usage to unified ``Block<S>`` 
 3. Maintain facade interface compatibility during migration
 4. Preserve all existing functionality from both structs
 5. Update serialization to work with unified struct
@@ -258,7 +258,7 @@ pub struct Block<S = BlockStatus> {
     pub(crate) participants: Vec<Participant>,
     pub(crate) results: Vec<ScoringResult>,
     
-    // From Block<S> (lifecycle fields)
+    // From ``Block<S>`` (lifecycle fields)
     pub(crate) description: String,
     pub(crate) livestream_url: String,
     pub(crate) target_timestamp: DateTime<Utc>,
@@ -275,7 +275,7 @@ pub struct Block<S = BlockStatus> {
 }
 
 // Same facade interface works for unified struct!
-impl<S> BlockFacade for Block<S> {
+impl<S> BlockFacade for Block< S > {
     fn block_id(&self) -> &str { &self.block_num }
     fn prize_pool(&self) -> f64 { self.prize_pool }
     // ... all existing facade methods unchanged
@@ -299,7 +299,7 @@ pub struct BlockDataDTO {
     // ... other fields
 }
 
-impl From<Block<S>> for BlockDataDTO { /* ... */ }
+impl From< Block< S > > for BlockDataDTO { /* ... */ }
 impl TryFrom<BlockDataDTO> for Block<dyn StateMarker> { /* ... */ }
 ```
 
@@ -347,7 +347,7 @@ impl TryFrom<BlockDataDTO> for Block<dyn StateMarker> { /* ... */ }
 - [ ] Test suite uses real embeddings and passes
 
 ### Phase 4 Success Criteria
-- [ ] **Unified Block<S> struct created**: Combines all fields from BlockData and Block<S>
+- [ ] **Unified ``Block<S>`` struct created**: Combines all fields from BlockData and ``Block<S>``
 - [ ] **All BlockData usage migrated**: No references to old BlockData struct remain
 - [ ] **Facade compatibility maintained**: All existing facade methods work with unified struct
 - [ ] **Serialization preserved**: JSON compatibility maintained through DTO pattern
@@ -391,7 +391,7 @@ impl TryFrom<BlockDataDTO> for Block<dyn StateMarker> { /* ... */ }
 5. Add CLIP model validation at startup
 
 ### Phase 4: Struct Unification (Week 4)
-1. **Design unified Block<S> struct**: Combine fields from both structs
+1. **Design unified ``Block<S>`` struct**: Combine fields from both structs
 2. **Create migration layer**: Conversion functions between old and new structs
 3. **Update facade implementations**: Make facades work with unified struct
 4. **Migrate consumers gradually**: BlockProcessor, CLI commands, tests
@@ -400,7 +400,7 @@ impl TryFrom<BlockDataDTO> for Block<dyn StateMarker> { /* ... */ }
 
 ### Phase 5: Typestate Implementation (Week 5)
 1. Create DTO structs for serialization
-2. Implement typestate transitions in unified Block<S>
+2. Implement typestate transitions in unified ``Block<S>``
 3. Update BlockProcessor to work with typed blocks
 4. Update CLI commands for typestate pattern
 5. Add comprehensive state transition tests

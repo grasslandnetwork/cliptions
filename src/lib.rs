@@ -37,6 +37,9 @@ pub mod types;
 // New async block engine
 pub mod block_engine;
 
+// Facades for stable access
+pub mod facades;
+
 // Python bindings module (conditional compilation)
 #[cfg(feature = "python")]
 pub mod python_bridge;

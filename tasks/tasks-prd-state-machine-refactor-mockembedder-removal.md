@@ -43,12 +43,12 @@
 ## Tasks
 
 - [ ] 1.0 Implement Comprehensive Facades for `BlockData`, `Participant`, `Guess`, and `Block<S>`
-  - [ ] 1.1 Create `src/facades/` with `block_facade.rs`, `participant_facade.rs`, `guess_facade.rs`
-  - [ ] 1.2 Define `trait BlockFacade` with stable accessors (e.g., `block_id()`, `block_num()`, `prize_pool()`, state queries)
-  - [ ] 1.3 Implement `BlockFacade` for `BlockData` (map fields, including legacy differences)
-  - [ ] 1.4 Implement `BlockFacade` for `Block<S>` (map fields via typestate; start at `CommitmentsOpen`)
-  - [ ] 1.5 Implement `ParticipantFacade` (getters: `social_id`, `username`, `guess()`, `wallet`, `score`, `is_verified()`)
-  - [ ] 1.6 Implement `GuessFacade` (getters: `text`, `timestamp`, `has_embedding()`, helper `get_embedding_array()`)
+  - [x] 1.1 Create `src/facades/` with `block_facade.rs`, `participant_facade.rs`, `guess_facade.rs`
+  - [x] 1.2 Define `trait BlockFacade` with stable accessors (e.g., `block_id()`, `block_num()`, `prize_pool()`, state queries)
+  - [x] 1.3 Implement `BlockFacade` for `BlockData` (map fields, including legacy differences)
+  - [x] 1.4 Implement `BlockFacade` for `Block<S>` (map fields via typestate; start at `CommitmentsOpen`)
+  - [x] 1.5 Implement `ParticipantFacade` (getters: `social_id`, `username`, `guess()`, `wallet`, `score`, `is_verified()`)
+  - [x] 1.6 Implement `GuessFacade` (getters: `text`, `timestamp`, `has_embedding()`, helper `get_embedding_array()`)
   - [ ] 1.7 Replace direct field access across codebase to use facades (search-and-replace guided edits)
   - [ ] 1.8 Add unit tests for each facade; verify no `struct.field` access in consumers
   - [ ] 1.9 Update docs to describe facade usage and field access policy
