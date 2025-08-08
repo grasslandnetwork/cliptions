@@ -1,0 +1,89 @@
+## Relevant Files
+
+- `src/facades/block_facade.rs` - Facade for `BlockData` field access and state/business logic.
+- `src/facades/participant_facade.rs` - Facade for `Participant` safe field access and logic.
+- `src/facades/guess_facade.rs` - Facade for `Guess` safe field access and helpers.
+- `src/facades/` - Directory for facades (Rust 2021; no mod.rs required).
+- `src/config.rs` - `PathManager` centralized path management facade; integrates with config.
+- `src/embedder.rs` - Remove `MockEmbedder`; enforce real `ClipEmbedder` only.
+- `src/block_processor.rs` - Migrate to facades; later to unified block/typestate.
+- `src/block_engine/state_machine.rs` - Typestate block; integration and future unification.
+- `src/types.rs` - Legacy `BlockData`, `Participant`, `Guess`; wrapped by facades, later unified.
+- `src/actions/*.rs` - Update to use facades and centralized paths.
+- `src/main.rs` - Ensure CLI uses facades and PathManager; remove `--use-mock` options.
+- `tests/` - New and updated tests for facades, path manager, struct unification, typestate.
+
+### Notes
+
+- If this project uses Rust, it uses **Rust 2021 Edition**.
+- **No `mod.rs` files needed** - Project convention: use directory-based modules without `mod.rs`.
+- Unit tests can be placed in the same file as the code they are testing, inside a `#[cfg(test)] mod tests { ... }` block.
+- Use `cargo test` to run all tests. To run a specific test, you can use `cargo test <test_name>`.
+- **Always include documentation updates** - Any task that adds or changes user-facing functionality (CLI commands, APIs, interfaces) must include a sub-task to update relevant documentation (README.md, help text, etc.).
+
+#### Carried Over (Slice 9: Centralized File Path Management - Incomplete Items)
+- [ ] Add `dirs` crate (dependency) for cross-platform home directory access
+- [ ] Create `PathManager` in `src/config.rs` with `new()` that builds `~/.cliptions/`
+- [ ] Ensure creation of `~/.cliptions/{data,miner,validator}` via `create_dir_all`
+- [ ] Implement getters:
+  - `get_config_path()` -> `~/.cliptions/config.yaml`
+  - `get_blocks_path()` -> `~/.cliptions/data/blocks.json`
+  - `get_twitter_posts_path()` -> `~/.cliptions/data/twitter_posts.json`
+  - `get_scoring_versions_path()` -> `~/.cliptions/data/scoring_versions.json`
+  - `get_validator_tweet_cache_path()` -> `~/.cliptions/validator/validator_tweet_cache.json`
+  - `get_miner_commitments_path()` -> `~/.cliptions/miner/commitments.json`
+  - `get_validator_collected_commitments_path()` -> `~/.cliptions/validator/collected_commitments.json`
+  - `get_validator_collected_reveals_path()` -> `~/.cliptions/validator/collected_reveals.json`
+- [ ] Integrate `PathManager` with `ConfigManager::new()` and `with_path()`
+- [ ] Replace hardcoded paths throughout codebase with `PathManager` getters
+- [ ] Clear error message when `~/.cliptions/config.yaml` missing
+- [ ] Update README and docs for new locations under `~/.cliptions`
+- [ ] Unit tests for `PathManager` (path generation and directory creation)
+
+## Tasks
+
+- [ ] 1.0 Implement Comprehensive Facades for `BlockData`, `Participant`, `Guess`, and `Block<S>`
+  - [ ] 1.1 Create `src/facades/` with `block_facade.rs`, `participant_facade.rs`, `guess_facade.rs`
+  - [ ] 1.2 Define `trait BlockFacade` with stable accessors (e.g., `block_id()`, `block_num()`, `prize_pool()`, state queries)
+  - [ ] 1.3 Implement `BlockFacade` for `BlockData` (map fields, including legacy differences)
+  - [ ] 1.4 Implement `BlockFacade` for `Block<S>` (map fields via typestate; start at `CommitmentsOpen`)
+  - [ ] 1.5 Implement `ParticipantFacade` (getters: `social_id`, `username`, `guess()`, `wallet`, `score`, `is_verified()`)
+  - [ ] 1.6 Implement `GuessFacade` (getters: `text`, `timestamp`, `has_embedding()`, helper `get_embedding_array()`)
+  - [ ] 1.7 Replace direct field access across codebase to use facades (search-and-replace guided edits)
+  - [ ] 1.8 Add unit tests for each facade; verify no `struct.field` access in consumers
+  - [ ] 1.9 Update docs to describe facade usage and field access policy
+
+- [ ] 2.0 Centralized Path Management (Carryover from Slice 9)
+  - [ ] 2.1 Add `dirs` crate dependency
+  - [ ] 2.2 Implement `PathManager::new()` in `src/config.rs` to prepare `~/.cliptions/` structure
+  - [ ] 2.3 Implement getters: config, blocks, twitter_posts, scoring_versions, validator_tweet_cache, miner_commitments, validator_collected_commitments, validator_collected_reveals
+  - [ ] 2.4 Replace all hardcoded paths with `PathManager` getters
+  - [ ] 2.5 Integrate `PathManager` with `ConfigManager::{new, with_path}`
+  - [ ] 2.6 Clear error message when `~/.cliptions/config.yaml` missing
+  - [ ] 2.7 Unit tests for `PathManager` (path generation, directory creation)
+  - [ ] 2.8 Update README/docs for new default locations
+
+- [ ] 3.0 Remove MockEmbedder and Enforce Real CLIP Model Everywhere
+  - [ ] 3.1 Delete `MockEmbedder` from `src/embedder.rs`; remove re-exports from `src/lib.rs`
+  - [ ] 3.2 Remove `--use-mock` flags and logic from CLI binaries and actions
+  - [ ] 3.3 Update `BlockProcessor` and scoring to use `ClipEmbedder` only; adjust generics if needed
+  - [ ] 3.4 Update `python_bridge.rs`, `benches/`, and tests to use real embeddings
+  - [ ] 3.5 Ensure startup/model load fails fast with clear panic if CLIP model unavailable
+  - [ ] 3.6 Update README and CLI help to remove mock references
+
+- [ ] 4.0 Unify `BlockData` and `Block<S>` into a Single Typestate-Ready Struct
+  - [ ] 4.1 Design unified `Block<S>` struct (use `block_num`, not `block_id`)
+  - [ ] 4.2 Implement DTO conversions for JSON compatibility (legacy `BlockData` ↔ unified `Block<S>`)
+  - [ ] 4.3 Implement `BlockFacade` for unified struct; keep facade API stable
+  - [ ] 4.4 Migrate consumers (processors, actions, CLI) to unified struct via facades
+  - [ ] 4.5 Remove legacy `BlockData` after migration and tests are green
+  - [ ] 4.6 Add/adjust tests for unified struct and DTO mappings
+
+- [ ] 5.0 Implement Full Typestate Pattern and DTO Layer; Update Twitter Integration
+  - [ ] 5.1 Implement typestate transitions in unified struct starting at `CommitmentsOpen` (no `Pending`)
+  - [ ] 5.2 Update state parsing/DTO mapping; map any legacy `Pending` to `CommitmentsOpen`
+  - [ ] 5.3 Ensure `AnnouncementFormatter` and Twitter posting use new states
+  - [ ] 5.4 Update actions/CLI flows to operate via typestate transitions
+  - [ ] 5.5 Add comprehensive state transition tests; enforce compile-time validity
+  - [ ] 5.6 Update docs to reflect final lifecycle and starting state
+
