@@ -11,6 +11,7 @@ use chrono::{DateTime, Utc};
 use serde_json;
 
 use crate::commitment::CommitmentVerifier;
+use crate::facades::block_facade::BlockFacade;
 use crate::embedder::EmbedderTrait;
 use crate::error::{Result, BlockError};
 use crate::scoring::{process_participants, ScoreValidator, ScoringStrategy};
@@ -207,21 +208,19 @@ impl<E: EmbedderTrait, S: ScoringStrategy> BlockProcessor<E, S> {
                         block_num: block_num.to_string(),
                     })?;
 
+            // Use facade for reads
+            let facade = block as &dyn BlockFacade;
+
             // Verify target image exists
-            if !Path::new(&block.target_image_path).exists() {
+            if !Path::new(facade.target_image_path()).exists() {
                 return Err(BlockError::TargetImageNotFound {
-                    path: block.target_image_path.clone(),
+                    path: facade.target_image_path().to_string(),
                 }
                 .into());
             }
 
-            // Get verified participants
-            let verified_participants: Vec<Participant> = block
-                .participants
-                .iter()
-                .filter(|p| p.verified)
-                .cloned()
-                .collect();
+            // Get verified participants via facade
+            let verified_participants: Vec<Participant> = facade.verified_participants_owned();
 
             if verified_participants.is_empty() {
                 return Err(BlockError::NoParticipants {
@@ -231,8 +230,8 @@ impl<E: EmbedderTrait, S: ScoringStrategy> BlockProcessor<E, S> {
             }
 
             (
-                block.target_image_path.clone(),
-                block.prize_pool,
+                facade.target_image_path().to_string(),
+                facade.prize_pool(),
                 verified_participants,
             )
         };
@@ -270,7 +269,8 @@ impl<E: EmbedderTrait, S: ScoringStrategy> BlockProcessor<E, S> {
         for block_num in block_nums {
             // Only process blocks that are open or processing
             let block = self.get_block(&block_num)?;
-            if matches!(block.status, BlockStatus::Open | BlockStatus::Processing) {
+            let facade = block as &dyn BlockFacade;
+            if matches!(facade.status(), BlockStatus::Open | BlockStatus::Processing) {
                 match self.process_block_payouts(&block_num) {
                     Ok(results) => {
                         all_results.insert(block_num, results);

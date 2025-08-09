@@ -49,8 +49,8 @@
   - [x] 1.4 Implement `BlockFacade` for `Block<S>` (map fields via typestate; start at `CommitmentsOpen`)
   - [x] 1.5 Implement `ParticipantFacade` (getters: `social_id`, `username`, `guess()`, `wallet`, `score`, `is_verified()`)
   - [x] 1.6 Implement `GuessFacade` (getters: `text`, `timestamp`, `has_embedding()`, helper `get_embedding_array()`)
-  - [ ] 1.7 Replace direct field access across codebase to use facades (search-and-replace guided edits)
-  - [ ] 1.8 Add unit tests for each facade; verify no `struct.field` access in consumers
+  - [x] 1.7 Replace direct field access across codebase to use facades (search-and-replace guided edits)
+  - [ ] 1.8 Add unit tests for each facade; verify no `struct.field` access in consumers (deferred)
   - [ ] 1.9 Update docs to describe facade usage and field access policy
 
 - [ ] 2.0 Centralized Path Management (Carryover from Slice 9)
