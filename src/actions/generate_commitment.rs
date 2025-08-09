@@ -10,7 +10,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use crate::commitment::CommitmentGenerator;
-use crate::config::ConfigManager;
+use crate::config::{ConfigManager, PathManager};
 use crate::error::Result;
 
 #[derive(Parser)]
@@ -144,21 +144,8 @@ pub fn run(args: GenerateCommitmentArgs) -> Result<()> {
         let save_path = if let Some(custom_path) = &args.save_to {
             custom_path.clone()
         } else {
-            // Default to ~/.cliptions/miner/commitments.json
-            let home_dir = dirs::home_dir()
-                .ok_or_else(|| "Could not determine home directory".to_string())?;
-            let cliptions_dir = home_dir.join(".cliptions");
-            let miner_dir = cliptions_dir.join("miner");
-            
-            // Create directories if they don't exist
-            if !cliptions_dir.exists() {
-                fs::create_dir_all(&cliptions_dir)?;
-            }
-            if !miner_dir.exists() {
-                fs::create_dir_all(&miner_dir)?;
-            }
-            
-            miner_dir.join("commitments.json")
+            let path_manager = PathManager::new()?;
+            path_manager.get_miner_commitments_path()
         };
 
         save_results(&results, &save_path)?;

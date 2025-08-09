@@ -2,7 +2,7 @@ use clap::Parser;
 use colored::Colorize;
 use std::fs;
 use std::path::PathBuf;
-use crate::config::ConfigManager;
+use crate::config::{ConfigManager, PathManager};
 use crate::error::Result;
 use twitter_api::{TwitterApi, TwitterClient, TwitterError};
 
@@ -183,21 +183,8 @@ pub async fn run(args: CollectRevealsArgs) -> Result<()> {
                 let save_path = if let Some(custom_path) = &args.save_to {
                     custom_path.clone()
                 } else {
-                    // Default to ~/.cliptions/validator/collected_reveals.json
-                    let home_dir = dirs::home_dir()
-                        .ok_or_else(|| "Could not determine home directory".to_string())?;
-                    let cliptions_dir = home_dir.join(".cliptions");
-                    let validator_dir = cliptions_dir.join("validator");
-                    
-                    // Create directories if they don't exist
-                    if !cliptions_dir.exists() {
-                        fs::create_dir_all(&cliptions_dir)?;
-                    }
-                    if !validator_dir.exists() {
-                        fs::create_dir_all(&validator_dir)?;
-                    }
-                    
-                    validator_dir.join("collected_reveals.json")
+                    let path_manager = PathManager::new()?;
+                    path_manager.get_validator_collected_reveals_path()
                 };
 
                 save_results(&results, &save_path)?;

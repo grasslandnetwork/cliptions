@@ -22,7 +22,7 @@
 - **Always include documentation updates** - Any task that adds or changes user-facing functionality (CLI commands, APIs, interfaces) must include a sub-task to update relevant documentation (README.md, help text, etc.).
 
 #### Carried Over (Slice 9: Centralized File Path Management - Incomplete Items)
-- [ ] Add `dirs` crate (dependency) for cross-platform home directory access
+- [x] Add `dirs` crate (dependency) for cross-platform home directory access
 - [ ] Create `PathManager` in `src/config.rs` with `new()` that builds `~/.cliptions/`
 - [ ] Ensure creation of `~/.cliptions/{data,miner,validator}` via `create_dir_all`
 - [ ] Implement getters:
@@ -51,17 +51,17 @@
   - [x] 1.6 Implement `GuessFacade` (getters: `text`, `timestamp`, `has_embedding()`, helper `get_embedding_array()`)
   - [x] 1.7 Replace direct field access across codebase to use facades (search-and-replace guided edits)
   - [ ] 1.8 Add unit tests for each facade; verify no `struct.field` access in consumers (deferred)
-  - [ ] 1.9 Update docs to describe facade usage and field access policy
+  - [ ] 1.9 Update docs to describe facade usage and field access policy (deferred)
 
 - [ ] 2.0 Centralized Path Management (Carryover from Slice 9)
-  - [ ] 2.1 Add `dirs` crate dependency
-  - [ ] 2.2 Implement `PathManager::new()` in `src/config.rs` to prepare `~/.cliptions/` structure
-  - [ ] 2.3 Implement getters: config, blocks, twitter_posts, scoring_versions, validator_tweet_cache, miner_commitments, validator_collected_commitments, validator_collected_reveals
-  - [ ] 2.4 Replace all hardcoded paths with `PathManager` getters
-  - [ ] 2.5 Integrate `PathManager` with `ConfigManager::{new, with_path}`
-  - [ ] 2.6 Clear error message when `~/.cliptions/config.yaml` missing
-  - [ ] 2.7 Unit tests for `PathManager` (path generation, directory creation)
-  - [ ] 2.8 Update README/docs for new default locations
+  - [x] 2.1 Add `dirs` crate dependency
+  - [x] 2.2 Implement `PathManager::new()` in `src/config.rs` to prepare `~/.cliptions/` structure
+  - [x] 2.3 Implement getters: config, blocks, twitter_posts, scoring_versions, validator_tweet_cache, miner_commitments, validator_collected_commitments, validator_collected_reveals
+  - [x] 2.4 Replace all hardcoded paths with `PathManager` getters
+  - [x] 2.5 Integrate `PathManager` with `ConfigManager::{new, with_path}`
+  - [x] 2.6 Clear error message when `~/.cliptions/config.yaml` missing
+  - [ ] 2.7 Unit tests for `PathManager` (path generation, directory creation) (deferred)
+  - [ ] 2.8 Update README/docs for new default locations (deferred)
 
 - [ ] 3.0 Remove MockEmbedder and Enforce Real CLIP Model Everywhere
   - [ ] 3.1 Delete `MockEmbedder` from `src/embedder.rs`; remove re-exports from `src/lib.rs`

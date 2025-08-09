@@ -1,9 +1,87 @@
 use crate::error::{CliptionsError, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
+
+/// Centralized file path manager for user data directories
+#[derive(Debug, Clone)]
+pub struct PathManager {
+    base_dir: PathBuf,
+    data_dir: PathBuf,
+    miner_dir: PathBuf,
+    validator_dir: PathBuf,
+}
+
+impl PathManager {
+    /// Initialize path manager and ensure directory structure exists under ~/.cliptions
+    pub fn new() -> Result<Self> {
+        let home_dir = dirs::home_dir().ok_or_else(|| {
+            CliptionsError::ConfigError("Could not determine home directory".to_string())
+        })?;
+
+        let base_dir = home_dir.join(".cliptions");
+        let data_dir = base_dir.join("data");
+        let miner_dir = base_dir.join("miner");
+        let validator_dir = base_dir.join("validator");
+
+        for dir in [&base_dir, &data_dir, &miner_dir, &validator_dir] {
+            fs::create_dir_all(dir).map_err(|e| {
+                CliptionsError::ConfigError(format!(
+                    "Failed to create directory {}: {}",
+                    dir.display(), e
+                ))
+            })?;
+        }
+
+        Ok(Self {
+            base_dir,
+            data_dir,
+            miner_dir,
+            validator_dir,
+        })
+    }
+
+    /// ~/.cliptions/config.yaml
+    pub fn get_config_path(&self) -> PathBuf {
+        self.base_dir.join("config.yaml")
+    }
+
+    /// ~/.cliptions/data/blocks.json
+    pub fn get_blocks_path(&self) -> PathBuf {
+        self.data_dir.join("blocks.json")
+    }
+
+    /// ~/.cliptions/data/twitter_posts.json
+    pub fn get_twitter_posts_path(&self) -> PathBuf {
+        self.data_dir.join("twitter_posts.json")
+    }
+
+    /// ~/.cliptions/data/scoring_versions.json
+    pub fn get_scoring_versions_path(&self) -> PathBuf {
+        self.data_dir.join("scoring_versions.json")
+    }
+
+    /// ~/.cliptions/validator/validator_tweet_cache.json
+    pub fn get_validator_tweet_cache_path(&self) -> PathBuf {
+        self.validator_dir.join("validator_tweet_cache.json")
+    }
+
+    /// ~/.cliptions/miner/commitments.json
+    pub fn get_miner_commitments_path(&self) -> PathBuf {
+        self.miner_dir.join("commitments.json")
+    }
+
+    /// ~/.cliptions/validator/collected_commitments.json
+    pub fn get_validator_collected_commitments_path(&self) -> PathBuf {
+        self.validator_dir.join("collected_commitments.json")
+    }
+
+    /// ~/.cliptions/validator/collected_reveals.json
+    pub fn get_validator_collected_reveals_path(&self) -> PathBuf {
+        self.validator_dir.join("collected_reveals.json")
+    }
+}
 
 /// OpenAI configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -164,7 +242,9 @@ pub struct ConfigManager {
 impl ConfigManager {
     /// Create a new configuration manager
     pub fn new() -> Result<Self> {
-        let config_path = PathBuf::from("config/config.yaml");
+        // Use centralized PathManager default: ~/.cliptions/config.yaml
+        let path_manager = PathManager::new()?;
+        let config_path = path_manager.get_config_path();
         let config = Self::load_config(&config_path)?;
 
         Ok(Self {
@@ -192,10 +272,26 @@ impl ConfigManager {
     /// Load configuration from file
     fn load_config(config_path: &Path) -> Result<CliptionsConfig> {
         if !config_path.exists() {
-            return Err(CliptionsError::ConfigError(format!(
-                "Configuration file not found: {}",
+            let parent_dir = config_path
+                .parent()
+                .map(|p| p.display().to_string())
+                .unwrap_or_else(|| "~/.cliptions".to_string());
+            let message = format!(
+                concat!(
+                    "Configuration file not found at {}\n\n",
+                    "To create it:\n",
+                    "  mkdir -p {}\n",
+                    "  cp config/config.yaml.template {}\n",
+                    "  # then edit {} with your API keys and settings\n\n",
+                    "See README: Configuration section"
+                ),
+                config_path.display(),
+                parent_dir,
+                config_path.display(),
                 config_path.display()
-            )));
+            );
+            eprintln!("{}", message);
+            panic!("{}", message);
         }
 
         let content = fs::read_to_string(config_path).map_err(|e| {
@@ -429,6 +525,7 @@ pub struct SpendingStatus {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::env;
     use std::fs;
     use tempfile::TempDir;
 

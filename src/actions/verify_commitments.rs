@@ -3,7 +3,7 @@ use colored::Colorize;
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::PathBuf;
-use crate::config::ConfigManager;
+use crate::config::{ConfigManager, PathManager};
 use crate::error::Result;
 use crate::commitment::CommitmentGenerator;
 use serde_json::json;
@@ -85,15 +85,16 @@ pub async fn run(args: VerifyCommitmentsArgs) -> Result<()> {
     let _config_manager = ConfigManager::with_path(&args.config)
         .map_err(|e| format!("Failed to load config file: {}", e))?;
     
-    // Determine file paths
-    let home_dir = dirs::home_dir()
-        .ok_or_else(|| "Could not determine home directory".to_string())?;
-    let cliptions_dir = home_dir.join(".cliptions").join("validator");
-    
-    let commitments_path = args.commitments_file.clone().unwrap_or_else(|| 
-        cliptions_dir.join("collected_commitments.json"));
-    let reveals_path = args.reveals_file.clone().unwrap_or_else(|| 
-        cliptions_dir.join("collected_reveals.json"));
+    // Determine file paths via PathManager (defaults under ~/.cliptions/validator)
+    let path_manager = PathManager::new()?;
+    let commitments_path = args
+        .commitments_file
+        .clone()
+        .unwrap_or_else(|| path_manager.get_validator_collected_commitments_path());
+    let reveals_path = args
+        .reveals_file
+        .clone()
+        .unwrap_or_else(|| path_manager.get_validator_collected_reveals_path());
 
     // Load commitments and reveals
     let commitments = load_commitments(&commitments_path, &args.block_tweet_id)?;

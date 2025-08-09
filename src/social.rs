@@ -1,10 +1,8 @@
 use crate::error::{CliptionsError, Result};
-use chrono::{DateTime, Duration, Utc};
+use crate::config::PathManager;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::fs;
-use std::path::Path;
 use url::Url;
 
 /// Tweet ID extracted from URLs
@@ -483,7 +481,9 @@ impl TweetCacheManager {
 
     /// Create a cache manager with default cache file location
     pub fn default() -> Self {
-        Self::new("data/validator_tweet_cache.json".to_string())
+        let path_manager = PathManager::new().expect("PathManager init failed");
+        let default_path = path_manager.get_validator_tweet_cache_path();
+        Self::new(default_path.display().to_string())
     }
 
     /// Load cached tweet from file
