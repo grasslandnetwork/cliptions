@@ -141,6 +141,7 @@ pub fn py_calculate_rankings(
     let strategy = ClipBatchStrategy::new();
 
     if use_mock {
+        // Mock mode removed; fall back to CLIP
         let embedder = ClipEmbedder::new().map_err(|e| format!("Failed to load CLIP model: {}", e))?;
         let validator = ScoreValidator::new(embedder, strategy);
         calculate_rankings(target_image_path, &guesses, &validator).map_err(|e| e.into())
@@ -240,6 +241,7 @@ pub fn py_process_block_payouts(
     let strategy = ClipBatchStrategy::new();
 
     let mut processor = if use_mock {
+        // Mock mode removed; fall back to CLIP
         let embedder = ClipEmbedder::new().map_err(|e| format!("Failed to load CLIP model: {}", e))?;
         BlockProcessor::new(blocks_file, embedder, strategy)
     } else {
@@ -284,7 +286,8 @@ pub fn py_verify_block_commitments(
     let strategy = ClipBatchStrategy::new();
 
     let mut processor = if use_mock {
-        let embedder = MockEmbedder::clip_like();
+        // Mock mode removed; fall back to CLIP
+        let embedder = ClipEmbedder::new().map_err(|e| format!("Failed to load CLIP model: {}", e))?;
         BlockProcessor::new(blocks_file, embedder, strategy)
     } else {
         // Try CLIP - panic if it fails

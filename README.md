@@ -362,7 +362,7 @@ cliptions process-payouts --config config.yaml --all
 # Embedding
 
 The application uses a real CLIP model via Candle. Mock embedder support has been removed from production binaries.
-cliptions calculate-scores --use-mock target.jpg 100.0 "test1" "test2"
+cliptions calculate-scores target.jpg 100.0 "test1" "test2"
 
 # Multiple output formats
 cliptions verify-commitments --block-tweet-id "1234567890123456789" --block-id "block1" --output text  # Default

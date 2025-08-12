@@ -9,7 +9,7 @@ use std::path::PathBuf;
 use clap::Parser;
 use colored::Colorize;
 
-use crate::embedder::{ClipEmbedder, MockEmbedder};
+use crate::embedder::ClipEmbedder;
 use crate::block_processor::BlockProcessor;
 use crate::scoring::ClipBatchStrategy;
 use crate::types::{Participant, ScoringResult};
@@ -32,9 +32,6 @@ against the target image, determines fair payouts based on rankings, and updates
 Examples:
   # Calculate scores for block1 with default settings
   cliptions calculate-scores --block-num block1 --prize-pool 1000.0
-  
-  # Use MockEmbedder for testing
-  cliptions calculate-scores --block-num block1 --prize-pool 1000.0 --use-mock
   
   # Save results to JSON file
   cliptions calculate-scores --block-num block1 --prize-pool 1000.0 --output json --output-file results.json
@@ -60,9 +57,7 @@ pub struct CalculateScoresArgs {
     #[arg(short = 'w', long)]
     pub output_file: Option<PathBuf>,
     
-    /// Use MockEmbedder for testing
-    #[arg(long)]
-    pub use_mock: bool,
+    // Mock embedder support removed. Always use CLIP.
     
     /// Verbose output
     #[arg(short, long)]
@@ -72,7 +67,7 @@ pub struct CalculateScoresArgs {
 /// Load verified participants from blocks data
 fn load_verified_participants(block_num: &str, blocks_file: &str) -> Result<Vec<Participant>> {
     // Create embedder and processor
-    let embedder = MockEmbedder::clip_like(); // We'll replace this with real embedder later
+    let embedder = ClipEmbedder::new().map_err(|e| format!("Failed to load CLIP model: {}", e))?;
     let strategy = ClipBatchStrategy::new();
     let mut processor = BlockProcessor::new(blocks_file.to_string(), embedder, strategy);
     
@@ -103,71 +98,35 @@ fn calculate_scores_and_payouts(
     block_num: &str,
     blocks_file: &str,
     prize_pool: f64,
-    use_mock: bool,
     verbose: bool,
 ) -> Result<Vec<ScoringResult>> {
-    // Create embedder based on user preference
+    // Create embedder using CLIP only
     let strategy = ClipBatchStrategy::new();
-    
-    if use_mock {
-        if verbose {
-            println!("Using MockEmbedder for testing");
-        }
-        let embedder = MockEmbedder::clip_like();
-        let mut processor = BlockProcessor::new(blocks_file.to_string(), embedder, strategy);
-        
-        // Load blocks data
-        processor.load_blocks()?;
-        
-        // Get target image path from the block
-        let block = processor.get_block(block_num)?;
-        let target_image_path = block.target_image_path.clone();
-        
-        if verbose {
-            println!("Processing {} participants against target image: {}", participants.len(), target_image_path);
-        }
-        
-        // Process block payouts using the existing BlockProcessor logic
-        let results = processor.process_block_payouts(block_num)?;
-        
-        if verbose {
-            println!("Successfully calculated scores and payouts for {} participants", results.len());
-        }
-        
-        Ok(results)
-    } else {
-        match ClipEmbedder::new() {
-            Ok(clip_embedder) => {
-                if verbose {
-                    println!("Using CLIP embedder for semantic scoring");
-                }
-                let mut processor = BlockProcessor::new(blocks_file.to_string(), clip_embedder, strategy);
-                
-                // Load blocks data
-                processor.load_blocks()?;
-                
-                // Get target image path from the block
-                let block = processor.get_block(block_num)?;
-                let target_image_path = block.target_image_path.clone();
-                
-                if verbose {
-                    println!("Processing {} participants against target image: {}", participants.len(), target_image_path);
-                }
-                
-                // Process block payouts using the existing BlockProcessor logic
-                let results = processor.process_block_payouts(block_num)?;
-                
-                if verbose {
-                    println!("Successfully calculated scores and payouts for {} participants", results.len());
-                }
-                
-                Ok(results)
-            }
-            Err(e) => {
-                panic!("CRITICAL: Failed to load CLIP model: {}. Cannot proceed with invalid MockEmbedder fallback as this would produce unreliable scores that could lead to incorrect payouts.", e);
-            }
-        }
+    let clip_embedder = ClipEmbedder::new().map_err(|e| format!("Failed to load CLIP model: {}", e))?;
+    if verbose {
+        println!("Using CLIP embedder for semantic scoring");
     }
+    let mut processor = BlockProcessor::new(blocks_file.to_string(), clip_embedder, strategy);
+    
+    // Load blocks data
+    processor.load_blocks()?;
+    
+    // Get target image path from the block
+    let block = processor.get_block(block_num)?;
+    let target_image_path = block.target_image_path.clone();
+    
+    if verbose {
+        println!("Processing {} participants against target image: {}", participants.len(), target_image_path);
+    }
+    
+    // Process block payouts using the existing BlockProcessor logic
+    let results = processor.process_block_payouts(block_num)?;
+    
+    if verbose {
+        println!("Successfully calculated scores and payouts for {} participants", results.len());
+    }
+    
+    Ok(results)
 }
 
 /// Update the blocks.json file with calculated scores, payouts, and prize pool
@@ -412,7 +371,6 @@ pub fn run(args: CalculateScoresArgs) -> Result<()> {
         &args.block_num,
         &args.blocks_file,
         args.prize_pool,
-        args.use_mock,
         args.verbose,
     )?;
     

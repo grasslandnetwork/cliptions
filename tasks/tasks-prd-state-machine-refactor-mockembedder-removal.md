@@ -65,8 +65,8 @@
 
 - [ ] 3.0 Remove MockEmbedder and Enforce Real CLIP Model Everywhere
   - [x] 3.1 Delete `MockEmbedder` from `src/embedder.rs`; remove re-exports from `src/lib.rs` (partial: removed from public API and binaries; kept in codebase for tests to be migrated in 3.4)
-  - [ ] 3.2 Remove `--use-mock` flags and logic from CLI binaries and actions
-  - [ ] 3.3 Update `BlockProcessor` and scoring to use `ClipEmbedder` only; adjust generics if needed
+  - [x] 3.2 Remove `--use-mock` flags and logic from CLI binaries and actions
+  - [x] 3.3 Update `BlockProcessor` and scoring to use `ClipEmbedder` only; adjust generics if needed
   - [ ] 3.4 Update `python_bridge.rs`, `benches/`, and tests to use real embeddings
   - [ ] 3.5 Ensure startup/model load fails fast with clear panic if CLIP model unavailable
   - [ ] 3.6 Update README and CLI help to remove mock references
