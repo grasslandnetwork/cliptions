@@ -6,7 +6,7 @@
 use tempfile::NamedTempFile;
 
 use cliptions_core::commitment::{CommitmentGenerator, CommitmentVerifier};
-use cliptions_core::embedder::{EmbedderTrait, MockEmbedder};
+use cliptions_core::embedder::EmbedderTrait;
 use cliptions_core::block_processor::BlockProcessor;
 use cliptions_core::scoring::{
     calculate_payouts, calculate_rankings, ClipBatchStrategy, ScoreValidator,
@@ -20,7 +20,7 @@ fn test_complete_block_lifecycle() {
     let file_path = temp_file.path().to_string_lossy().to_string();
 
     // Create block processor
-    let embedder = MockEmbedder::clip_like();
+    let embedder = cliptions_core::embedder::ClipEmbedder::new().unwrap();
     let strategy = ClipBatchStrategy::new();
     let mut processor = BlockProcessor::new(file_path.clone(), embedder, strategy);
 
@@ -115,7 +115,7 @@ fn test_commitment_system_integration() {
 
 #[test]
 fn test_score_validator_integration() {
-    let embedder = MockEmbedder::new(128);
+    let embedder = cliptions_core::embedder::ClipEmbedder::new().unwrap();
     let strategy = ClipBatchStrategy::new();
     let validator = ScoreValidator::new(embedder, strategy);
 
@@ -145,7 +145,7 @@ fn test_score_validator_integration() {
 
 #[test]
 fn test_ranking_and_payout_calculation() {
-    let embedder = MockEmbedder::new(128);
+    let embedder = cliptions_core::embedder::ClipEmbedder::new().unwrap();
     let strategy = ClipBatchStrategy::new();
     let validator = ScoreValidator::new(embedder, strategy);
 
@@ -314,7 +314,7 @@ fn test_error_handling() {
     assert!(calculate_payouts(&ranked_results, 0.0).is_err());
 
     // 2. Empty guesses
-    let embedder = MockEmbedder::new(128);
+    let embedder = cliptions_core::embedder::ClipEmbedder::new().unwrap();
     let strategy = ClipBatchStrategy::new();
     let validator = ScoreValidator::new(embedder, strategy);
     assert!(calculate_rankings("test.jpg", &[], &validator).is_err());
@@ -326,7 +326,7 @@ fn test_error_handling() {
     // 4. Nonexistent block
     let temp_file = NamedTempFile::new().unwrap();
     let file_path = temp_file.path().to_string_lossy().to_string();
-    let embedder = MockEmbedder::clip_like();
+    let embedder = cliptions_core::embedder::ClipEmbedder::new().unwrap();
     let strategy = ClipBatchStrategy::new();
     let mut processor = BlockProcessor::new(file_path, embedder, strategy);
 
@@ -338,7 +338,7 @@ fn test_performance_characteristics() {
     // Test that operations scale reasonably with input size
     use std::time::Instant;
 
-    let embedder = MockEmbedder::new(512); // CLIP-like dimensions
+    let embedder = cliptions_core::embedder::ClipEmbedder::new().unwrap();
     let strategy = ClipBatchStrategy::new();
     let validator = ScoreValidator::new(embedder, strategy);
 
@@ -406,7 +406,7 @@ fn test_concurrent_operations() {
 #[test]
 fn test_deterministic_behavior() {
     // Test that operations are deterministic
-    let embedder = MockEmbedder::new(128);
+    let embedder = cliptions_core::embedder::ClipEmbedder::new().unwrap();
 
     // Same input should always produce same output
     let text = "deterministic test";

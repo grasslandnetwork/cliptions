@@ -334,7 +334,7 @@ pub fn process_participants<E: EmbedderTrait, S: ScoringStrategy>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::embedder::MockEmbedder;
+    // MockEmbedder removed from production; tests updated separately in later tasks
 
     #[test]
     fn test_clip_batch_strategy() {

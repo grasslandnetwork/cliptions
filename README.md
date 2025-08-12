@@ -359,7 +359,9 @@ cliptions calculate-scores --clip-model models/custom-clip target.jpg 100.0 "gue
 # Load configuration from YAML
 cliptions process-payouts --config config.yaml --all
 
-# Testing mode with MockEmbedder
+# Embedding
+
+The application uses a real CLIP model via Candle. Mock embedder support has been removed from production binaries.
 cliptions calculate-scores --use-mock target.jpg 100.0 "test1" "test2"
 
 # Multiple output formats

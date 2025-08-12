@@ -48,7 +48,7 @@ pub mod python_bridge;
 // pub use browser_integration::{BrowserIntegration, Commitment, CommitmentCollectionResult};  // TODO: File missing
 pub use commitment::{CommitmentGenerator, CommitmentVerifier};
 pub use config::{CliptionsConfig, ConfigManager, CostTracker, OpenAIConfig, SpendingStatus};
-pub use embedder::{EmbedderTrait, MockEmbedder};
+pub use embedder::EmbedderTrait;
 pub use error::{CliptionsError, Result};
 pub use payout::{PayoutCalculator, PayoutConfig, PayoutInfo};
 pub use block_processor::BlockProcessor;

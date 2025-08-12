@@ -10,7 +10,7 @@ use std::path::PathBuf;
 use std::process;
 
 use cliptions_core::config::ConfigManager;
-use cliptions_core::embedder::{ClipEmbedder, EmbedderTrait, MockEmbedder};
+use cliptions_core::embedder::{ClipEmbedder, EmbedderTrait};
 use cliptions_core::scoring::{
     calculate_payouts, calculate_rankings, ClipBatchStrategy, ScoreValidator,
 };
@@ -85,9 +85,7 @@ struct Args {
     #[arg(long)]
     detailed: bool,
 
-    /// Use MockEmbedder instead of CLIP for testing (fast, deterministic)
-    #[arg(long)]
-    use_mock: bool,
+    // Mock embedder support removed. Always use CLIP.
 }
 
 fn main() {
@@ -282,14 +280,8 @@ fn calculate_scores_with_embedder(
     args: &Args,
     guesses: &[String],
 ) -> Result<(Vec<(String, f64)>, Vec<f64>), Box<dyn std::error::Error>> {
-    // Create embedder based on user preference (defaults to CLIP)
-    if args.use_mock {
-        if args.verbose {
-            println!("{} Using MockEmbedder for testing", "Info:".blue().bold());
-        }
-        let embedder = MockEmbedder::clip_like();
-        calculate_with_embedder(embedder, args, guesses)
-    } else {
+    // Create embedder using CLIP only
+    {
         // Default: Use CLIP embedder
         if let Some(model_path) = &args.clip_model {
             match ClipEmbedder::from_path(&model_path.to_string_lossy()) {
@@ -592,7 +584,6 @@ mod tests {
             min_guess_length: 1,
             max_guess_length: 200,
             detailed: false,
-            use_mock: false,
         };
 
         // This will fail if the test image doesn't exist, which is expected
@@ -617,7 +608,6 @@ mod tests {
             min_guess_length: 1,
             max_guess_length: 200,
             detailed: false,
-            use_mock: false,
         };
 
         let result = validate_inputs(&args);

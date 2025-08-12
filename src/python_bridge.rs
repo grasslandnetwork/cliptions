@@ -10,7 +10,7 @@ use pyo3::types::PyModule;
 use serde_json;
 
 use crate::commitment::{CommitmentGenerator, CommitmentVerifier};
-use crate::embedder::{cosine_similarity, ClipEmbedder, MockEmbedder};
+use crate::embedder::{cosine_similarity, ClipEmbedder};
 use crate::error::CliptionsError;
 use crate::block_processor::BlockProcessor;
 use crate::scoring::{
@@ -93,14 +93,14 @@ pub fn py_verify_commitment(message: &str, salt: &str, commitment: &str) -> bool
 /// Python wrapper for ScoreValidator
 #[pyclass]
 pub struct PyScoreValidator {
-    inner: ScoreValidator<MockEmbedder, ClipBatchStrategy>,
+    inner: ScoreValidator<ClipEmbedder, ClipBatchStrategy>,
 }
 
 #[pymethods]
 impl PyScoreValidator {
     #[new]
     pub fn new() -> Self {
-        let embedder = MockEmbedder::clip_like();
+        let embedder = ClipEmbedder::new().map_err(|e| format!("Failed to load CLIP model: {}", e))?;
         let strategy = ClipBatchStrategy::new();
         Self {
             inner: ScoreValidator::new(embedder, strategy),
@@ -141,7 +141,7 @@ pub fn py_calculate_rankings(
     let strategy = ClipBatchStrategy::new();
 
     if use_mock {
-        let embedder = MockEmbedder::clip_like();
+        let embedder = ClipEmbedder::new().map_err(|e| format!("Failed to load CLIP model: {}", e))?;
         let validator = ScoreValidator::new(embedder, strategy);
         calculate_rankings(target_image_path, &guesses, &validator).map_err(|e| e.into())
     } else {
@@ -174,14 +174,14 @@ pub fn py_calculate_payouts(
 /// Python wrapper for BlockProcessor
 #[pyclass]
 pub struct PyBlockProcessor {
-    inner: BlockProcessor<MockEmbedder, ClipBatchStrategy>,
+    inner: BlockProcessor<ClipEmbedder, ClipBatchStrategy>,
 }
 
 #[pymethods]
 impl PyBlockProcessor {
     #[new]
     pub fn new(blocks_file: String) -> Self {
-        let embedder = MockEmbedder::clip_like();
+        let embedder = ClipEmbedder::new().map_err(|e| format!("Failed to load CLIP model: {}", e))?;
         let strategy = ClipBatchStrategy::new();
         Self {
             inner: BlockProcessor::new(blocks_file, embedder, strategy),
@@ -240,7 +240,7 @@ pub fn py_process_block_payouts(
     let strategy = ClipBatchStrategy::new();
 
     let mut processor = if use_mock {
-        let embedder = MockEmbedder::clip_like();
+        let embedder = ClipEmbedder::new().map_err(|e| format!("Failed to load CLIP model: {}", e))?;
         BlockProcessor::new(blocks_file, embedder, strategy)
     } else {
         // Try CLIP - panic if it fails

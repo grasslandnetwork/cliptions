@@ -11,7 +11,7 @@ use std::path::PathBuf;
 use std::process;
 
 use cliptions_core::config::ConfigManager;
-use cliptions_core::embedder::{ClipEmbedder, EmbedderTrait, MockEmbedder};
+use cliptions_core::embedder::{ClipEmbedder, EmbedderTrait};
 use cliptions_core::block_processor::BlockProcessor;
 use cliptions_core::scoring::ClipBatchStrategy;
 
@@ -61,9 +61,7 @@ struct Args {
     #[arg(long, short)]
     output_file: Option<PathBuf>,
 
-    /// Use MockEmbedder instead of CLIP for testing (fast, deterministic)
-    #[arg(long)]
-    use_mock: bool,
+    // Mock embedder support removed. Always use CLIP.
 
     /// Path to CLIP model directory (optional, uses default if not specified)
     #[arg(long)]
@@ -251,19 +249,8 @@ fn create_processor_and_process(
 ) -> Result<ProcessingResults, Box<dyn std::error::Error>> {
     let strategy = ClipBatchStrategy::new();
 
-    // Create processor and process based on embedder type (defaults to CLIP)
-    if args.use_mock {
-        if args.verbose {
-            println!("{} Using MockEmbedder for testing", "Info:".blue().bold());
-        }
-        let embedder = MockEmbedder::clip_like();
-        let processor = BlockProcessor::new(
-            args.blocks_file.to_string_lossy().to_string(),
-            embedder,
-            strategy,
-        );
-        process_with_processor(processor, args)
-    } else {
+    // Create processor and process using CLIP only
+    {
         // Default: Use CLIP embedder
         if let Some(model_path) = &args.clip_model {
             match ClipEmbedder::from_path(&model_path.to_string_lossy()) {
@@ -766,7 +753,6 @@ mod tests {
             blocks_file: PathBuf::from("tests/fixtures/blocks.json"),
             output: "table".to_string(),
             output_file: None,
-            use_mock: false,
             clip_model: None,
             verbose: false,
             no_color: false,
@@ -790,7 +776,6 @@ mod tests {
             blocks_file: PathBuf::from("blocks.json"),
             output: "table".to_string(),
             output_file: None,
-            use_mock: false,
             clip_model: None,
             verbose: false,
             no_color: false,
@@ -816,7 +801,6 @@ mod tests {
             blocks_file: PathBuf::from("blocks.json"),
             output: "table".to_string(),
             output_file: None,
-            use_mock: false,
             clip_model: None,
             verbose: false,
             no_color: false,
@@ -878,7 +862,6 @@ mod tests {
             blocks_file: file_path,
             output: "table".to_string(),
             output_file: None,
-            use_mock: false,
             clip_model: None,
             verbose: false,
             no_color: false,
