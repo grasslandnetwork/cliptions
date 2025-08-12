@@ -327,16 +327,16 @@ pub struct BlockStats {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::embedder::MockEmbedder;
+    use crate::embedder::ClipEmbedder;
     use crate::scoring::ClipBatchStrategy;
     use crate::types::Guess;
     use tempfile::NamedTempFile;
 
-    fn create_test_processor() -> (BlockProcessor<MockEmbedder, ClipBatchStrategy>, String) {
+    fn create_test_processor() -> (BlockProcessor<ClipEmbedder, ClipBatchStrategy>, String) {
         let temp_file = NamedTempFile::new().unwrap();
         let file_path = temp_file.path().to_string_lossy().to_string();
 
-        let embedder = MockEmbedder::clip_like();
+        let embedder = ClipEmbedder::new().expect("CLIP model should load in tests");
         let strategy = ClipBatchStrategy::new();
         let processor = BlockProcessor::new(file_path.clone(), embedder, strategy);
 

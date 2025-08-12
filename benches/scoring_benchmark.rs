@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 use cliptions_core::commitment::{CommitmentGenerator, CommitmentVerifier};
-use cliptions_core::embedder::{EmbedderTrait, MockEmbedder};
+use cliptions_core::embedder::{EmbedderTrait, ClipEmbedder};
 use cliptions_core::scoring::{
     calculate_payouts, calculate_rankings, ClipBatchStrategy, ScoreValidator, ScoringStrategy,
 };
@@ -76,7 +76,7 @@ fn benchmark_batch_commitment_verification(c: &mut Criterion) {
 }
 
 fn benchmark_embedding_generation(c: &mut Criterion) {
-    let embedder = MockEmbedder::clip_like();
+    let embedder = ClipEmbedder::new().unwrap();
 
     c.bench_function("text_embedding", |b| {
         b.iter(|| {
@@ -96,7 +96,7 @@ fn benchmark_embedding_generation(c: &mut Criterion) {
 }
 
 fn benchmark_scoring_strategies(c: &mut Criterion) {
-    let embedder = MockEmbedder::new(512);
+    let embedder = ClipEmbedder::new().unwrap();
     let strategy = ClipBatchStrategy::new();
 
     let image_features = embedder.get_image_embedding("test.jpg").unwrap();
@@ -112,7 +112,7 @@ fn benchmark_scoring_strategies(c: &mut Criterion) {
 }
 
 fn benchmark_ranking_calculation(c: &mut Criterion) {
-    let embedder = MockEmbedder::clip_like();
+    let embedder = ClipEmbedder::new().unwrap();
     let strategy = ClipBatchStrategy::new();
     let validator = ScoreValidator::new(embedder, strategy);
 
@@ -173,7 +173,7 @@ fn benchmark_payout_calculation(c: &mut Criterion) {
 }
 
 fn benchmark_complete_scoring_pipeline(c: &mut Criterion) {
-    let embedder = MockEmbedder::clip_like();
+    let embedder = ClipEmbedder::new().unwrap();
     let strategy = ClipBatchStrategy::new();
     let validator = ScoreValidator::new(embedder, strategy);
 

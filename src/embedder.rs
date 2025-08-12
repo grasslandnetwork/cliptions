@@ -1,12 +1,9 @@
 //! Embedding model interface for Cliptions
 //!
-//! This module provides the interface for embedding models like CLIP,
-//! along with a mock implementation for testing and development.
+//! This module provides the interface for embedding models like CLIP.
 
 use crate::error::{EmbeddingError, Result};
 use ndarray::Array1;
-use std::collections::hash_map::DefaultHasher;
-use std::hash::{Hash, Hasher};
 use std::path::Path;
 
 // Candle imports for native CLIP support
@@ -55,108 +52,6 @@ pub trait EmbedderTrait: Send + Sync {
     fn embedding_dim(&self) -> usize;
 }
 
-/// Mock embedder for testing and development
-///
-/// This embedder generates deterministic embeddings based on hash functions,
-/// allowing for consistent testing without requiring actual CLIP models.
-#[derive(Debug, Clone)]
-pub struct MockEmbedder {
-    embedding_dim: usize,
-}
-
-impl MockEmbedder {
-    /// Create a new mock embedder with specified dimensions
-    pub fn new(embedding_dim: usize) -> Self {
-        Self { embedding_dim }
-    }
-
-    /// Create a mock embedder with CLIP-like dimensions (512)
-    pub fn clip_like() -> Self {
-        Self::new(512)
-    }
-
-    /// Generate a deterministic embedding from a hash
-    fn hash_to_embedding(&self, input: &str) -> Array1<f64> {
-        let mut hasher = DefaultHasher::new();
-        input.hash(&mut hasher);
-        let hash = hasher.finish();
-
-        // Generate deterministic values from the hash
-        let mut values = Vec::with_capacity(self.embedding_dim);
-        let mut seed = hash;
-
-        for _ in 0..self.embedding_dim {
-            // Simple linear congruential generator for deterministic values
-            seed = seed.wrapping_mul(1103515245).wrapping_add(12345);
-            let normalized = (seed as f64) / (u64::MAX as f64) * 2.0 - 1.0;
-            values.push(normalized);
-        }
-
-        let mut embedding = Array1::from_vec(values);
-
-        // Normalize the embedding vector
-        let norm = embedding.dot(&embedding).sqrt();
-        if norm > 0.0 {
-            embedding /= norm;
-        }
-
-        embedding
-    }
-}
-
-impl Default for MockEmbedder {
-    fn default() -> Self {
-        Self::clip_like()
-    }
-}
-
-impl EmbedderTrait for MockEmbedder {
-    fn get_image_embedding(&self, image_path: &str) -> Result<Array1<f64>> {
-        // For mock purposes, just hash the image path
-        // In a real implementation, this would load and process the image
-        let embedding_input = format!("image:{}", image_path);
-        Ok(self.hash_to_embedding(&embedding_input))
-    }
-
-    fn get_text_embedding(&self, text: &str) -> Result<Array1<f64>> {
-        // Hash the text to create a deterministic embedding
-        let embedding_input = format!("text:{}", text);
-        Ok(self.hash_to_embedding(&embedding_input))
-    }
-
-    fn calculate_batch_similarities(&self, image_path: &str, texts: &[String]) -> Result<Vec<f64>> {
-        // Get image embedding
-        let image_embedding = self.get_image_embedding(image_path)?;
-
-        // Calculate raw cosine similarities for all texts
-        let mut raw_similarities = Vec::new();
-        for text in texts {
-            let text_embedding = self.get_text_embedding(text)?;
-            let similarity = cosine_similarity(&image_embedding, &text_embedding)?;
-            raw_similarities.push(similarity);
-        }
-
-        // Apply softmax to create competitive rankings (simulating CLIP's behavior)
-        let max_sim = raw_similarities
-            .iter()
-            .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-        let exp_sims: Vec<f64> = raw_similarities
-            .iter()
-            .map(|&x| (x - max_sim).exp())
-            .collect();
-        let sum_exp: f64 = exp_sims.iter().sum();
-
-        // Convert to percentages
-        let softmax_percentages: Vec<f64> =
-            exp_sims.iter().map(|&x| (x / sum_exp) * 100.0).collect();
-
-        Ok(softmax_percentages)
-    }
-
-    fn embedding_dim(&self) -> usize {
-        self.embedding_dim
-    }
-}
 
 /// Native Rust CLIP embedder using Candle ML framework
 ///
@@ -397,7 +292,6 @@ impl ClipEmbedder {
         Ok(Array1::from_vec(values_f64))
     }
 
-    /// Parse CLIP configuration from JSON
     /// Tokenize multiple text sequences for batch processing
     fn tokenize_batch(&self, texts: &[String]) -> Result<Tensor> {
         let pad_id = *self
@@ -570,95 +464,6 @@ pub fn cosine_similarity(a: &Array1<f64>, b: &Array1<f64>) -> Result<f64> {
 mod tests {
     use super::*;
 
-    #[test]
-    fn test_mock_embedder_deterministic() {
-        let embedder = MockEmbedder::new(128);
-
-        let text = "test text";
-        let embedding1 = embedder.get_text_embedding(text).unwrap();
-        let embedding2 = embedder.get_text_embedding(text).unwrap();
-
-        // Should be deterministic
-        assert_eq!(embedding1, embedding2);
-    }
-
-    #[test]
-    fn test_mock_embedder_different_inputs() {
-        let embedder = MockEmbedder::new(128);
-
-        let embedding1 = embedder.get_text_embedding("text1").unwrap();
-        let embedding2 = embedder.get_text_embedding("text2").unwrap();
-
-        // Different inputs should produce different embeddings
-        assert_ne!(embedding1, embedding2);
-    }
-
-    #[test]
-    fn test_mock_embedder_normalized() {
-        let embedder = MockEmbedder::new(128);
-
-        let embedding = embedder.get_text_embedding("test").unwrap();
-        let norm = embedding.dot(&embedding).sqrt();
-
-        // Should be approximately normalized (within floating point precision)
-        assert!((norm - 1.0).abs() < 1e-10);
-    }
-
-    #[test]
-    fn test_cosine_similarity() {
-        let embedder = MockEmbedder::new(128);
-
-        let embedding1 = embedder.get_text_embedding("similar text").unwrap();
-        let embedding2 = embedder.get_text_embedding("similar text").unwrap();
-        let embedding3 = embedder.get_text_embedding("different text").unwrap();
-
-        // Identical embeddings should have similarity of 1.0
-        let sim_identical = cosine_similarity(&embedding1, &embedding2).unwrap();
-        assert!((sim_identical - 1.0).abs() < 1e-10);
-
-        // Different embeddings should have different similarity
-        let sim_different = cosine_similarity(&embedding1, &embedding3).unwrap();
-        assert!(sim_different < 1.0);
-        assert!(sim_different >= -1.0);
-    }
-
-    #[test]
-    fn test_cosine_similarity_dimension_mismatch() {
-        let embedder1 = MockEmbedder::new(128);
-        let embedder2 = MockEmbedder::new(256);
-
-        let embedding1 = embedder1.get_text_embedding("test").unwrap();
-        let embedding2 = embedder2.get_text_embedding("test").unwrap();
-
-        let result = cosine_similarity(&embedding1, &embedding2);
-        assert!(matches!(
-            result,
-            Err(crate::error::CliptionsError::Embedding(
-                EmbeddingError::InvalidDimensions
-            ))
-        ));
-    }
-
-    #[test]
-    fn test_image_vs_text_embeddings() {
-        let embedder = MockEmbedder::new(128);
-
-        let image_embedding = embedder.get_image_embedding("test.jpg").unwrap();
-        let text_embedding = embedder.get_text_embedding("test.jpg").unwrap();
-
-        // Same input should produce different embeddings for image vs text
-        assert_ne!(image_embedding, text_embedding);
-    }
-
-    #[test]
-    fn test_embedding_dimensions() {
-        let embedder = MockEmbedder::new(256);
-
-        assert_eq!(embedder.embedding_dim(), 256);
-
-        let embedding = embedder.get_text_embedding("test").unwrap();
-        assert_eq!(embedding.len(), 256);
-    }
 
     #[test]
     fn test_clip_embedder_creation() {

@@ -334,12 +334,12 @@ pub fn process_participants<E: EmbedderTrait, S: ScoringStrategy>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::embedder::MockEmbedder;
+    use crate::embedder::ClipEmbedder;
 
     #[test]
     fn test_clip_batch_strategy() {
         let strategy = ClipBatchStrategy::new();
-        let embedder = MockEmbedder::new(128);
+        let embedder = ClipEmbedder::new().expect("CLIP model should load in tests");
 
         let img_features = embedder.get_image_embedding("test.jpg").unwrap();
         let txt_features = embedder.get_text_embedding("test text").unwrap();
@@ -356,7 +356,7 @@ mod tests {
 
     #[test]
     fn test_score_validator() {
-        let embedder = MockEmbedder::new(128);
+        let embedder = ClipEmbedder::new().expect("CLIP model should load in tests");
         let strategy = ClipBatchStrategy::new();
         let validator = ScoreValidator::new(embedder, strategy);
 
@@ -371,7 +371,7 @@ mod tests {
 
     #[test]
     fn test_calculate_rankings() {
-        let embedder = MockEmbedder::new(128);
+        let embedder = ClipEmbedder::new().expect("CLIP model should load in tests");
         let strategy = ClipBatchStrategy::new();
         let validator = ScoreValidator::new(embedder, strategy);
 
@@ -460,7 +460,7 @@ mod tests {
 
     #[test]
     fn test_empty_guesses() {
-        let embedder = MockEmbedder::new(128);
+        let embedder = ClipEmbedder::new().expect("CLIP model should load in tests");
         let strategy = ClipBatchStrategy::new();
         let validator = ScoreValidator::new(embedder, strategy);
 

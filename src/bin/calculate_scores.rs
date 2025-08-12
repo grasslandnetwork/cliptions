@@ -30,8 +30,7 @@ Examples:
   # Basic usage with CLIP embedder (semantic scoring)
   calculate_scores target.jpg 100.0 \"ocean waves\" \"mountain sunset\" \"city lights\"
   
-  # Use MockEmbedder for fast testing
-  calculate_scores --use-mock target.jpg 100.0 \"guess1\" \"guess2\"
+  
   
   # Save results to JSON file with verbose output
   calculate_scores --verbose --output json --output-file results.json target.jpg 100.0 \"guess1\"
@@ -634,7 +633,7 @@ mod tests {
 
     #[test]
     fn test_calculate_scores_basic() {
-        let embedder = MockEmbedder::clip_like();
+        let embedder = ClipEmbedder::new().unwrap();
         let strategy = ClipBatchStrategy::new();
         let validator = ScoreValidator::new(embedder, strategy);
 
