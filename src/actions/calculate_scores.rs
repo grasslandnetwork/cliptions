@@ -74,14 +74,10 @@ fn load_verified_participants(block_num: &str, blocks_file: &str) -> Result<Vec<
     // Load blocks data
     processor.load_blocks()?;
     
-    // Get the block and extract verified participants
+    // Get the block and extract verified participants via facade
     let block = processor.get_block(block_num)?;
-    let verified_participants: Vec<Participant> = block
-        .participants
-        .iter()
-        .filter(|p| p.verified)
-        .cloned()
-        .collect();
+    let facade = block as &dyn crate::facades::block_facade::BlockFacade;
+    let verified_participants: Vec<Participant> = facade.verified_participants_owned();
     
     if verified_participants.is_empty() {
         return Err(crate::error::CliptionsError::ValidationError(
@@ -111,9 +107,10 @@ fn calculate_scores_and_payouts(
     // Load blocks data
     processor.load_blocks()?;
     
-    // Get target image path from the block
+    // Get target image path via facade
     let block = processor.get_block(block_num)?;
-    let target_image_path = block.target_image_path.clone();
+    let facade = block as &dyn crate::facades::block_facade::BlockFacade;
+    let target_image_path = facade.target_image_path().to_string();
     
     if verbose {
         println!("Processing {} participants against target image: {}", participants.len(), target_image_path);

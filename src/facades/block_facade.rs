@@ -18,6 +18,7 @@ pub trait BlockFacade {
     fn verified_participants_len(&self) -> usize;
     fn is_complete(&self) -> bool;
     fn total_payout(&self) -> f64;
+    fn participants_owned(&self) -> Vec<crate::types::Participant>;
 }
 
 impl BlockFacade for BlockData {
@@ -49,6 +50,9 @@ impl BlockFacade for BlockData {
             0.0
         }
     }
+    fn participants_owned(&self) -> Vec<crate::types::Participant> {
+        self.participants.clone()
+    }
 }
 
 impl<S: StateMarker> BlockFacade for TypedBlock<S> {
@@ -73,6 +77,7 @@ impl<S: StateMarker> BlockFacade for TypedBlock<S> {
     fn verified_participants_len(&self) -> usize { 0 }
     fn is_complete(&self) -> bool { matches!(self.status(), crate::types::BlockStatus::Complete) }
     fn total_payout(&self) -> f64 { 0.0 }
+    fn participants_owned(&self) -> Vec<crate::types::Participant> { Vec::new() }
 }
 
 

@@ -463,17 +463,18 @@ fn process_block_verification<E: EmbedderTrait>(
 ) -> Result<(Vec<bool>, Vec<cliptions_core::types::Participant>), Box<dyn std::error::Error>> {
     // Get block info
     let block = processor.get_block(block_num)?;
+    let facade = block as &dyn cliptions_core::facades::block_facade::BlockFacade;
 
     if args.verbose {
         println!(
             "{} Block: {} - {} participants",
             "Info:".blue().bold(),
-            block.block_num,
-            block.participants.len()
+            facade.block_num(),
+            facade.participants_len()
         );
     }
 
-    if block.participants.is_empty() {
+    if facade.participants_len() == 0 {
         if args.verbose {
             println!(
                 "{} No participants to verify in block {}",
@@ -485,7 +486,7 @@ fn process_block_verification<E: EmbedderTrait>(
     }
 
     // Clone participants to avoid borrowing issues
-    let participants = block.participants.clone();
+    let participants = facade.participants_owned();
 
     // Verify commitments
     let verification_results = processor.verify_commitments(block_num)?;
