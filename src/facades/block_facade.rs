@@ -14,6 +14,10 @@ pub trait BlockFacade {
 
     fn is_commitment_phase(&self) -> bool;
     fn verified_participants_owned(&self) -> Vec<crate::types::Participant>;
+    fn participants_len(&self) -> usize;
+    fn verified_participants_len(&self) -> usize;
+    fn is_complete(&self) -> bool;
+    fn total_payout(&self) -> f64;
 }
 
 impl BlockFacade for BlockData {
@@ -35,20 +39,40 @@ impl BlockFacade for BlockData {
             .cloned()
             .collect()
     }
+    fn participants_len(&self) -> usize { self.participants.len() }
+    fn verified_participants_len(&self) -> usize { self.verified_participants().len() }
+    fn is_complete(&self) -> bool { self.is_complete() }
+    fn total_payout(&self) -> f64 {
+        if self.is_complete() {
+            self.results.iter().filter_map(|r| r.payout).sum()
+        } else {
+            0.0
+        }
+    }
 }
 
 impl<S: StateMarker> BlockFacade for TypedBlock<S> {
-    fn block_num(&self) -> &str { &self.id }
+    fn block_num(&self) -> &str { &self.block_num }
     fn prize_pool(&self) -> f64 { 0.0 }
     fn created_at(&self) -> DateTime<Utc> { self.created_at }
     fn updated_at(&self) -> DateTime<Utc> { self.created_at }
-    fn status(&self) -> crate::types::BlockStatus { crate::types::BlockStatus::Open }
+    fn status(&self) -> crate::types::BlockStatus {
+        match S::state_name() {
+            "Finished" => crate::types::BlockStatus::Complete,
+            "CommitmentsOpen" | "RevealsOpen" => crate::types::BlockStatus::Open,
+            _ => crate::types::BlockStatus::Processing,
+        }
+    }
     fn target_image_path(&self) -> &str { "" }
 
     fn is_commitment_phase(&self) -> bool {
         S::state_name() == <CommitmentsOpen as StateMarker>::state_name()
     }
     fn verified_participants_owned(&self) -> Vec<crate::types::Participant> { Vec::new() }
+    fn participants_len(&self) -> usize { 0 }
+    fn verified_participants_len(&self) -> usize { 0 }
+    fn is_complete(&self) -> bool { matches!(self.status(), crate::types::BlockStatus::Complete) }
+    fn total_payout(&self) -> f64 { 0.0 }
 }
 
 

@@ -74,8 +74,8 @@
 - [ ] 4.0 Unify `BlockData` and `Block<S>` into a Single Typestate-Ready Struct
   - [x] 4.1 Design unified `Block<S>` struct (use `block_num`, not `block_id`)
   - [x] 4.2 Implement DTO conversions for JSON compatibility (legacy `BlockData` ↔ unified `Block<S>`)
-  - [ ] 4.3 Implement `BlockFacade` for unified struct; keep facade API stable
-  - [ ] 4.4 Migrate consumers (processors, actions, CLI) to unified struct via facades
+  - [x] 4.3 Implement `BlockFacade` for unified struct; keep facade API stable
+  - [ ] 4.4 Migrate consumers (processors, actions, CLI) to unified struct via facades (processing path done; stats path `get_block_stats` now facade-only; storage swap pending)
   - [ ] 4.5 Remove legacy `BlockData` after migration and tests are green
   - [ ] 4.6 Add/adjust tests for unified struct and DTO mappings
 

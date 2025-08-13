@@ -12,6 +12,9 @@ use std::fmt;
 use std::path::Path;
 use std::path::PathBuf;
 use twitter_api::TwitterApi;
+use std::path::PathBuf as StdPathBuf;
+
+use crate::types::{BlockData, BlockStatus};
 
 // --- State Markers ---
 
@@ -96,7 +99,7 @@ impl StateMarker for Finished {
 /// Block data structure with typestate pattern
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Block<S> {
-    pub id: String,
+    pub block_num: String,
     pub created_at: DateTime<Utc>,
 
     // --- Block Parameters (Known at Start) ---
@@ -130,7 +133,7 @@ where
     S: StateMarker,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Block {} ({})", self.id, S::state_name())
+        write!(f, "Block {} ({})", self.block_num, S::state_name())
     }
 }
 
@@ -138,13 +141,13 @@ where
 impl Block<Pending> {
     /// Create a new pending block
     pub fn new(
-        id: String,
+        block_num: String,
         description: String,
         livestream_url: String,
         target_timestamp: DateTime<Utc>,
     ) -> Self {
         Self {
-            id,
+            block_num,
             created_at: Utc::now(),
             description,
             livestream_url,
@@ -164,7 +167,13 @@ impl Block<Pending> {
     ) -> Result<Block<CommitmentsOpen>> {
         let formatter = AnnouncementFormatter::new();
         let announcement_data = AnnouncementData {
-            block_num: self.id.parse().expect(&format!("CRITICAL: Invalid block ID '{}' - cannot proceed with block announcements", self.id)),
+            block_num: self
+                .block_num
+                .parse()
+                .expect(&format!(
+                    "CRITICAL: Invalid block ID '{}' - cannot proceed with block announcements",
+                    self.block_num
+                )),
             state_name: "CommitmentsOpen".to_string(),
             target_time: commitment_deadline.to_rfc3339(),
             hashtags: vec![],       // The formatter will add standard hashtags
@@ -182,7 +191,7 @@ impl Block<Pending> {
         self.commitment_deadline = Some(commitment_deadline);
 
         Ok(Block {
-            id: self.id,
+            block_num: self.block_num,
             created_at: self.created_at,
             description: self.description,
             livestream_url: self.livestream_url,
@@ -204,13 +213,19 @@ impl Block<CommitmentsOpen> {
     ) -> Result<Block<CommitmentsClosed>> {
         let formatter = AnnouncementFormatter::new();
         let announcement_data = AnnouncementData {
-            block_num: self.id.parse().expect(&format!("CRITICAL: Invalid block ID '{}' - cannot proceed with block announcements", self.id)),
+            block_num: self
+                .block_num
+                .parse()
+                .expect(&format!(
+                    "CRITICAL: Invalid block ID '{}' - cannot proceed with block announcements",
+                    self.block_num
+                )),
             state_name: "CommitmentsClosed".to_string(),
             target_time: self.target_timestamp.to_rfc3339(),
             hashtags: vec![],
             message: format!(
                 "Block '{}': Commitments are now closed. Waiting for target time at {}.",
-                self.id,
+                self.block_num,
                 self.target_timestamp.to_rfc3339()
             ),
             prize_pool: None,
@@ -224,7 +239,7 @@ impl Block<CommitmentsOpen> {
             .map_err(|e| CliptionsError::ApiError(e.to_string()))?;
 
         Ok(Block {
-            id: self.id,
+            block_num: self.block_num,
             created_at: self.created_at,
             description: self.description,
             livestream_url: self.livestream_url,
@@ -249,7 +264,7 @@ impl Block<CommitmentsClosed> {
         }
         self.target_frame_path = Some(target_frame_path);
         Ok(Block {
-            id: self.id,
+            block_num: self.block_num,
             created_at: self.created_at,
             description: self.description,
             livestream_url: self.livestream_url,
@@ -273,13 +288,19 @@ impl Block<FrameCaptured> {
     ) -> Result<Block<RevealsOpen>> {
         let formatter = AnnouncementFormatter::new();
         let announcement_data = AnnouncementData {
-            block_num: self.id.parse().expect(&format!("CRITICAL: Invalid block ID '{}' - cannot proceed with block announcements", self.id)),
+            block_num: self
+                .block_num
+                .parse()
+                .expect(&format!(
+                    "CRITICAL: Invalid block ID '{}' - cannot proceed with block announcements",
+                    self.block_num
+                )),
             state_name: "RevealsOpen".to_string(),
             target_time: reveals_deadline.to_rfc3339(),
             hashtags: vec![],
             message: format!(
                 "Block '{}': Target frame revealed! Reveals are open until {}.",
-                self.id,
+                self.block_num,
                 reveals_deadline.to_rfc3339()
             ),
             prize_pool: None,
@@ -299,7 +320,7 @@ impl Block<FrameCaptured> {
         self.reveals_deadline = Some(reveals_deadline);
 
         Ok(Block {
-            id: self.id,
+            block_num: self.block_num,
             created_at: self.created_at,
             description: self.description,
             livestream_url: self.livestream_url,
@@ -318,7 +339,7 @@ impl Block<RevealsOpen> {
     pub async fn close_reveals<T: TwitterApi>(self, _client: &T) -> Result<Block<Payouts>> {
         // This is a placeholder for the real implementation
         Ok(Block {
-            id: self.id,
+            block_num: self.block_num,
             created_at: self.created_at,
             description: self.description,
             livestream_url: self.livestream_url,
@@ -336,7 +357,7 @@ impl Block<Payouts> {
     pub async fn process_payouts<T: TwitterApi>(self, _client: &T) -> Result<Block<Finished>> {
         // Placeholder
         Ok(Block {
-            id: self.id,
+            block_num: self.block_num,
             created_at: self.created_at,
             description: self.description,
             livestream_url: self.livestream_url,
@@ -360,7 +381,7 @@ impl<S> Block<S> {
     /// Convert to any other state (used for deserialization)
     pub fn into_state<T>(self) -> Block<T> {
         Block {
-            id: self.id,
+            block_num: self.block_num,
             created_at: self.created_at,
             description: self.description,
             livestream_url: self.livestream_url,
@@ -385,6 +406,60 @@ pub fn parse_state_from_string(state_str: &str) -> Option<String> {
         "payouts" => Some("Payouts".to_string()),
         "finished" => Some("Finished".to_string()),
         _ => None,
+    }
+}
+
+// =============================================================================
+// Legacy DTO Conversions (BlockData ↔ Block<S>)
+// =============================================================================
+
+impl From<&BlockData> for Block<CommitmentsOpen> {
+    fn from(legacy: &BlockData) -> Self {
+        // Map legacy fields into the unified typestate block. We start at CommitmentsOpen.
+        let target_frame_path: Option<PathBuf> = if legacy.target_image_path.is_empty() {
+            None
+        } else {
+            Some(PathBuf::from(legacy.target_image_path.clone()))
+        };
+
+        Block::<CommitmentsOpen> {
+            block_num: legacy.block_num.clone(),
+            created_at: legacy.created_at,
+            description: String::new(),
+            livestream_url: String::new(),
+            // Use legacy reveal_deadline as the canonical target moment
+            target_timestamp: legacy.reveal_deadline,
+            target_frame_path,
+            commitment_deadline: Some(legacy.commitment_deadline),
+            reveals_deadline: Some(legacy.reveal_deadline),
+            state: std::marker::PhantomData,
+        }
+    }
+}
+
+impl Block<CommitmentsOpen> {
+    /// Convert this unified block back to legacy `BlockData` by merging with an existing template.
+    /// Fields not represented in the unified struct are copied from `template` to preserve data.
+    pub fn to_legacy_with_template(&self, template: &BlockData) -> BlockData {
+        let mut out = template.clone();
+
+        // Update core identity/time fields from unified block
+        out.block_num = self.block_num.clone();
+        out.commitment_deadline = self.commitment_deadline.unwrap_or(template.commitment_deadline);
+        out.reveal_deadline = self.reveals_deadline.unwrap_or(template.reveal_deadline);
+
+        if let Some(p) = &self.target_frame_path {
+            out.target_image_path = p.to_string_lossy().to_string();
+        }
+
+        // Keep existing status if it has progressed; otherwise ensure at least Open
+        if matches!(out.status, BlockStatus::Open | BlockStatus::Processing | BlockStatus::Complete | BlockStatus::Cancelled) {
+            // leave as-is
+        } else {
+            out.status = BlockStatus::Open;
+        }
+
+        out
     }
 }
 

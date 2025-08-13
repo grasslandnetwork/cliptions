@@ -288,17 +288,13 @@ impl<E: EmbedderTrait, S: ScoringStrategy> BlockProcessor<E, S> {
     /// Get block statistics
     pub fn get_block_stats(&mut self, block_num: &str) -> Result<BlockStats> {
         let block = self.get_block(block_num)?;
+        let facade = block as &dyn BlockFacade;
 
-        let total_participants = block.participants.len();
-        let verified_participants = block.verified_participants().len();
-        let total_prize_pool = block.prize_pool;
-        let is_complete = block.is_complete();
-
-        let total_payout = if is_complete {
-            block.results.iter().filter_map(|r| r.payout).sum()
-        } else {
-            0.0
-        };
+        let total_participants = facade.participants_len();
+        let verified_participants = facade.verified_participants_len();
+        let total_prize_pool = facade.prize_pool();
+        let is_complete = facade.is_complete();
+        let total_payout = facade.total_payout();
 
         Ok(BlockStats {
             block_num: block_num.to_string(),
@@ -307,7 +303,7 @@ impl<E: EmbedderTrait, S: ScoringStrategy> BlockProcessor<E, S> {
             total_prize_pool,
             total_payout,
             is_complete,
-            status: block.status.clone(),
+            status: facade.status(),
         })
     }
 }
