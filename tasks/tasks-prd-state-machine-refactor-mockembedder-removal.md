@@ -72,8 +72,8 @@
   - [x] 3.6 Update README and CLI help to remove mock references
 
 - [ ] 4.0 Unify `BlockData` and `Block<S>` into a Single Typestate-Ready Struct
-  - [ ] 4.1 Design unified `Block<S>` struct (use `block_num`, not `block_id`)
-  - [ ] 4.2 Implement DTO conversions for JSON compatibility (legacy `BlockData` ↔ unified `Block<S>`)
+  - [x] 4.1 Design unified `Block<S>` struct (use `block_num`, not `block_id`)
+  - [x] 4.2 Implement DTO conversions for JSON compatibility (legacy `BlockData` ↔ unified `Block<S>`)
   - [ ] 4.3 Implement `BlockFacade` for unified struct; keep facade API stable
   - [ ] 4.4 Migrate consumers (processors, actions, CLI) to unified struct via facades
   - [ ] 4.5 Remove legacy `BlockData` after migration and tests are green
