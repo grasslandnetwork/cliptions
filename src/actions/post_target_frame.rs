@@ -3,7 +3,7 @@ use colored::Colorize;
 use std::path::PathBuf;
 use crate::config::ConfigManager;
 use crate::error::Result;
-use twitter_api::{TwitterApi, TwitterClient, TwitterError};
+use twitter_api::{TwitterClient, TwitterError};
 use chrono::{Duration as ChronoDuration, Utc};
 use chrono_tz;
 use crate::social::AnnouncementFormatter;

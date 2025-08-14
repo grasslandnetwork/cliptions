@@ -206,6 +206,26 @@ impl Block<Pending> {
 
 /// Implementation for CommitmentsOpen state
 impl Block<CommitmentsOpen> {
+    /// Start directly in CommitmentsOpen state (skips Pending)
+    pub fn start(
+        block_num: String,
+        description: String,
+        livestream_url: String,
+        target_timestamp: DateTime<Utc>,
+        commitment_deadline: DateTime<Utc>,
+    ) -> Self {
+        Block::<CommitmentsOpen> {
+            block_num,
+            created_at: Utc::now(),
+            description,
+            livestream_url,
+            target_timestamp,
+            target_frame_path: None,
+            commitment_deadline: Some(commitment_deadline),
+            reveals_deadline: None,
+            state: std::marker::PhantomData,
+        }
+    }
     /// Close commitments
     pub async fn close_commitments<T: TwitterApi>(
         self,
@@ -472,6 +492,7 @@ mod tests {
     use std::path::PathBuf;
     use std::sync::{Arc, Mutex};
     use twitter_api::{PostTweetResult, Tweet, TwitterError};
+    use crate::types::{BlockData as LegacyBlockData, BlockStatus as LegacyBlockStatus};
 
     /// A mock Twitter client that records calls for verification.
     #[derive(Clone)]
@@ -628,5 +649,78 @@ mod tests {
         } else {
             panic!("Expected a ValidationError");
         }
+    }
+
+    #[test]
+    fn test_start_commitments_open_constructor() {
+        let now = Utc::now();
+        let commit_deadline = now + Duration::hours(24);
+        let block = Block::<CommitmentsOpen>::start(
+            "42".to_string(),
+            "Test".to_string(),
+            "http://example.com".to_string(),
+            now + Duration::days(1),
+            commit_deadline,
+        );
+        assert_eq!(block.state_name(), "CommitmentsOpen");
+        assert_eq!(block.block_num, "42");
+        assert_eq!(block.commitment_deadline, Some(commit_deadline));
+        assert!(block.reveals_deadline.is_none());
+        assert!(block.target_frame_path.is_none());
+    }
+
+    #[test]
+    fn test_legacy_round_trip_conversion() {
+        // Create a legacy block
+        let legacy = LegacyBlockData {
+            block_version: 1,
+            block_num: "7".to_string(),
+            target_image_path: "/tmp/target.jpg".to_string(),
+            status: LegacyBlockStatus::Open,
+            prize_pool: 100.0,
+            social_id: "tweet123".to_string(),
+            commitment_deadline: Utc::now() + Duration::hours(1),
+            reveal_deadline: Utc::now() + Duration::hours(2),
+            total_payout: 0.0,
+            participants: vec![],
+            results: vec![],
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        };
+
+        // Convert to unified CommitmentsOpen block
+        let unified: Block<CommitmentsOpen> = (&legacy).into();
+        assert_eq!(unified.block_num, legacy.block_num);
+        assert_eq!(unified.commitment_deadline, Some(legacy.commitment_deadline));
+        assert_eq!(unified.reveals_deadline, Some(legacy.reveal_deadline));
+
+        // Convert back to legacy using the original as template
+        let legacy_back = unified.to_legacy_with_template(&legacy);
+        assert_eq!(legacy_back.block_num, legacy.block_num);
+        assert_eq!(legacy_back.commitment_deadline, legacy.commitment_deadline);
+        assert_eq!(legacy_back.reveal_deadline, legacy.reveal_deadline);
+        assert_eq!(legacy_back.target_image_path, legacy.target_image_path);
+    }
+
+    #[test]
+    fn test_legacy_pending_maps_to_commitments_open() {
+        let legacy = LegacyBlockData {
+            block_version: 1,
+            block_num: "9".to_string(),
+            target_image_path: String::new(),
+            status: LegacyBlockStatus::Open, // change to Pending once available in legacy enum
+            prize_pool: 0.0,
+            social_id: String::new(),
+            commitment_deadline: Utc::now() + Duration::hours(1),
+            reveal_deadline: Utc::now() + Duration::hours(2),
+            total_payout: 0.0,
+            participants: vec![],
+            results: vec![],
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        };
+
+        let unified: Block<CommitmentsOpen> = (&legacy).into();
+        assert_eq!(unified.state_name(), "CommitmentsOpen");
     }
 }
