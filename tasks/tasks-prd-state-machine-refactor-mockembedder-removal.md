@@ -105,7 +105,7 @@
       - Single DTO round‑trip point; copy fields verbatim to preserve compatibility
     - [x] 5.3.4 Update `impl BlockFacade for TypedBlock<S>` to return real values for `participants_len`, `verified_participants_len`, `prize_pool`, `total_payout`, `is_complete`
       - Return direct values; avoid introducing extra traits/abstractions here
-    - [ ] 5.3.5 Add unit tests for DTO round‑trip and facade values
+    - [x] 5.3.5 Add unit tests for DTO round‑trip and facade values
       - Ensure counts, prize pool, and total payout survive serialize/deserialize
       - Ensure `status()` mapping remains stable across states
       - Colocate tests; deterministic fixtures; use `anyhow` in helpers; `unwrap` acceptable in tests

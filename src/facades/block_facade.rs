@@ -82,4 +82,49 @@ impl<S: StateMarker> BlockFacade for TypedBlock<S> {
     fn participants_owned(&self) -> Vec<crate::types::Participant> { self.participants.clone() }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::block_engine::state_machine::Block as TypedBlock;
+    use chrono::Duration;
+
+    #[test]
+    fn facade_reports_counts_and_totals_from_unified_block() {
+        let mut block = TypedBlock::<CommitmentsOpen>::start(
+            "5".to_string(),
+            "desc".to_string(),
+            "http://example".to_string(),
+            Utc::now() + Duration::hours(2),
+            Utc::now() + Duration::hours(1),
+        );
+
+        // Populate consolidated fields
+        block.prize_pool = 50.0;
+        block.total_payout = 20.0;
+        block.participants = vec![
+            crate::types::Participant::new(
+                "sid1".to_string(),
+                "u1".to_string(),
+                crate::types::Guess::new("g1".to_string()),
+                "c1".to_string(),
+            )
+            .mark_verified(),
+            crate::types::Participant::new(
+                "sid2".to_string(),
+                "u2".to_string(),
+                crate::types::Guess::new("g2".to_string()),
+                "c2".to_string(),
+            ),
+        ];
+
+        // Use facade
+        assert_eq!(BlockFacade::prize_pool(&block), 50.0);
+        assert_eq!(BlockFacade::total_payout(&block), 20.0);
+        assert_eq!(BlockFacade::participants_len(&block), 2);
+        assert_eq!(BlockFacade::verified_participants_len(&block), 1);
+        assert_eq!(BlockFacade::verified_participants_owned(&block).len(), 1);
+        assert_eq!(BlockFacade::participants_owned(&block).len(), 2);
+    }
+}
+
 

@@ -770,4 +770,54 @@ mod tests {
         let unified: Block<CommitmentsOpen> = (&legacy).into();
         assert_eq!(unified.state_name(), "CommitmentsOpen");
     }
+
+    #[test]
+    fn test_dto_carries_participants_and_totals() {
+        use crate::types::{Guess, Participant as LegacyParticipant};
+
+        // Legacy with participants and pools
+        let p1 = LegacyParticipant::new(
+            "u1".to_string(),
+            "user1".to_string(),
+            Guess::new("guess1".to_string()),
+            "c1".to_string(),
+        )
+        .mark_verified();
+        let p2 = LegacyParticipant::new(
+            "u2".to_string(),
+            "user2".to_string(),
+            Guess::new("guess2".to_string()),
+            "c2".to_string(),
+        );
+
+        let legacy = LegacyBlockData {
+            block_version: 1,
+            block_num: "11".to_string(),
+            target_image_path: "/tmp/target.jpg".to_string(),
+            status: LegacyBlockStatus::Open,
+            prize_pool: 123.4,
+            social_id: "tweet11".to_string(),
+            commitment_deadline: Utc::now() + Duration::hours(1),
+            reveal_deadline: Utc::now() + Duration::hours(2),
+            total_payout: 56.7,
+            participants: vec![p1.clone(), p2.clone()],
+            results: vec![],
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        };
+
+        // Into unified typestate
+        let mut unified: Block<CommitmentsOpen> = (&legacy).into();
+        assert_eq!(unified.prize_pool, legacy.prize_pool);
+        assert_eq!(unified.total_payout, legacy.total_payout);
+        assert_eq!(unified.participants.len(), 2);
+
+        // Modify unified and round-trip back
+        unified.prize_pool = 200.0;
+        unified.total_payout = 10.0;
+        let legacy_back = unified.to_legacy_with_template(&legacy);
+        assert_eq!(legacy_back.prize_pool, 200.0);
+        assert_eq!(legacy_back.total_payout, 10.0);
+        assert_eq!(legacy_back.participants.len(), 2);
+    }
 }
