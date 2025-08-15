@@ -111,20 +111,20 @@
       - Colocate tests; deterministic fixtures; use `anyhow` in helpers; `unwrap` acceptable in tests
     - Notes: Follow the typestate design guidelines from [The Typestate Pattern in Rust](https://cliffle.com/blog/rust-typestate/)
   - [ ] 5.4 Introduce storage abstraction used by typestate flows
-    - [ ] 5.4.1 Define `trait BlockStore` in `src/block_engine/state_machine.rs` (or `src/block_engine/store.rs`)
+    - [x] 5.4.1 Define `trait BlockStore` in `src/block_engine/store.rs`
       - `fn load_commitments_open(&self, num: &str) -> Result<Block<CommitmentsOpen>>`
       - `fn load_any<S: StateMarker>(&self, num: &str) -> Result<Block<S>>`
       - `fn save<S: StateMarker>(&self, block: &Block<S>) -> Result<()>`
       - `fn list(&self) -> Result<Vec<String>>`
       - Keep trait minimal; prefer a concrete store API first if simpler
-    - [ ] 5.4.2 Implement `JsonBlockStore` backed by `~/.cliptions/data/blocks.json` via `PathManager`
+    - [x] 5.4.2 Implement `JsonBlockStore` backed by `~/.cliptions/data/blocks.json` via `PathManager`
       - Use `serde_json` with a `BTreeMap<String, serde_json::Value>` to preserve unknown fields
       - Ensure safe concurrent updates by read‑modify‑write on a per‑block value
       - Use `anyhow::Result`; naive read‑modify‑write is fine; no concurrency primitives yet
     - [ ] 5.4.3 Auto‑persist at safe transition boundaries
       - Each public transition method that consumes `self` returns the next state; callers save explicitly
       - Provide helper `save_after(self, store: &impl BlockStore) -> Result<Block<Next>>` patterns only if duplication appears
-    - [ ] 5.4.4 Tests
+    - [x] 5.4.4 Tests
       - Load/save round‑trip preserves fields and state
       - `list()` returns existing keys even with mixed legacy/unified blocks
       - Use temp dirs; `unwrap`/`expect` acceptable in tests
