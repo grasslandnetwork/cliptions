@@ -15,6 +15,7 @@ use twitter_api::TwitterApi;
 use std::path::PathBuf as StdPathBuf;
 
 use crate::types::{BlockData, BlockStatus, Participant};
+use crate::block_engine::store::BlockStore;
 
 // --- State Markers ---
 
@@ -216,6 +217,18 @@ impl Block<Pending> {
             state: std::marker::PhantomData,
         })
     }
+
+    /// Helper: open commitments and immediately persist the next state using the provided store
+    pub async fn open_commitments_save<T: TwitterApi, st: BlockStore>(
+        self,
+        commitment_deadline: DateTime<Utc>,
+        client: &T,
+        store: &st,
+    ) -> Result<Block<CommitmentsOpen>> {
+        let next = self.open_commitments(commitment_deadline, client).await?;
+        store.save(&next)?;
+        Ok(next)
+    }
 }
 
 /// Implementation for CommitmentsOpen state
@@ -290,6 +303,17 @@ impl Block<CommitmentsOpen> {
             state: std::marker::PhantomData,
         })
     }
+
+    /// Helper: close commitments and persist
+    pub async fn close_commitments_save<T: TwitterApi, st: BlockStore>(
+        self,
+        client: &T,
+        store: &st,
+    ) -> Result<Block<CommitmentsClosed>> {
+        let next = self.close_commitments(client).await?;
+        store.save(&next)?;
+        Ok(next)
+    }
 }
 
 /// Implementation for CommitmentsClosed state
@@ -317,6 +341,17 @@ impl Block<CommitmentsClosed> {
             total_payout: self.total_payout,
             state: std::marker::PhantomData,
         })
+    }
+
+    /// Helper: capture frame and persist
+    pub fn capture_frame_save<st: BlockStore>(
+        self,
+        target_frame_path: PathBuf,
+        store: &st,
+    ) -> Result<Block<FrameCaptured>> {
+        let next = self.capture_frame(target_frame_path)?;
+        store.save(&next)?;
+        Ok(next)
     }
 }
 
@@ -377,6 +412,19 @@ impl Block<FrameCaptured> {
             state: std::marker::PhantomData,
         })
     }
+
+    /// Helper: open reveals and persist
+    pub async fn open_reveals_save<T: TwitterApi, st: BlockStore>(
+        self,
+        reveals_deadline: DateTime<Utc>,
+        client: &T,
+        parent_tweet_id: &str,
+        store: &st,
+    ) -> Result<Block<RevealsOpen>> {
+        let next = self.open_reveals(reveals_deadline, client, parent_tweet_id).await?;
+        store.save(&next)?;
+        Ok(next)
+    }
 }
 
 /// Implementation for RevealsOpen state
@@ -399,6 +447,17 @@ impl Block<RevealsOpen> {
             state: std::marker::PhantomData,
         })
     }
+
+    /// Helper: close reveals and persist
+    pub async fn close_reveals_save<T: TwitterApi, st: BlockStore>(
+        self,
+        client: &T,
+        store: &st,
+    ) -> Result<Block<Payouts>> {
+        let next = self.close_reveals(client).await?;
+        store.save(&next)?;
+        Ok(next)
+    }
 }
 
 /// Implementation for Payouts state
@@ -419,6 +478,17 @@ impl Block<Payouts> {
             total_payout: self.total_payout,
             state: std::marker::PhantomData,
         })
+    }
+
+    /// Helper: process payouts and persist
+    pub async fn process_payouts_save<T: TwitterApi, st: BlockStore>(
+        self,
+        client: &T,
+        store: &st,
+    ) -> Result<Block<Finished>> {
+        let next = self.process_payouts(client).await?;
+        store.save(&next)?;
+        Ok(next)
     }
 }
 

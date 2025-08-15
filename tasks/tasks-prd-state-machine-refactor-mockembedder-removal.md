@@ -121,7 +121,7 @@
       - Use `serde_json` with a `BTreeMap<String, serde_json::Value>` to preserve unknown fields
       - Ensure safe concurrent updates by read‑modify‑write on a per‑block value
       - Use `anyhow::Result`; naive read‑modify‑write is fine; no concurrency primitives yet
-    - [ ] 5.4.3 Auto‑persist at safe transition boundaries
+    - [x] 5.4.3 Auto‑persist at safe transition boundaries
       - Each public transition method that consumes `self` returns the next state; callers save explicitly
       - Provide helper `save_after(self, store: &impl BlockStore) -> Result<Block<Next>>` patterns only if duplication appears
     - [x] 5.4.4 Tests
