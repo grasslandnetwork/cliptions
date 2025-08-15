@@ -487,9 +487,9 @@ impl From<&BlockData> for Block<CommitmentsOpen> {
             target_frame_path,
             commitment_deadline: Some(legacy.commitment_deadline),
             reveals_deadline: Some(legacy.reveal_deadline),
-            participants: Vec::new(),
-            prize_pool: 0.0,
-            total_payout: 0.0,
+            participants: legacy.participants.clone(),
+            prize_pool: legacy.prize_pool,
+            total_payout: legacy.total_payout,
             state: std::marker::PhantomData,
         }
     }

@@ -97,7 +97,7 @@
       - `prize_pool: f64`
       - `total_payout: f64` (derived but stored for JSON compatibility)
       - Use owned types; avoid lifetimes/generics in this slice
-    - [ ] 5.3.2 Update `impl From<&BlockData> for Block<CommitmentsOpen>` to map new fields
+    - [x] 5.3.2 Update `impl From<&BlockData> for Block<CommitmentsOpen>` to map new fields
       - participants/prize pool → carried over
       - target image path → `target_frame_path`
       - Keep mapping simple; use `serde(default)` where needed
