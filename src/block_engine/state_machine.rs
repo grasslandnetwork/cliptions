@@ -510,6 +510,15 @@ impl Block<CommitmentsOpen> {
             out.target_image_path = p.to_string_lossy().to_string();
         }
 
+        // Round-trip consolidated fields
+        if self.prize_pool > 0.0 {
+            out.prize_pool = self.prize_pool;
+        }
+        out.total_payout = self.total_payout;
+        if !self.participants.is_empty() {
+            out.participants = self.participants.clone();
+        }
+
         // Keep existing status if it has progressed; otherwise ensure at least Open
         if matches!(out.status, BlockStatus::Open | BlockStatus::Processing | BlockStatus::Complete | BlockStatus::Cancelled) {
             // leave as-is
