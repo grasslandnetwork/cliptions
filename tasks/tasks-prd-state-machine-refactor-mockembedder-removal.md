@@ -83,19 +83,32 @@
   - [x] 5.1 Implement typestate transitions in unified struct starting at `CommitmentsOpen` (no `Pending`)
   - [x] 5.2 Update state parsing/DTO mapping; map any legacy `Pending` to `CommitmentsOpen`
     - Added unit tests to ensure conversion From<&BlockData> yields `CommitmentsOpen` as the entry state
+  - Prototype guardrails (apply to all 5.x):
+    - Use owned types (`String`, `Vec`, `PathBuf`, `f64`); avoid lifetimes and generics until clearly needed
+    - Prefer concrete structs over traits; introduce traits only after duplication becomes painful
+    - Use `todo!()`, `unreachable!()`, `assert!()`, `dbg!()` while iterating; clean up later
+    - Use `anyhow::Result<T>` with `with_context`/`bail!` for quick error handling
+    - Keep modules flat where possible; colocate unit tests via `#[cfg(test)]`
+    - Defer optimization; write clear, deterministic tests and scaffolding
+    - Centralize DTO/back-compat; keep `BlockFacade` API stable for consumers
   - [ ] 5.3 Consolidate block data into typestate `Block<S>`
     - [ ] 5.3.1 Add fields to `Block<S>` in `src/block_engine/state_machine.rs` to subsume client-side needs
       - `participants: Vec<Participant>`
       - `prize_pool: f64`
       - `total_payout: f64` (derived but stored for JSON compatibility)
+      - Use owned types; avoid lifetimes/generics in this slice
     - [ ] 5.3.2 Update `impl From<&BlockData> for Block<CommitmentsOpen>` to map new fields
       - participants/prize pool → carried over
       - target image path → `target_frame_path`
+      - Keep mapping simple; use `serde(default)` where needed
     - [ ] 5.3.3 Update `to_legacy_with_template(&self, template: &BlockData)` to round‑trip new fields
+      - Single DTO round‑trip point; copy fields verbatim to preserve compatibility
     - [ ] 5.3.4 Update `impl BlockFacade for TypedBlock<S>` to return real values for `participants_len`, `verified_participants_len`, `prize_pool`, `total_payout`, `is_complete`
+      - Return direct values; avoid introducing extra traits/abstractions here
     - [ ] 5.3.5 Add unit tests for DTO round‑trip and facade values
       - Ensure counts, prize pool, and total payout survive serialize/deserialize
       - Ensure `status()` mapping remains stable across states
+      - Colocate tests; deterministic fixtures; use `anyhow` in helpers; `unwrap` acceptable in tests
     - Notes: Follow the typestate design guidelines from [The Typestate Pattern in Rust](https://cliffle.com/blog/rust-typestate/)
   - [ ] 5.4 Introduce storage abstraction used by typestate flows
     - [ ] 5.4.1 Define `trait BlockStore` in `src/block_engine/state_machine.rs` (or `src/block_engine/store.rs`)
@@ -103,21 +116,25 @@
       - `fn load_any<S: StateMarker>(&self, num: &str) -> Result<Block<S>>`
       - `fn save<S: StateMarker>(&self, block: &Block<S>) -> Result<()>`
       - `fn list(&self) -> Result<Vec<String>>`
+      - Keep trait minimal; prefer a concrete store API first if simpler
     - [ ] 5.4.2 Implement `JsonBlockStore` backed by `~/.cliptions/data/blocks.json` via `PathManager`
       - Use `serde_json` with a `BTreeMap<String, serde_json::Value>` to preserve unknown fields
       - Ensure safe concurrent updates by read‑modify‑write on a per‑block value
+      - Use `anyhow::Result`; naive read‑modify‑write is fine; no concurrency primitives yet
     - [ ] 5.4.3 Auto‑persist at safe transition boundaries
       - Each public transition method that consumes `self` returns the next state; callers save explicitly
-      - Provide helper `save_after(self, store: &impl BlockStore) -> Result<Block<Next>>` patterns where helpful
+      - Provide helper `save_after(self, store: &impl BlockStore) -> Result<Block<Next>>` patterns only if duplication appears
     - [ ] 5.4.4 Tests
       - Load/save round‑trip preserves fields and state
       - `list()` returns existing keys even with mixed legacy/unified blocks
+      - Use temp dirs; `unwrap`/`expect` acceptable in tests
   - [ ] 5.5 Participant and commitment operations in typestate
     - [ ] 5.5.1 In `impl Block<CommitmentsOpen>` add:
       - `fn add_participant(&mut self, p: Participant)`
       - `fn verify_commitments(&mut self, verifier: &CommitmentVerifier) -> usize` (marks `verified`)
     - [ ] 5.5.2 Tests
       - Adding/verification updates counts; only participants with valid salts/hashes are marked verified
+      - Use `&mut self`; keep signatures concrete; assert invariants with `assert!`/`debug_assert!`
   - [ ] 5.6 Reveal and payout flows in typestate
     - [ ] 5.6.1 `impl Block<CommitmentsClosed>::capture_frame(PathBuf) -> Result<Block<FrameCaptured>>` (already present)
     - [ ] 5.6.2 `impl Block<FrameCaptured>::open_reveals(...) -> Result<Block<RevealsOpen>>` (already present)
@@ -127,15 +144,18 @@
       - Compute embeddings, scores, ranks, payouts; accumulate `total_payout`; set final status
     - [ ] 5.6.6 Tests
       - Happy path through Payouts to Finished with deterministic scaffolding
+    - Notes: Start with skeleton transitions; use `todo!()` where appropriate, then fill in happy path. Pass `ClipEmbedder` directly; compute totals via straightforward accumulation
   - [ ] 5.7 Update actions/CLI to use typestate + BlockStore (remove `BlockProcessor` usage)
     - [ ] 5.7.1 `calculate_scores`: load → advance to `Payouts` → `process_payouts` → save → display
     - [ ] 5.7.2 `verify_commitments`: load `CommitmentsOpen` → `verify_commitments` → save
     - [ ] 5.7.3 `post_target_frame`: ensure it calls `open_reveals` with proper parent tweet
     - [ ] 5.7.4 Update any remaining actions to operate via typestate transitions
+    - Notes: Use `anyhow` in actions/CLI; keep functions concrete; initial `unwrap` acceptable for CLI
   - [ ] 5.8 Batch operations and stats via typestate
     - [ ] 5.8.1 Provide a small helper `process_all(store: &impl BlockStore)` that iterates `list()` and advances eligible blocks
     - [ ] 5.8.2 Add `fn stats(&self) -> BlockStats` on `Block<Finished>` (and minimal variants for other states if needed)
     - [ ] 5.8.3 Replace `BlockProcessor::get_block_stats` callers with typestate stats
+    - Notes: Implement with plain loops; no async/concurrency; `BlockStats` as a simple struct
   - [ ] 5.9 Remove `BlockProcessor`
     - [ ] 5.9.1 Delete `src/block_processor.rs`; remove imports/usages; adapt tests to typestate/store
     - [ ] 5.9.2 Replace JSON mutations in actions with store‑mediated saves
@@ -143,9 +163,11 @@
   - [ ] 5.10 Ensure `AnnouncementFormatter` and Twitter posting align with new states
     - [ ] 5.10.1 Validate copy and state names for all transitions; unify casing and hashtags
     - [ ] 5.10.2 Add tests around formatter text and reply‑with‑image pathways
+    - Notes: Build strings with owned `String`; keep formatting minimal; tests focus on stable copy
   - [ ] 5.11 Comprehensive tests and docs
     - [ ] 5.11.1 Add state transition tests enforcing compile‑time validity and runtime preconditions
     - [ ] 5.11.2 Add storage round‑trip and migration tests for legacy `blocks.json`
     - [ ] 5.11.3 Add comments in code to describe the typestate lifecycle and operations
     - [ ] 5.11.4 Document extension points (`BlockStore`, scoring strategy) and invariants
+    - Notes: Colocate unit tests with code; keep fixtures deterministic; update docs when CLI/UI behavior changes
 
