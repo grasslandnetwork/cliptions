@@ -92,7 +92,7 @@
     - Defer optimization; write clear, deterministic tests and scaffolding
     - Centralize DTO/back-compat; keep `BlockFacade` API stable for consumers
   - [ ] 5.3 Consolidate block data into typestate `Block<S>`
-    - [ ] 5.3.1 Add fields to `Block<S>` in `src/block_engine/state_machine.rs` to subsume client-side needs
+    - [x] 5.3.1 Add fields to `Block<S>` in `src/block_engine/state_machine.rs` to subsume client-side needs
       - `participants: Vec<Participant>`
       - `prize_pool: f64`
       - `total_payout: f64` (derived but stored for JSON compatibility)

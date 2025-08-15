@@ -14,7 +14,7 @@ use std::path::PathBuf;
 use twitter_api::TwitterApi;
 use std::path::PathBuf as StdPathBuf;
 
-use crate::types::{BlockData, BlockStatus};
+use crate::types::{BlockData, BlockStatus, Participant};
 
 // --- State Markers ---
 
@@ -114,6 +114,14 @@ pub struct Block<S> {
     pub commitment_deadline: Option<DateTime<Utc>>,
     pub reveals_deadline: Option<DateTime<Utc>>,
 
+    // --- Consolidated Data (Client-side needs) ---
+    #[serde(default)]
+    pub participants: Vec<Participant>,
+    #[serde(default)]
+    pub prize_pool: f64,
+    #[serde(default)]
+    pub total_payout: f64,
+
     #[serde(skip)]
     pub state: std::marker::PhantomData<S>,
 }
@@ -155,6 +163,9 @@ impl Block<Pending> {
             target_frame_path: None,
             commitment_deadline: None,
             reveals_deadline: None,
+            participants: Vec::new(),
+            prize_pool: 0.0,
+            total_payout: 0.0,
             state: std::marker::PhantomData,
         }
     }
@@ -199,6 +210,9 @@ impl Block<Pending> {
             target_frame_path: self.target_frame_path,
             commitment_deadline: self.commitment_deadline,
             reveals_deadline: self.reveals_deadline,
+            participants: self.participants,
+            prize_pool: self.prize_pool,
+            total_payout: self.total_payout,
             state: std::marker::PhantomData,
         })
     }
@@ -223,6 +237,9 @@ impl Block<CommitmentsOpen> {
             target_frame_path: None,
             commitment_deadline: Some(commitment_deadline),
             reveals_deadline: None,
+            participants: Vec::new(),
+            prize_pool: 0.0,
+            total_payout: 0.0,
             state: std::marker::PhantomData,
         }
     }
@@ -267,6 +284,9 @@ impl Block<CommitmentsOpen> {
             target_frame_path: self.target_frame_path,
             commitment_deadline: self.commitment_deadline,
             reveals_deadline: self.reveals_deadline,
+            participants: self.participants,
+            prize_pool: self.prize_pool,
+            total_payout: self.total_payout,
             state: std::marker::PhantomData,
         })
     }
@@ -292,6 +312,9 @@ impl Block<CommitmentsClosed> {
             target_frame_path: self.target_frame_path,
             commitment_deadline: self.commitment_deadline,
             reveals_deadline: self.reveals_deadline,
+            participants: self.participants,
+            prize_pool: self.prize_pool,
+            total_payout: self.total_payout,
             state: std::marker::PhantomData,
         })
     }
@@ -348,6 +371,9 @@ impl Block<FrameCaptured> {
             target_frame_path: self.target_frame_path,
             commitment_deadline: self.commitment_deadline,
             reveals_deadline: self.reveals_deadline,
+            participants: self.participants,
+            prize_pool: self.prize_pool,
+            total_payout: self.total_payout,
             state: std::marker::PhantomData,
         })
     }
@@ -367,6 +393,9 @@ impl Block<RevealsOpen> {
             target_frame_path: self.target_frame_path,
             commitment_deadline: self.commitment_deadline,
             reveals_deadline: self.reveals_deadline,
+            participants: self.participants,
+            prize_pool: self.prize_pool,
+            total_payout: self.total_payout,
             state: std::marker::PhantomData,
         })
     }
@@ -385,6 +414,9 @@ impl Block<Payouts> {
             target_frame_path: self.target_frame_path,
             commitment_deadline: self.commitment_deadline,
             reveals_deadline: self.reveals_deadline,
+            participants: self.participants,
+            prize_pool: self.prize_pool,
+            total_payout: self.total_payout,
             state: std::marker::PhantomData,
         })
     }
@@ -409,6 +441,9 @@ impl<S> Block<S> {
             target_frame_path: self.target_frame_path,
             commitment_deadline: self.commitment_deadline,
             reveals_deadline: self.reveals_deadline,
+            participants: self.participants,
+            prize_pool: self.prize_pool,
+            total_payout: self.total_payout,
             state: std::marker::PhantomData,
         }
     }
@@ -452,6 +487,9 @@ impl From<&BlockData> for Block<CommitmentsOpen> {
             target_frame_path,
             commitment_deadline: Some(legacy.commitment_deadline),
             reveals_deadline: Some(legacy.reveal_deadline),
+            participants: Vec::new(),
+            prize_pool: 0.0,
+            total_payout: 0.0,
             state: std::marker::PhantomData,
         }
     }
