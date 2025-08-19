@@ -129,10 +129,10 @@
       - `list()` returns existing keys even with mixed legacy/unified blocks
       - Use temp dirs; `unwrap`/`expect` acceptable in tests
   - [ ] 5.5 Participant and commitment operations in typestate
-    - [ ] 5.5.1 In `impl Block<CommitmentsOpen>` add:
+    - [x] 5.5.1 In `impl Block<CommitmentsOpen>` add:
       - `fn add_participant(&mut self, p: Participant)`
       - `fn verify_commitments(&mut self, verifier: &CommitmentVerifier) -> usize` (marks `verified`)
-    - [ ] 5.5.2 Tests
+    - [x] 5.5.2 Tests
       - Adding/verification updates counts; only participants with valid salts/hashes are marked verified
       - Use `&mut self`; keep signatures concrete; assert invariants with `assert!`/`debug_assert!`
   - [ ] 5.6 Reveal and payout flows in typestate
@@ -146,8 +146,14 @@
       - Happy path through Payouts to Finished with deterministic scaffolding
     - Notes: Start with skeleton transitions; use `todo!()` where appropriate, then fill in happy path. Pass `ClipEmbedder` directly; compute totals via straightforward accumulation
   - [ ] 5.7 Update actions/CLI to use typestate + BlockStore (remove `BlockProcessor` usage)
+    - Verification de-dup plan: unify verification on typestate `Block<CommitmentsOpen>::verify_commitments` + `JsonBlockStore`; deprecate legacy `BlockProcessor` path and direct JSON writes
     - [ ] 5.7.1 `calculate_scores`: load → advance to `Payouts` → `process_payouts` → save → display
-    - [ ] 5.7.2 `verify_commitments`: load `CommitmentsOpen` → `verify_commitments` → save
+    - [ ] 5.7.2 `verify_commitments` (actions):
+      - [ ] 5.7.2.1 Load block via `JsonBlockStore::load_commitments_open`
+      - [ ] 5.7.2.2 Upsert participants from collected commitments/reveals (by `social_id`)
+      - [ ] 5.7.2.3 Call `Block<CommitmentsOpen>::verify_commitments(&CommitmentVerifier)` and `store.save(&block)`
+      - [ ] 5.7.2.4 Remove/replace `save_to_blocks_json` with store-mediated save
+      - [ ] 5.7.2.5 Display counts from the updated block; preserve existing output semantics
     - [ ] 5.7.3 `post_target_frame`: ensure it calls `open_reveals` with proper parent tweet
     - [ ] 5.7.4 Update any remaining actions to operate via typestate transitions
     - Notes: Use `anyhow` in actions/CLI; keep functions concrete; initial `unwrap` acceptable for CLI
