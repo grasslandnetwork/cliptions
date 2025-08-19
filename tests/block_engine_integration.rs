@@ -179,16 +179,18 @@ async fn test_full_block_lifecycle_with_mocks() {
         Some(target_frame_path.clone())
     );
 
-    // 4. RevealsOpen -> Payouts
+    // 4. RevealsOpen -> RevealsClosed
     let payouts_block = reveals_open_block
         .close_reveals(&mock_twitter_client)
         .await
-        .expect("Failed to transition to Payouts");
+        .expect("Failed to transition to RevealsClosed");
 
-    assert_eq!(payouts_block.state_name(), "Payouts");
+    assert_eq!(payouts_block.state_name(), "RevealsClosed");
 
     // 5. Payouts -> Finished
+    // 5. RevealsClosed -> Payouts -> Finished
     let finished_block = payouts_block
+        .begin_payouts()
         .process_payouts(&mock_twitter_client)
         .await
         .expect("Failed to transition to Finished");
@@ -312,6 +314,7 @@ async fn test_block_lifecycle_with_machine_readable_tweets() {
         .expect("Failed to close reveals");
 
     let _finished_block = payouts_block
+        .begin_payouts()
         .process_payouts(&mock_twitter_client)
         .await
         .expect("Failed to process payouts");

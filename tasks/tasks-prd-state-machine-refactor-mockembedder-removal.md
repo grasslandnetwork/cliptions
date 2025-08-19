@@ -136,9 +136,9 @@
       - Adding/verification updates counts; only participants with valid salts/hashes are marked verified
       - Use `&mut self`; keep signatures concrete; assert invariants with `assert!`/`debug_assert!`
   - [ ] 5.6 Reveal and payout flows in typestate
-    - [ ] 5.6.1 `impl Block<CommitmentsClosed>::capture_frame(PathBuf) -> Result<Block<FrameCaptured>>` (already present)
-    - [ ] 5.6.2 `impl Block<FrameCaptured>::open_reveals(...) -> Result<Block<RevealsOpen>>` (already present)
-    - [ ] 5.6.3 `impl Block<RevealsOpen>::close_reveals(...) -> Result<Block<RevealsClosed>>`
+    - [x] 5.6.1 `impl Block<CommitmentsClosed>::capture_frame(PathBuf) -> Result<Block<FrameCaptured>>` (already present)
+    - [x] 5.6.2 `impl Block<FrameCaptured>::open_reveals(...) -> Result<Block<RevealsOpen>>` (already present)
+    - [x] 5.6.3 `impl Block<RevealsOpen>::close_reveals(...) -> Result<Block<RevealsClosed>>`
     - [ ] 5.6.4 `impl Block<RevealsClosed>::begin_payouts(self) -> Block<Payouts>`
     - [ ] 5.6.5 `impl Block<Payouts>::process_payouts(self, embedder: &ClipEmbedder, strategy: &impl ScoringStrategy) -> Result<Block<Finished>>`
       - Compute embeddings, scores, ranks, payouts; accumulate `total_payout`; set final status

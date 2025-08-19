@@ -15,6 +15,7 @@ use twitter_api::TwitterApi;
 use std::path::PathBuf as StdPathBuf;
 
 use crate::types::{BlockData, BlockStatus, Participant};
+use crate::commitment::CommitmentVerifier;
 use crate::block_engine::store::BlockStore;
 
 // --- State Markers ---
@@ -314,6 +315,30 @@ impl Block<CommitmentsOpen> {
         store.save(&next)?;
         Ok(next)
     }
+
+    /// Add a participant to the block
+    pub fn add_participant(&mut self, participant: Participant) {
+        self.participants.push(participant);
+    }
+
+    /// Verify participant commitments using the provided verifier.
+    /// Returns the number of participants marked verified.
+    pub fn verify_commitments(&mut self, verifier: &CommitmentVerifier) -> usize {
+        let mut verified_count = 0usize;
+        for p in &mut self.participants {
+            if let Some(salt) = &p.salt {
+                let message = &p.guess.text;
+                let commitment = &p.commitment;
+                if verifier.verify(message, salt, commitment) {
+                    if !p.verified {
+                        p.verified = true;
+                        verified_count += 1;
+                    }
+                }
+            }
+        }
+        verified_count
+    }
 }
 
 /// Implementation for CommitmentsClosed state
@@ -430,8 +455,7 @@ impl Block<FrameCaptured> {
 /// Implementation for RevealsOpen state
 impl Block<RevealsOpen> {
     /// Close reveals and start payout processing
-    pub async fn close_reveals<T: TwitterApi>(self, _client: &T) -> Result<Block<Payouts>> {
-        // This is a placeholder for the real implementation
+    pub async fn close_reveals<T: TwitterApi>(self, _client: &T) -> Result<Block<RevealsClosed>> {
         Ok(Block {
             block_num: self.block_num,
             created_at: self.created_at,
@@ -453,10 +477,31 @@ impl Block<RevealsOpen> {
         self,
         client: &T,
         store: &st,
-    ) -> Result<Block<Payouts>> {
+    ) -> Result<Block<RevealsClosed>> {
         let next = self.close_reveals(client).await?;
         store.save(&next)?;
         Ok(next)
+    }
+}
+
+/// Implementation for RevealsClosed state
+impl Block<RevealsClosed> {
+    /// Begin payout processing
+    pub fn begin_payouts(self) -> Block<Payouts> {
+        Block {
+            block_num: self.block_num,
+            created_at: self.created_at,
+            description: self.description,
+            livestream_url: self.livestream_url,
+            target_timestamp: self.target_timestamp,
+            target_frame_path: self.target_frame_path,
+            commitment_deadline: self.commitment_deadline,
+            reveals_deadline: self.reveals_deadline,
+            participants: self.participants,
+            prize_pool: self.prize_pool,
+            total_payout: self.total_payout,
+            state: std::marker::PhantomData,
+        }
     }
 }
 
@@ -889,5 +934,49 @@ mod tests {
         assert_eq!(legacy_back.prize_pool, 200.0);
         assert_eq!(legacy_back.total_payout, 10.0);
         assert_eq!(legacy_back.participants.len(), 2);
+    }
+
+    #[test]
+    fn test_add_and_verify_participants() {
+        use crate::types::{Guess, Participant as LegacyParticipant};
+        let mut block = Block::<CommitmentsOpen>::start(
+            "77".to_string(),
+            "desc".to_string(),
+            "http://live".to_string(),
+            Utc::now() + Duration::hours(2),
+            Utc::now() + Duration::hours(1),
+        );
+
+        let gen = crate::commitment::CommitmentGenerator::new();
+        let message = "target";
+        let salt = "somesalt".to_string();
+        let commitment = gen.generate(message, &salt).unwrap();
+
+        // p1 has correct salt/commitment
+        let mut p1 = LegacyParticipant::new(
+            "sid1".to_string(),
+            "u1".to_string(),
+            Guess::new(message.to_string()),
+            commitment.clone(),
+        );
+        p1.salt = Some(salt.clone());
+
+        // p2 has wrong salt
+        let mut p2 = LegacyParticipant::new(
+            "sid2".to_string(),
+            "u2".to_string(),
+            Guess::new("different".to_string()),
+            commitment.clone(),
+        );
+        p2.salt = Some("wrong".to_string());
+
+        block.add_participant(p1);
+        block.add_participant(p2);
+        assert_eq!(block.participants.len(), 2);
+
+        let verifier = crate::commitment::CommitmentVerifier::new();
+        let count = block.verify_commitments(&verifier);
+        assert_eq!(count, 1);
+        assert_eq!(block.participants.iter().filter(|p| p.verified).count(), 1);
     }
 }
