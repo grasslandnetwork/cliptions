@@ -6,6 +6,8 @@
 
 use crate::error::{CliptionsError, Result};
 use crate::social::{AnnouncementData, AnnouncementFormatter};
+use crate::scoring::{ScoreValidator, ClipBatchStrategy};
+use crate::embedder::ClipEmbedder;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -507,8 +509,90 @@ impl Block<RevealsClosed> {
 
 /// Implementation for Payouts state
 impl Block<Payouts> {
-    pub async fn process_payouts<T: TwitterApi>(self, _client: &T) -> Result<Block<Finished>> {
-        // Placeholder
+    pub async fn process_payouts<T: TwitterApi>(self, client: &T) -> Result<Block<Finished>> {
+        // Announce payouts starting (machine-readable)
+        let formatter = AnnouncementFormatter::new();
+        let payouts_announcement = AnnouncementData {
+            block_num: self
+                .block_num
+                .parse()
+                .unwrap_or_else(|_| {
+                    panic!(
+                        "CRITICAL: Invalid block ID '{}' - cannot announce payouts",
+                        self.block_num
+                    )
+                }),
+            state_name: "Payouts".to_string(),
+            target_time: chrono::Utc::now().to_rfc3339(),
+            hashtags: vec![],
+            message: String::new(),
+            prize_pool: Some(self.prize_pool),
+            livestream_url: None,
+        };
+        let payouts_text = formatter.format_announcement(&payouts_announcement, true);
+        client
+            .post_tweet(&payouts_text)
+            .await
+            .map_err(|e| CliptionsError::ApiError(e.to_string()))?;
+
+        // Try to compute scores and payouts only when feasible
+        let mut total_payout = self.total_payout;
+
+        if let Some(frame_path) = &self.target_frame_path {
+            if std::path::Path::new(frame_path).exists() {
+                // Filter verified participants
+                let verified: Vec<Participant> = self
+                    .participants
+                    .iter()
+                    .cloned()
+                    .filter(|p| p.verified)
+                    .collect();
+
+                if !verified.is_empty() && self.prize_pool > 0.0 {
+                    // Build validator with real embedder and batch strategy
+                    let embedder = ClipEmbedder::new()?;
+                    let strategy = ClipBatchStrategy::new();
+                    let validator = ScoreValidator::new(embedder, strategy);
+
+                    let results = crate::scoring::process_participants(
+                        &verified,
+                        &frame_path.to_string_lossy(),
+                        self.prize_pool,
+                        &validator,
+                    )?;
+
+                    total_payout = results
+                        .iter()
+                        .map(|r| r.payout.unwrap_or(0.0))
+                        .sum::<f64>();
+                }
+            }
+        }
+
+        // Announce finished (machine-readable)
+        let finished_announcement = AnnouncementData {
+            block_num: self
+                .block_num
+                .parse()
+                .unwrap_or_else(|_| {
+                    panic!(
+                        "CRITICAL: Invalid block ID '{}' - cannot announce finished",
+                        self.block_num
+                    )
+                }),
+            state_name: "Finished".to_string(),
+            target_time: chrono::Utc::now().to_rfc3339(),
+            hashtags: vec![],
+            message: String::new(),
+            prize_pool: Some(self.prize_pool),
+            livestream_url: None,
+        };
+        let finished_text = formatter.format_announcement(&finished_announcement, true);
+        client
+            .post_tweet(&finished_text)
+            .await
+            .map_err(|e| CliptionsError::ApiError(e.to_string()))?;
+
         Ok(Block {
             block_num: self.block_num,
             created_at: self.created_at,
@@ -520,7 +604,7 @@ impl Block<Payouts> {
             reveals_deadline: self.reveals_deadline,
             participants: self.participants,
             prize_pool: self.prize_pool,
-            total_payout: self.total_payout,
+            total_payout,
             state: std::marker::PhantomData,
         })
     }

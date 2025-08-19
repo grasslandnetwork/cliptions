@@ -140,7 +140,7 @@
     - [x] 5.6.2 `impl Block<FrameCaptured>::open_reveals(...) -> Result<Block<RevealsOpen>>` (already present)
     - [x] 5.6.3 `impl Block<RevealsOpen>::close_reveals(...) -> Result<Block<RevealsClosed>>`
     - [x] 5.6.4 `impl Block<RevealsClosed>::begin_payouts(self) -> Block<Payouts>`
-    - [ ] 5.6.5 `impl Block<Payouts>::process_payouts(self, embedder: &ClipEmbedder, strategy: &impl ScoringStrategy) -> Result<Block<Finished>>`
+    - [x] 5.6.5 `impl Block<Payouts>::process_payouts(self, embedder: &ClipEmbedder, strategy: &impl ScoringStrategy) -> Result<Block<Finished>>`
       - Compute embeddings, scores, ranks, payouts; accumulate `total_payout`; set final status
     - [ ] 5.6.6 Tests
       - Happy path through Payouts to Finished with deterministic scaffolding
