@@ -323,24 +323,6 @@ impl Block<CommitmentsOpen> {
         self.participants.push(participant);
     }
 
-    /// Verify participant commitments using the provided verifier.
-    /// Returns the number of participants marked verified.
-    pub fn verify_commitments(&mut self, verifier: &CommitmentVerifier) -> usize {
-        let mut verified_count = 0usize;
-        for p in &mut self.participants {
-            if let Some(salt) = &p.salt {
-                let message = &p.guess.text;
-                let commitment = &p.commitment;
-                if verifier.verify(message, salt, commitment) {
-                    if !p.verified {
-                        p.verified = true;
-                        verified_count += 1;
-                    }
-                }
-            }
-        }
-        verified_count
-    }
 }
 
 /// Implementation for CommitmentsClosed state
@@ -504,6 +486,25 @@ impl Block<RevealsClosed> {
             total_payout: self.total_payout,
             state: std::marker::PhantomData,
         }
+    }
+
+    /// Verify participant commitments using the provided verifier.
+    /// Returns the number of participants marked verified.
+    pub fn verify_commitments(&mut self, verifier: &CommitmentVerifier) -> usize {
+        let mut verified_count = 0usize;
+        for participant in &mut self.participants {
+            if let Some(salt) = &participant.salt {
+                let message = &participant.guess.text;
+                let commitment = &participant.commitment;
+                if verifier.verify(message, salt, commitment) {
+                    if !participant.verified {
+                        participant.verified = true;
+                        verified_count += 1;
+                    }
+                }
+            }
+        }
+        verified_count
     }
 }
 
@@ -1059,8 +1060,17 @@ mod tests {
         assert_eq!(block.participants.len(), 2);
 
         let verifier = crate::commitment::CommitmentVerifier::new();
-        let count = block.verify_commitments(&verifier);
+        // Verification is only allowed in RevealsClosed state
+        let mut reveals_closed: Block<RevealsClosed> = block.into_state();
+        let count = reveals_closed.verify_commitments(&verifier);
         assert_eq!(count, 1);
-        assert_eq!(block.participants.iter().filter(|p| p.verified).count(), 1);
+        assert_eq!(
+            reveals_closed
+                .participants
+                .iter()
+                .filter(|p| p.verified)
+                .count(),
+            1
+        );
     }
 }
