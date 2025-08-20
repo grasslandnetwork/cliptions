@@ -155,7 +155,7 @@
       - [x] 5.7.2.4 Remove/replace `save_to_blocks_json` with store-mediated save
       - [x] 5.7.2.5 Display counts from the updated block; preserve existing output semantics
     - [x] 5.7.3 `post_target_frame`: ensure it calls `open_reveals` with proper parent tweet
-    - [ ] 5.7.4 Update any remaining actions to operate via typestate transitions
+    - [x] 5.7.4 Update any remaining actions to operate via typestate transitions
     - Notes: Use `anyhow` in actions/CLI; keep functions concrete; initial `unwrap` acceptable for CLI
   - [ ] 5.8 Batch operations and stats via typestate
     - [ ] 5.8.1 Provide a small helper `process_all(store: &impl BlockStore)` that iterates `list()` and advances eligible blocks
