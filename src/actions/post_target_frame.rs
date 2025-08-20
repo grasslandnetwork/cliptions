@@ -3,11 +3,11 @@ use colored::Colorize;
 use std::path::PathBuf;
 use crate::config::ConfigManager;
 use crate::error::Result;
-use twitter_api::{TwitterClient, TwitterError};
+use twitter_api::{TwitterClient, TwitterApi};
 use chrono::{Duration as ChronoDuration, Utc};
 use chrono_tz;
-use crate::social::AnnouncementFormatter;
-use crate::twitter_utils::post_tweet_flexible;
+use crate::block_engine::store::{JsonBlockStore, BlockStore};
+use crate::block_engine::state_machine::{Block, CommitmentsOpen, CommitmentsClosed, FrameCaptured, RevealsOpen};
 
 #[derive(Parser)]
 pub struct PostTargetFrameArgs {
@@ -105,158 +105,45 @@ pub async fn run(args: PostTargetFrameArgs) -> Result<()> {
         target_time_eastern.format("%H:%M:%S")
     );
 
-    // Create announcement data for reveals
-    let announcement_data = crate::social::AnnouncementData {
-        block_num: args.block,
-        state_name: "revealsopen".to_string(),
-        target_time: formatted_target_time.clone(),
-        hashtags: vec![], // The formatter will add standard hashtags
-        message: String::new(), // Not used for reveal announcements
-        prize_pool: None,
-        livestream_url: None, // Optional for reveals
-    };
+    // Use typestate: load block, set frame, open reveals (tweets image reply), and persist
+    let store = JsonBlockStore::new()?;
+    let block_id = args.block.to_string();
+    let block_open: Block<CommitmentsOpen> = store.load_commitments_open(&block_id)?;
+    // Coerce to commitments closed without tweeting again
+    let block_closed: Block<CommitmentsClosed> = block_open.into_state();
+    // Capture frame path
+    let frame_captured: Block<FrameCaptured> = block_closed
+        .capture_frame(args.image.clone())?;
+    // Open reveals by replying to the parent tweet with the image
+    let reveals_open: Block<RevealsOpen> = frame_captured
+        .open_reveals(target_time, &client, &args.reply_to)
+        .await?;
+    // Persist reveals_open state
+    store.save(&reveals_open)?;
 
-    // Format the reveals announcement
-    let formatter = AnnouncementFormatter::new();
-    let tweet_text = formatter.create_reveals_announcement(&announcement_data);
-
-    if args.verbose {
-        println!("Tweet text: {}", tweet_text);
-        println!("Image to upload: {}", args.image.display());
+    // Build output using the data we have; tweet id is not exposed from typestate here
+    if !args.quiet {
+        println!("✅ Target frame posted and reveals opened!");
+        println!("Reply to: {}", args.reply_to);
+        println!("Block: {}", args.block);
+        println!("Target time: {}", formatted_target_time);
     }
 
-    // Post the tweet with image as reply
-    let result = post_tweet_flexible(
-        &client,
-        &tweet_text,
-        Some(&args.reply_to),
-        Some(args.image.clone()),
-    )
-    .await;
-
-    match result {
-        Ok(post_result) => {
-            let tweet = &post_result.tweet;
-            
-            let results = PostTargetFrameResults {
-                tweet_id: tweet.id.clone(),
-                tweet_url: format!("https://twitter.com/i/status/{}", tweet.id),
-                reply_to_tweet_id: args.reply_to.clone(),
-                image_path: args.image.display().to_string(),
-                block_num: args.block,
-                target_time: formatted_target_time,
-                posted_at: Utc::now().to_rfc3339(),
-            };
-
-            if !args.quiet {
-                println!("✅ Target frame posted successfully!");
-                println!("Tweet ID: {}", results.tweet_id);
-                println!("URL: {}", results.tweet_url);
-                println!("Reply to: {}", results.reply_to_tweet_id);
-                println!("Block: {}", results.block_num);
-                println!("Target time: {}", results.target_time);
-            }
-
-            if args.verbose {
-                println!("Created: {:?}", tweet.created_at);
-                println!("Text: {}", tweet.text);
-                if let Some(metrics) = &tweet.public_metrics {
-                    println!(
-                        "Initial metrics: {} retweets, {} likes, {} replies",
-                        metrics.retweet_count, metrics.like_count, metrics.reply_count
-                    );
-                }
-            }
-
-            // Output JSON if quiet mode
-            if args.quiet {
-                println!("{}", serde_json::to_string_pretty(&results)?);
-            }
-
-            Ok(())
-        }
-        Err(TwitterError::ApiError { status, message }) => {
-            let error_msg = format!("Twitter API error: {} - {}", status, message);
-            if args.quiet {
-                eprintln!("{}", error_msg);
-            } else {
-                println!("❌ {}", error_msg);
-            }
-            Err(error_msg.into())
-        }
-        Err(TwitterError::NetworkError(e)) => {
-            let error_msg = format!("Network error: {}", e);
-            if args.quiet {
-                eprintln!("{}", error_msg);
-            } else {
-                println!("❌ {}", error_msg);
-            }
-            Err(error_msg.into())
-        }
-        Err(TwitterError::AuthError(e)) => {
-            let error_msg = format!("Authentication error: {}", e);
-            if args.quiet {
-                eprintln!("{}", error_msg);
-            } else {
-                println!("❌ {}", error_msg);
-            }
-            Err(error_msg.into())
-        }
-        Err(TwitterError::ParseError(e)) => {
-            let error_msg = format!("Response parsing error: {}", e);
-            if args.quiet {
-                eprintln!("{}", error_msg);
-            } else {
-                println!("❌ {}", error_msg);
-            }
-            Err(error_msg.into())
-        }
-        Err(TwitterError::MediaError(e)) => {
-            let error_msg = format!("Media upload error: {}", e);
-            if args.quiet {
-                eprintln!("{}", error_msg);
-            } else {
-                println!("❌ {}", error_msg);
-            }
-            Err(error_msg.into())
-        }
-        Err(TwitterError::InvalidInput(e)) => {
-            let error_msg = format!("Invalid input: {}", e);
-            if args.quiet {
-                eprintln!("{}", error_msg);
-            } else {
-                println!("❌ {}", error_msg);
-            }
-            Err(error_msg.into())
-        }
-        Err(TwitterError::FileError(e)) => {
-            let error_msg = format!("File error: {}", e);
-            if args.quiet {
-                eprintln!("{}", error_msg);
-            } else {
-                println!("❌ {}", error_msg);
-            }
-            Err(error_msg.into())
-        }
-        Err(TwitterError::HttpError(e)) => {
-            let error_msg = format!("HTTP error: {}", e);
-            if args.quiet {
-                eprintln!("{}", error_msg);
-            } else {
-                println!("❌ {}", error_msg);
-            }
-            Err(error_msg.into())
-        }
-        Err(TwitterError::SerializationError(e)) => {
-            let error_msg = format!("Serialization error: {}", e);
-            if args.quiet {
-                eprintln!("{}", error_msg);
-            } else {
-                println!("❌ {}", error_msg);
-            }
-            Err(error_msg.into())
-        }
+    // Quiet JSON output
+    if args.quiet {
+        let results = PostTargetFrameResults {
+            tweet_id: String::new(),
+            tweet_url: String::new(),
+            reply_to_tweet_id: args.reply_to.clone(),
+            image_path: args.image.display().to_string(),
+            block_num: args.block,
+            target_time: formatted_target_time,
+            posted_at: Utc::now().to_rfc3339(),
+        };
+        println!("{}", serde_json::to_string_pretty(&results)?);
     }
+
+    Ok(())
 }
 
 #[cfg(test)]
