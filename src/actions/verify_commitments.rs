@@ -6,7 +6,10 @@ use std::path::PathBuf;
 use crate::config::{ConfigManager, PathManager};
 use crate::error::Result;
 use crate::commitment::CommitmentGenerator;
-use serde_json::json;
+use crate::commitment::CommitmentVerifier;
+use crate::block_engine::store::{JsonBlockStore, BlockStore};
+use crate::block_engine::state_machine::{Block, CommitmentsOpen};
+use crate::types::{Participant, Guess};
 
 #[derive(Parser)]
 pub struct VerifyCommitmentsArgs {
@@ -38,11 +41,7 @@ pub struct VerifyCommitmentsArgs {
     #[arg(long, default_value = "config/config.yaml")]
     pub config: String,
     
-    /// Path to blocks.json file (default: data/blocks.json)
-    #[arg(long, default_value = "data/blocks.json")]
-    pub blocks_file: PathBuf,
-    
-    /// Block ID to save results under (e.g., "block4")
+    /// Block ID to update (e.g., "block4")
     #[arg(long)]
     pub block_num: Option<String>,
 }
@@ -105,24 +104,62 @@ pub async fn run(args: VerifyCommitmentsArgs) -> Result<()> {
         println!("Loaded {} reveals for block {}", reveals.len(), args.block_tweet_id);
     }
 
-    // Loop through commitments and look for matching reveals
-    let mut verification_results = Vec::new();
-    let mut valid_count = 0;
-    let mut invalid_count = 0;
+    // Require a block_num to operate (typestate + store)
+    let block_num = args
+        .block_num
+        .clone()
+        .ok_or_else(|| "--block-num is required for verify-commitments".to_string())?;
 
+    // Load unified block via JsonBlockStore at CommitmentsOpen state
+    let store = JsonBlockStore::new()?;
+    let mut block: Block<CommitmentsOpen> = store.load_commitments_open(&block_num)?;
+
+    // Upsert participants from collected commitments/reveals by social_id
+    // Build display records in parallel to preserve output behavior
+    let mut verification_results = Vec::new();
     for (author_id, commitment) in &commitments {
         if let Some(reveal) = reveals.get(author_id) {
-            // Verify the commitment
-            let verification_result = verify_commitment(commitment.clone(), reveal, args.verbose);
-            if verification_result.is_valid {
-                valid_count += 1;
-            } else {
-                invalid_count += 1;
-            }
-            verification_results.push(verification_result);
+            // Construct participant from commitment + reveal
+            let participant = Participant::new(
+                author_id.clone(),
+                commitment.username.clone(),
+                Guess::new(reveal.guess.clone()),
+                commitment.commitment_hash.clone(),
+            )
+            .with_wallet(commitment.wallet_address.clone())
+            .with_guess_url(reveal.tweet_url.clone())
+            .with_commitment_url(commitment.tweet_url.clone())
+            .with_salt(reveal.salt.clone());
+
+            upsert_participant(&mut block, participant);
+
+            // Prepare display result (validity filled after verification)
+            verification_results.push(VerificationResult {
+                author_id: author_id.clone(),
+                username: commitment.username.clone(),
+                wallet_address: commitment.wallet_address.clone(),
+                commitment_hash: commitment.commitment_hash.clone(),
+                guess: reveal.guess.clone(),
+                salt: reveal.salt.clone(),
+                is_valid: false, // temp, update after verification
+                verification_error: None,
+                commitment_tweet_url: commitment.tweet_url.clone(),
+                reveal_tweet_url: reveal.tweet_url.clone(),
+            });
         } else {
-            // Commitment without reveal
-            let verification_result = VerificationResult {
+            // No reveal - still upsert a placeholder participant so it appears in the block
+            let participant = Participant::new(
+                author_id.clone(),
+                commitment.username.clone(),
+                Guess::new(String::new()),
+                commitment.commitment_hash.clone(),
+            )
+            .with_wallet(commitment.wallet_address.clone())
+            .with_commitment_url(commitment.tweet_url.clone());
+
+            upsert_participant(&mut block, participant);
+
+            verification_results.push(VerificationResult {
                 author_id: author_id.clone(),
                 username: commitment.username.clone(),
                 wallet_address: commitment.wallet_address.clone(),
@@ -133,9 +170,35 @@ pub async fn run(args: VerifyCommitmentsArgs) -> Result<()> {
                 verification_error: Some("No reveal found".to_string()),
                 commitment_tweet_url: commitment.tweet_url.clone(),
                 reveal_tweet_url: "".to_string(),
-            };
+            });
+        }
+    }
+
+    // Verify via typestate method and persist
+    let verifier = CommitmentVerifier::new();
+    let verified_count = block.verify_commitments(&verifier);
+    store.save(&block)?;
+
+    // Update display validity flags after verification
+    let participant_map: std::collections::BTreeMap<String, bool> = block
+        .participants
+        .iter()
+        .map(|p| (p.social_id.clone(), p.verified))
+        .collect();
+
+    let mut valid_count = 0usize;
+    let mut invalid_count = 0usize;
+    for rec in &mut verification_results {
+        if let Some(v) = participant_map.get(&rec.author_id) {
+            rec.is_valid = *v;
+            if *v { valid_count += 1; } else { invalid_count += 1; }
+            if !*v && rec.verification_error.is_none() {
+                rec.verification_error = Some("Commitment verification failed".to_string());
+            }
+        } else {
+            // Shouldn't happen; treat as invalid
+            rec.is_valid = false;
             invalid_count += 1;
-            verification_results.push(verification_result);
         }
     }
 
@@ -151,14 +214,10 @@ pub async fn run(args: VerifyCommitmentsArgs) -> Result<()> {
     // Display results
     display_verification_results(&results, &args)?;
 
-    // Save to blocks.json if block_num is provided
-    if let Some(block_num) = &args.block_num {
-        save_to_blocks_json(&results, &args.blocks_file, block_num)?;
-        
-        if args.verbose {
-            println!("✅ Verification results saved to {} under block '{}'", 
-                args.blocks_file.display(), block_num);
-        }
+    // Persisted via JsonBlockStore above; no direct JSON mutations here
+    if args.verbose {
+        println!("✅ Verification results saved to store under block '{}'", block_num);
+        println!("   Marked {} participants as verified", verified_count);
     }
 
     Ok(())
@@ -314,70 +373,17 @@ fn csv_escape(field: &str) -> String {
 
 
 // Add new function to save to blocks.json
-fn save_to_blocks_json(
-    results: &VerificationResults,
-    blocks_file: &PathBuf,
-    block_num: &str,
-) -> Result<()> {
-    // Load existing blocks data
-    let mut blocks_data: BTreeMap<String, serde_json::Value> = if blocks_file.exists() {
-        let content = fs::read_to_string(blocks_file)?;
-        serde_json::from_str(&content)?
+// Upsert participant by social_id into the typestate block
+fn upsert_participant(block: &mut Block<CommitmentsOpen>, participant: Participant) {
+    if let Some(idx) = block
+        .participants
+        .iter()
+        .position(|p| p.social_id == participant.social_id)
+    {
+        block.participants[idx] = participant;
     } else {
-        BTreeMap::new()
-    };
-
-    // Create participants array from verification results
-    let participants: Vec<serde_json::Value> = results.results.iter().map(|result| {
-        json!({
-            "social_id": result.author_id,
-            "username": result.username,
-            "guess": {
-                "text": result.guess,
-                "embedding": null,
-                "timestamp": chrono::Utc::now().to_rfc3339(),
-                "metadata": {}
-            },
-            "guess_url": result.reveal_tweet_url,
-            "commitment": result.commitment_hash,
-            "commitment_url": result.commitment_tweet_url,
-            "wallet": result.wallet_address,
-            "score": 0.0, // Will be calculated in Slice 6
-            "payout": {
-                "amount": 0.0,
-                "currency": "TAO",
-                "url": ""
-            },
-            "salt": result.salt,
-            "verified": result.is_valid
-        })
-    }).collect();
-
-            // Create block data that matches BlockData struct
-    let block_data = json!({
-        "block_version": "1",
-        "block_num": block_num,
-        "target_image_path": "", // Will be set in other slices
-        "status": "Open",
-        "prize_pool": 0.0, // Will be set in other slices
-        "social_id": "", // Will be set in other slices
-        "commitment_deadline": chrono::Utc::now().to_rfc3339(), // Will be set in other slices
-        "reveal_deadline": chrono::Utc::now().to_rfc3339(), // Will be set in other slices
-        "total_payout": 0.0, // Will be calculated in Slice 6
-        "participants": participants,
-        "results": [], // Will be populated in Slice 6
-        "created_at": chrono::Utc::now().to_rfc3339(),
-        "updated_at": chrono::Utc::now().to_rfc3339()
-    });
-
-    // Insert or update the block
-    blocks_data.insert(block_num.to_string(), block_data);
-
-    // Save back to file
-    let content = serde_json::to_string_pretty(&blocks_data)?;
-    fs::write(blocks_file, content)?;
-
-    Ok(())
+        block.participants.push(participant);
+    }
 }
 
 // Import the data structures from other modules

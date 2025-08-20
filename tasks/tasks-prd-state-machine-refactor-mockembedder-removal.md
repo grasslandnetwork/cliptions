@@ -148,12 +148,12 @@
   - [ ] 5.7 Update actions/CLI to use typestate + BlockStore (remove `BlockProcessor` usage)
     - Verification de-dup plan: unify verification on typestate `Block<CommitmentsOpen>::verify_commitments` + `JsonBlockStore`; deprecate legacy `BlockProcessor` path and direct JSON writes
     - [ ] 5.7.1 `calculate_scores`: load → advance to `Payouts` → `process_payouts` → save → display
-    - [ ] 5.7.2 `verify_commitments` (actions):
-      - [ ] 5.7.2.1 Load block via `JsonBlockStore::load_commitments_open`
-      - [ ] 5.7.2.2 Upsert participants from collected commitments/reveals (by `social_id`)
-      - [ ] 5.7.2.3 Call `Block<CommitmentsOpen>::verify_commitments(&CommitmentVerifier)` and `store.save(&block)`
-      - [ ] 5.7.2.4 Remove/replace `save_to_blocks_json` with store-mediated save
-      - [ ] 5.7.2.5 Display counts from the updated block; preserve existing output semantics
+    - [x] 5.7.2 `verify_commitments` (actions):
+      - [x] 5.7.2.1 Load block via `JsonBlockStore::load_commitments_open`
+      - [x] 5.7.2.2 Upsert participants from collected commitments/reveals (by `social_id`)
+      - [x] 5.7.2.3 Call `Block<CommitmentsOpen>::verify_commitments(&CommitmentVerifier)` and `store.save(&block)`
+      - [x] 5.7.2.4 Remove/replace `save_to_blocks_json` with store-mediated save
+      - [x] 5.7.2.5 Display counts from the updated block; preserve existing output semantics
     - [ ] 5.7.3 `post_target_frame`: ensure it calls `open_reveals` with proper parent tweet
     - [ ] 5.7.4 Update any remaining actions to operate via typestate transitions
     - Notes: Use `anyhow` in actions/CLI; keep functions concrete; initial `unwrap` acceptable for CLI
