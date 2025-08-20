@@ -8,7 +8,7 @@ use crate::error::Result;
 use crate::commitment::CommitmentGenerator;
 use crate::commitment::CommitmentVerifier;
 use crate::block_engine::store::{JsonBlockStore, BlockStore};
-use crate::block_engine::state_machine::{Block, CommitmentsOpen};
+use crate::block_engine::state_machine::{Block, CommitmentsOpen, RevealsClosed, RevealsOpen};
 use crate::types::{Participant, Guess};
 
 #[derive(Parser)]
@@ -110,9 +110,9 @@ pub async fn run(args: VerifyCommitmentsArgs) -> Result<()> {
         .clone()
         .ok_or_else(|| "--block-num is required for verify-commitments".to_string())?;
 
-    // Load unified block via JsonBlockStore at CommitmentsOpen state
+    // Load unified block via JsonBlockStore at CommitmentsOpen state, then coerce to RevealsClosed for verification semantics
     let store = JsonBlockStore::new()?;
-    let mut block: Block<CommitmentsOpen> = store.load_commitments_open(&block_num)?;
+    let mut block_open: Block<CommitmentsOpen> = store.load_commitments_open(&block_num)?;
 
     // Upsert participants from collected commitments/reveals by social_id
     // Build display records in parallel to preserve output behavior
@@ -131,7 +131,7 @@ pub async fn run(args: VerifyCommitmentsArgs) -> Result<()> {
             .with_commitment_url(commitment.tweet_url.clone())
             .with_salt(reveal.salt.clone());
 
-            upsert_participant(&mut block, participant);
+            upsert_participant(&mut block_open, participant);
 
             // Prepare display result (validity filled after verification)
             verification_results.push(VerificationResult {
@@ -157,7 +157,7 @@ pub async fn run(args: VerifyCommitmentsArgs) -> Result<()> {
             .with_wallet(commitment.wallet_address.clone())
             .with_commitment_url(commitment.tweet_url.clone());
 
-            upsert_participant(&mut block, participant);
+            upsert_participant(&mut block_open, participant);
 
             verification_results.push(VerificationResult {
                 author_id: author_id.clone(),
@@ -174,13 +174,16 @@ pub async fn run(args: VerifyCommitmentsArgs) -> Result<()> {
         }
     }
 
-    // Verify via typestate method and persist
+    // Move to RevealsClosed view for verification
+    let mut block_reveals_closed: Block<RevealsClosed> = block_open.into_state();
     let verifier = CommitmentVerifier::new();
-    let verified_count = block.verify_commitments(&verifier);
-    store.save(&block)?;
+    let verified_count = block_reveals_closed.verify_commitments(&verifier);
+    // Persist back as CommitmentsOpen representation for storage compatibility in this slice
+    let block_to_save: Block<CommitmentsOpen> = block_reveals_closed.into_state();
+    store.save(&block_to_save)?;
 
     // Update display validity flags after verification
-    let participant_map: std::collections::BTreeMap<String, bool> = block
+    let participant_map: std::collections::BTreeMap<String, bool> = block_to_save
         .participants
         .iter()
         .map(|p| (p.social_id.clone(), p.verified))

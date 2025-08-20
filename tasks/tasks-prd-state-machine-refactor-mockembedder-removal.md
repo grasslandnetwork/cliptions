@@ -147,7 +147,7 @@
     - Notes: Start with skeleton transitions; use `todo!()` where appropriate, then fill in happy path. Pass `ClipEmbedder` directly; compute totals via straightforward accumulation
   - [ ] 5.7 Update actions/CLI to use typestate + BlockStore (remove `BlockProcessor` usage)
     - Verification de-dup plan: unify verification on typestate `Block<CommitmentsOpen>::verify_commitments` + `JsonBlockStore`; deprecate legacy `BlockProcessor` path and direct JSON writes
-    - [ ] 5.7.1 `calculate_scores`: load → advance to `Payouts` → `process_payouts` → save → display
+    - [x] 5.7.1 `calculate_scores`: load → advance to `Payouts` → `process_payouts` → save → display
     - [x] 5.7.2 `verify_commitments` (actions):
       - [x] 5.7.2.1 Load block via `JsonBlockStore::load_commitments_open`
       - [x] 5.7.2.2 Upsert participants from collected commitments/reveals (by `social_id`)

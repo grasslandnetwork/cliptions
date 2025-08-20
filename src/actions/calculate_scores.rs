@@ -10,10 +10,12 @@ use clap::Parser;
 use colored::Colorize;
 
 use crate::embedder::ClipEmbedder;
-use crate::block_processor::BlockProcessor;
 use crate::scoring::ClipBatchStrategy;
 use crate::types::{Participant, ScoringResult};
 use crate::error::Result;
+use crate::block_engine::store::{JsonBlockStore, BlockStore};
+use crate::block_engine::state_machine::{Block, CommitmentsOpen, Payouts, Finished};
+use crate::scoring::{ScoreValidator, process_participants};
 // Note: PayoutCalculator and PayoutConfig are imported for future use
 // when we integrate the payout system more deeply
 // use crate::payout::{PayoutCalculator, PayoutConfig};
@@ -41,7 +43,7 @@ pub struct CalculateScoresArgs {
     #[arg(short, long)]
     pub block_num: String,
     
-    /// Path to blocks data file
+    /// DEPRECATED: path to blocks data file (store uses PathManager)
     #[arg(short = 'f', long, default_value = "data/blocks.json")]
     pub blocks_file: String,
     
@@ -65,138 +67,77 @@ pub struct CalculateScoresArgs {
 }
 
 /// Load verified participants from blocks data
-fn load_verified_participants(block_num: &str, blocks_file: &str) -> Result<Vec<Participant>> {
-    // Create embedder and processor
-    let embedder = ClipEmbedder::new().map_err(|e| format!("Failed to load CLIP model: {}", e))?;
-    let strategy = ClipBatchStrategy::new();
-    let mut processor = BlockProcessor::new(blocks_file.to_string(), embedder, strategy);
+fn load_verified_participants_from_store(block_num: &str) -> Result<(Block<CommitmentsOpen>, Vec<Participant>, String, f64)> {
+    let store = JsonBlockStore::new()?;
+    let block: Block<CommitmentsOpen> = store.load_commitments_open(block_num)?;
     
-    // Load blocks data
-    processor.load_blocks()?;
-    
-    // Get the block and extract verified participants via facade
-    let block = processor.get_block(block_num)?;
-    let facade = block as &dyn crate::facades::block_facade::BlockFacade;
-    let verified_participants: Vec<Participant> = facade.verified_participants_owned();
-    
-    if verified_participants.is_empty() {
+    let verified: Vec<Participant> = block
+        .participants
+        .iter()
+        .cloned()
+        .filter(|p| p.verified)
+        .collect();
+    if verified.is_empty() {
         return Err(crate::error::CliptionsError::ValidationError(
-            format!("No verified participants found for block {}", block_num)
+            format!("No verified participants found for block {}", block_num),
         ));
     }
-    
-    Ok(verified_participants)
+
+    let image_path = block
+        .target_frame_path
+        .as_ref()
+        .map(|p| p.to_string_lossy().to_string())
+        .ok_or_else(|| crate::error::CliptionsError::ValidationError("Target frame path not set on block".to_string()))?;
+
+    let prize = block.prize_pool;
+    Ok((block, verified, image_path, prize))
 }
 
 /// Calculate scores and payouts for participants using the PayoutCalculator
 fn calculate_scores_and_payouts(
     participants: &[Participant],
-    block_num: &str,
-    blocks_file: &str,
+    image_path: &str,
     prize_pool: f64,
     verbose: bool,
 ) -> Result<Vec<ScoringResult>> {
-    // Create embedder using CLIP only
     let strategy = ClipBatchStrategy::new();
     let clip_embedder = ClipEmbedder::new().map_err(|e| format!("Failed to load CLIP model: {}", e))?;
+    let validator = ScoreValidator::new(clip_embedder, strategy);
     if verbose {
-        println!("Using CLIP embedder for semantic scoring");
+        println!("Processing {} participants against target image: {}", participants.len(), image_path);
     }
-    let mut processor = BlockProcessor::new(blocks_file.to_string(), clip_embedder, strategy);
-    
-    // Load blocks data
-    processor.load_blocks()?;
-    
-    // Get target image path via facade
-    let block = processor.get_block(block_num)?;
-    let facade = block as &dyn crate::facades::block_facade::BlockFacade;
-    let target_image_path = facade.target_image_path().to_string();
-    
-    if verbose {
-        println!("Processing {} participants against target image: {}", participants.len(), target_image_path);
-    }
-    
-    // Process block payouts using the existing BlockProcessor logic
-    let results = processor.process_block_payouts(block_num)?;
-    
+    let results = process_participants(participants, image_path, prize_pool, &validator)?;
     if verbose {
         println!("Successfully calculated scores and payouts for {} participants", results.len());
     }
-    
     Ok(results)
 }
 
 /// Update the blocks.json file with calculated scores, payouts, and prize pool
-fn update_blocks_file(
-    block_num: &str,
-    blocks_file: &str,
-    results: &[ScoringResult],
-    prize_pool: f64,
-    verbose: bool,
-) -> Result<()> {
-    // Load the current blocks data
-    let blocks_data = std::fs::read_to_string(blocks_file)
-        .map_err(|e| crate::error::CliptionsError::Io(e))?;
-    
-    let mut blocks: serde_json::Value = serde_json::from_str(&blocks_data)
-        .map_err(|e| crate::error::CliptionsError::Json(e))?;
-    
-    // Get the block object
-    let block = blocks.get_mut(block_num)
-        .ok_or_else(|| crate::error::CliptionsError::ValidationError(
-            format!("Block {} not found in blocks file", block_num)
-        ))?;
-    
-    // Update prize pool
-    block["prize_pool"] = serde_json::Value::from(prize_pool);
-    
-    // Update total payout
-    let total_payout: f64 = results.iter().filter_map(|r| r.payout).sum();
-    block["total_payout"] = serde_json::Value::from(total_payout);
-    
-    
-    // Update participants with scores and payouts
-    if let Some(participants) = block.get_mut("participants") {
-        if let Some(participants_array) = participants.as_array_mut() {
-            for participant in participants_array {
-                if let Some(username) = participant.get("username").and_then(|u| u.as_str()) {
-                    // Find matching result
-                    if let Some(result) = results.iter().find(|r| r.participant.username == username) {
-                        // Update score
-                        participant["score"] = serde_json::Value::from(result.raw_score);
-                        
-                        // Update payout
-                        if let Some(payout_amount) = result.payout {
-                            participant["payout"]["amount"] = serde_json::Value::from(payout_amount);
-                        }
-                        
-                        // Update rank if available
-                        if let Some(rank) = result.rank {
-                            participant["rank"] = serde_json::Value::from(rank);
-                        }
-                    }
-                }
+fn update_block_in_store(block: &mut Block<CommitmentsOpen>, results: &[ScoringResult], verbose: bool) -> Result<()> {
+    // Update participant scores/payouts
+    for res in results {
+        if let Some(idx) = block
+            .participants
+            .iter()
+            .position(|p| p.social_id == res.participant.social_id)
+        {
+            block.participants[idx].score = res.raw_score;
+            if let Some(p) = res.payout { block.participants[idx].payout.amount = p; }
+            if let Some(rank) = res.rank {
+                // Store rank in metadata for now (legacy BlockData used results vec; typestate not yet)
+                block.participants[idx].guess.metadata.insert("rank".to_string(), rank.to_string());
             }
         }
     }
-    
-    // Note: We don't add a redundant "results" section since all the information
-    // is already stored in the participant data (scores, payouts, ranks)
-    
-    // Update timestamp
-    block["updated_at"] = serde_json::Value::from(chrono::Utc::now().to_rfc3339());
-    
-    // Write back to file
-    let updated_json = serde_json::to_string_pretty(&blocks)
-        .map_err(|e| crate::error::CliptionsError::Json(e))?;
-    
-    std::fs::write(blocks_file, updated_json)
-        .map_err(|e| crate::error::CliptionsError::Io(e))?;
-    
+    // Update totals
+    block.total_payout = results.iter().filter_map(|r| r.payout).sum();
+
+    let store = JsonBlockStore::new()?;
+    store.save(block)?;
     if verbose {
-        println!("Updated blocks file with scores, payouts, and prize pool information");
+        println!("Updated store with scores and payouts. Total distributed: {:.9} TAO", block.total_payout);
     }
-    
     Ok(())
 }
 
@@ -355,29 +296,31 @@ fn save_results(results: &[ScoringResult], output_file: &PathBuf, format: &str) 
 
 /// Entry point for the calculate-scores subcommand
 pub fn run(args: CalculateScoresArgs) -> Result<()> {
-    // Load verified participants
-    let participants = load_verified_participants(&args.block_num, &args.blocks_file)?;
-    
+    // Load block and verified participants via store
+    let (mut block, participants, image_path, prize_pool_from_block) = load_verified_participants_from_store(&args.block_num)?;
+
+    // Use provided prize_pool arg if > 0 else fallback to block value
+    let prize_pool = if args.prize_pool > 0.0 { args.prize_pool } else { prize_pool_from_block };
+
     if args.verbose {
         println!("Loaded {} verified participants for block {}", participants.len(), args.block_num);
     }
-    
+
     // Calculate scores and payouts
     let results = calculate_scores_and_payouts(
         &participants,
-        &args.block_num,
-        &args.blocks_file,
-        args.prize_pool,
+        &image_path,
+        prize_pool,
         args.verbose,
     )?;
-    
+
     if args.verbose {
         println!("Successfully processed block {} with {} results", args.block_num, results.len());
     }
-    
+
     // Display results
     display_results(&results, &args)?;
-    
+
     // Save results to file if requested
     if let Some(output_file) = &args.output_file {
         save_results(&results, output_file, &args.output)?;
@@ -385,15 +328,9 @@ pub fn run(args: CalculateScoresArgs) -> Result<()> {
             println!("Results saved to {}", output_file.display());
         }
     }
-    
-    // Update blocks.json file
-    update_blocks_file(
-        &args.block_num,
-        &args.blocks_file,
-        &results,
-        args.prize_pool,
-        args.verbose,
-    )?;
-    
+
+    // Persist into store: update participant fields and total_payout
+    update_block_in_store(&mut block, &results, args.verbose)?;
+
     Ok(())
-} 
+}
