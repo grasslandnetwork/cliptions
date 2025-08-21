@@ -4,6 +4,10 @@ use crate::config::ConfigManager;
 use crate::social::{AnnouncementData, AnnouncementFormatter, TweetCache, TweetCacheManager};
 use crate::twitter_utils::post_tweet_flexible;
 
+// Typestate + store imports for persisting the newly opened block
+use crate::block_engine::state_machine::{Block, CommitmentsOpen};
+use crate::block_engine::store::{BlockStore, JsonBlockStore};
+
 use twitter_api::{TwitterClient, TwitterConfig};
 
 #[derive(Parser)]
@@ -111,7 +115,9 @@ pub async fn run(args: NewBlockArgs) -> Result<()> {
         println!("{}", tweet_text);
     }
 
-    // Post the tweet
+    // Post the tweet first to obtain a Tweet ID for caching.
+    // Note: We post here instead of calling the typestate posting method to avoid a double-post,
+    // then initialize/persist the block via typestate + JsonBlockStore below.
     let result = post_tweet_flexible(&client, &tweet_text, None, None).await;
 
     match result {
@@ -146,6 +152,31 @@ pub async fn run(args: NewBlockArgs) -> Result<()> {
                 eprintln!("⚠️  Warning: Failed to save tweet cache: {}", e);
             } else if args.verbose {
                 println!("💾 Saved tweet cache for later use");
+            }
+
+            // After posting and caching, initialize and persist the block using typestate + JsonBlockStore.
+            // We intentionally use `Block::<CommitmentsOpen>::start(...)` rather than `Pending::open_commitments(...)`
+            // to prevent posting the tweet twice. Both target_timestamp (canonical target moment) and
+            // commitment_deadline are initially set from the CLI's `target_time_hours` for simplicity.
+            let now_utc = chrono::Utc::now();
+            let commitment_deadline = now_utc + chrono::Duration::hours(args.target_time_hours as i64);
+
+            let mut block = Block::<CommitmentsOpen>::start(
+                args.block_num.to_string(),
+                // Store the optional custom message as the block description for operator context
+                args.message.clone().unwrap_or_default(),
+                args.livestream_url.clone(),
+                commitment_deadline,
+                commitment_deadline,
+            );
+            if let Some(prize) = args.prize_pool {
+                block.prize_pool = prize;
+            }
+
+            let store = JsonBlockStore::new()?;
+            store.save(&block)?;
+            if args.verbose && !args.quiet {
+                println!("💾 Persisted block {} to store (state: {})", block.block_num, block.state_name());
             }
         }
         Err(e) => {
